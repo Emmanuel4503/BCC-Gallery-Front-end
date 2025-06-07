@@ -39,7 +39,7 @@
             setIsLoadingCarousel(true)
             setCarouselError(null)
             
-            const response = await fetch('http://localhost:6500/images/selected')
+            const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/selected')
             
             if (!response.ok) {
                 throw new Error(`Failed to fetch carousel images: ${response.status}`)
@@ -68,7 +68,7 @@ const fetchGalleryImages = async (silent = false) => {
         }
         setGalleryError(null)
         
-        const response = await fetch('http://localhost:6500/images/latest')
+        const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest')
         
         if (!response.ok) {
             throw new Error(`Failed to fetch gallery images: ${response.status}`)
@@ -94,7 +94,7 @@ const fetchGalleryImages = async (silent = false) => {
             // Fetch user reactions from backend
         const fetchUserReactions = async (userId) => {
             try {
-            const response = await fetch(`http://localhost:6500/images/reactions?userId=${userId}`);
+            const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`);
             if (!response.ok) {
                 throw new Error(`Failed to fetch user reactions: ${response.status}`);
             }
@@ -114,7 +114,7 @@ const fetchGalleryImages = async (silent = false) => {
             try {
                 setIsLoadingAlbum(true);
                 setAlbumError(null);
-                const response = await fetch('http://localhost:6500/album/latest');
+                const response = await fetch('https://bcc-gallery-back-end.onrender.com/album/latest');
                 if (!response.ok) {
                     throw new Error(`Failed to fetch latest album: ${response.status}`);
                 }
@@ -153,7 +153,7 @@ const fetchGalleryImages = async (silent = false) => {
                 });
           
                 // Send reaction to backend
-                const response = await fetch('http://localhost:6500/images/react', {
+                const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/react', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -236,9 +236,9 @@ const fetchGalleryImages = async (silent = false) => {
             try {
             let processedUrl = imageUrl;
             if (imageUrl.startsWith('/')) {
-                processedUrl = `http://localhost:6500${imageUrl}`;
+                processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
             } else if (!imageUrl.startsWith('http')) {
-                processedUrl = `http://localhost:6500/${imageUrl}`;
+                processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
             }
         
             console.log('Downloading from:', processedUrl);
@@ -480,7 +480,7 @@ const fetchGalleryImages = async (silent = false) => {
             try {
             console.log('Attempting to create user:', userName.trim())
             
-            const response = await fetch('http://localhost:6500/users/signup', {
+            const response = await fetch('https://bcc-gallery-back-end.onrender.com/users/signup', {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json',
@@ -523,7 +523,7 @@ const fetchGalleryImages = async (silent = false) => {
             console.error('Signup error:', error)
             
             if (error.message.includes('Failed to fetch')) {
-                alert('Cannot connect to server. Please check if the server is running on http://localhost:6500')
+                alert('Cannot connect to server. Please check if the server is running on https://bcc-gallery-back-end.onrender.com')
             } else if (error.message.includes('non-JSON response')) {
                 alert('Server error: Invalid response format')
             } else {
@@ -591,7 +591,7 @@ const fetchGalleryImages = async (silent = false) => {
                     }
         
                     try {
-                        const response = await fetch('http://localhost:6500/saved/add', {
+                        const response = await fetch('https://bcc-gallery-back-end.onrender.com/saved/add', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -648,7 +648,7 @@ const fetchGalleryImages = async (silent = false) => {
         
             setIsSubmitting(true)
             try {
-                const response = await fetch('http://localhost:6500/saved/add', {
+                const response = await fetch('https://bcc-gallery-back-end.onrender.com/saved/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

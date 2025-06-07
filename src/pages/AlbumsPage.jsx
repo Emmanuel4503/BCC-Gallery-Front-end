@@ -29,7 +29,7 @@ function AlbumsPage() {
   // Fetch all albums
   useEffect(() => {
     setIsLoading(true);
-    fetch("http://localhost:6500/album/get")
+    fetch("https://bcc-gallery-back-end.onrender.com/album/get")
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -56,7 +56,7 @@ function AlbumsPage() {
   // Fetch images for a specific album
   const fetchAlbumImages = async (albumTitle) => {
     try {
-      const response = await fetch(`http://localhost:6500/images/album/${encodeURIComponent(albumTitle)}`);
+      const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -86,9 +86,9 @@ function AlbumsPage() {
     try {
       let processedUrl = imageUrl;
       if (imageUrl.startsWith('/')) {
-        processedUrl = `http://localhost:6500${imageUrl}`;
+        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
       } else if (!imageUrl.startsWith('http')) {
-        processedUrl = `http://localhost:6500/${imageUrl}`;
+        processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
       }
 
       const response = await fetch(processedUrl, {

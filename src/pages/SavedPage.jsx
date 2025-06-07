@@ -44,7 +44,7 @@ function SavedPage() {
       setIsLoading(true);
       setError(null);
       const response = await fetch(
-        `http://localhost:6500/saved/get/${currentUser.id}`
+        `https://bcc-gallery-back-end.onrender.com/saved/get/${currentUser.id}`
       );
       if (!response.ok) {
         throw new Error(`Failed to fetch saved images: ${response.status}`);
@@ -64,7 +64,7 @@ function SavedPage() {
   const fetchUserReactions = async (userId) => {
     try {
       const response = await fetch(
-        `http://localhost:6500/images/reactions?userId=${userId}`
+        `https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`
       );
       if (!response.ok) {
         throw new Error(`Failed to fetch user reactions: ${response.status}`);
@@ -109,7 +109,7 @@ function SavedPage() {
           return newReactions;
         });
   
-        const response = await fetch("http://localhost:6500/images/react", {
+        const response = await fetch("https://bcc-gallery-back-end.onrender.com/images/react", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -180,9 +180,9 @@ function SavedPage() {
     try {
       let processedUrl = imageUrl;
       if (imageUrl.startsWith("/")) {
-        processedUrl = `http://localhost:6500${imageUrl}`;
+        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
       } else if (!imageUrl.startsWith("http")) {
-        processedUrl = `http://localhost:6500/${imageUrl}`;
+        processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
       }
 
       const response = await fetch(processedUrl, {
