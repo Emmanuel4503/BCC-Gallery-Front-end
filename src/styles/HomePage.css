@@ -629,8 +629,8 @@
     height: 1rem;
   }
 
- /* Reaction Section */
- .reaction-section {
+ /* Reaction Section Page */
+.reaction-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -642,87 +642,88 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   margin: 0.5rem 0;
   flex-wrap: nowrap; 
-overflow-x: auto; 
-scrollbar-width: none; 
-width: 100%; 
-gap: 0.3rem; 
+  overflow-x: auto; 
+  scrollbar-width: none; 
+  width: 100%; 
+  gap: 0.3rem; 
 }
-  
-  .reaction-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 0.75rem;
-    background: transparent;
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    color: white;
-    transition: all 0.3s ease;
-    min-width: 3rem;
-  }
-  
-  .reaction-btn:hover {
-    background-color: #e2e8f0;
-    transform: translateY(-1px);
-  }
-  
-  .reaction-btn:active {
-    transform: translateY(0);
-  }
-  
-  .reaction-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-  }
-  
- 
-  .reaction-btn.reaction-active {
-    background: linear-gradient(135deg, #f97316, #fb923c);
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transform: translateY(-1px);
-  }
-  
-  .reaction-btn.reaction-active:hover {
-    background: linear-gradient(135deg, #ea580c, #f97316);
-  }
-  
-  .reaction-btn.reaction-active:active {
-    transform: translateY(0);
-  }
-  
-  .reaction-count {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #64748b;
-    min-width: 1.25rem;
-    text-align: center;
-  }
-  
-  .reaction-btn:hover .reaction-count {
-    color: white;
-  }
-  
-  .reaction-btn.reaction-active .reaction-count {
-    color: white;
-  }
-  
-  .reaction-btn:disabled {
-    cursor: default;
-    opacity: 1; 
-    transform: none;
-    pointer-events: none; 
-  }
-  
-  .reaction-btn:disabled:hover {
-    background: transparent;
-    transform: none;
-  }
-  
- 
+
+.reaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #fd8332; 
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white; 
+  transition: background-color 0.3s ease, transform 0.3s ease, color 0.3s ease;
+  min-width: 3rem;
+}
+
+.reaction-btn:hover {
+  background-color: #e2e8f0; 
+  color: #64748b; 
+  transform: translateY(-1px);
+}
+
+.reaction-btn:active {
+  transform: translateY(0);
+}
+
+.reaction-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.reaction-btn.reaction-active {
+  background: linear-gradient(135deg, #f97316, #fb923c); 
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.reaction-btn.reaction-active:hover {
+  background: linear-gradient(135deg, #ea580c, #f97316); 
+}
+
+.reaction-btn.reaction-active:active {
+  transform: translateY(0);
+}
+
+.reaction-count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white; 
+  min-width: 1.25rem;
+  text-align: center;
+}
+
+.reaction-btn:hover .reaction-count {
+  color: #64748b; 
+}
+
+.reaction-btn.reaction-active .reaction-count {
+  color: white;
+}
+
+.reaction-btn:disabled {
+  cursor: default;
+  opacity: 1;
+  transform: none;
+  pointer-events: none;
+  background-color: #fd8332; 
+}
+
+.reaction-btn:disabled:hover {
+  background-color: #fd8332;
+  transform: none;
+}
+
+
   .image-actions {
     display: flex;
     padding: 0.75rem;
