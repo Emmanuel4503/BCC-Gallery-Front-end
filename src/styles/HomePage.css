@@ -659,7 +659,7 @@ gap: 0.3rem; /* Slightly reduced gap */
     cursor: pointer;
     font-size: 1rem;
     font-weight: 500;
-    color: #475569;
+    color: white;
     transition: all 0.3s ease;
     min-width: 3rem;
   }
@@ -703,7 +703,7 @@ gap: 0.3rem; /* Slightly reduced gap */
   }
   
   .reaction-btn:hover .reaction-count {
-    color: #1e293b;
+    color: white;
   }
   
   .reaction-btn.reaction-active .reaction-count {
