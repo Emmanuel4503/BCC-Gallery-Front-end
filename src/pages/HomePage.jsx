@@ -957,7 +957,7 @@ const fetchGalleryImages = async (silent = false) => {
                     <>
 
                     {/* vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */}
-                    / Carousel rendering
+                  
 <div className="carousel">
   {carouselImages.map((image, index) => {
     let slideClass = "carousel-slide";
