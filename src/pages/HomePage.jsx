@@ -235,12 +235,20 @@ const fetchGalleryImages = async (silent = false) => {
         // Download functionality
         const downloadImage = async (imageUrl, filename, format) => {
             try {
-              let processedUrl = imageUrl; // imageUrl is the original, high-quality URL
-              if (imageUrl.startsWith('/')) {
-                processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
-              } else if (!imageUrl.startsWith('http')) {
-                processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
+              console.log('Downloading image:', { imageUrl, filename, format });
+          
+              // Validate imageUrl
+              if (!imageUrl || typeof imageUrl !== 'string') {
+                throw new Error('Invalid image URL provided');
               }
+          
+              // Use imageUrl directly if it starts with http(s), otherwise construct Cloudinary URL
+              let processedUrl = imageUrl;
+              if (!imageUrl.startsWith('http')) {
+                processedUrl = `https://res.cloudinary.com/dqxhczhxk/image/upload/${imageUrl}`;
+              }
+          
+              console.log('Fetching image from:', processedUrl);
           
               const response = await fetch(processedUrl, {
                 mode: 'cors',
@@ -248,12 +256,13 @@ const fetchGalleryImages = async (silent = false) => {
               });
           
               if (!response.ok) {
-                throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+                const text = await response.text();
+                throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} - ${text.slice(0, 100)}`);
               }
           
               const blob = await response.blob();
               if (!blob.type.startsWith('image/')) {
-                throw new Error('Downloaded content is not an image');
+                throw new Error(`Downloaded content is not an image: ${blob.type}`);
               }
           
               const canvas = document.createElement('canvas');
@@ -301,131 +310,132 @@ const fetchGalleryImages = async (silent = false) => {
                 img.src = URL.createObjectURL(blob);
               });
             } catch (error) {
-              console.error('Download error:', error);
+              console.error('Download error:', {
+                message: error.message,
+                stack: error.stack,
+                imageUrl,
+                filename,
+                format
+              });
               throw error;
             }
           };
 
-        const handleSingleDownload = async () => {
-        if (!currentDownloadImage) {
-            alert('No image selected for download');
-            return;
-        }
-        
-        setIsDownloading(true);
-        setDownloadProgress(0);
-        
-        try {
-            const progressInterval = setInterval(() => {
-            setDownloadProgress(prev => {
-                if (prev >= 90) {
-                clearInterval(progressInterval);
-                return 90;
-                }
-                return prev + 15;
-            });
-            }, 200);
-            
-            await downloadImage(
-            currentDownloadImage.imageUrl,
-            `BCC Picture-${Date.now()}`,
-            selectedFormat
-            );
-            
-            clearInterval(progressInterval);
-            setDownloadProgress(100);
-            
-         
-            setTimeout(() => {
-            setShowDownloadModal(false);
-            setIsDownloading(false);
-            setDownloadProgress(0);
-            setCurrentDownloadImage(null);
-            alert('Image downloaded successfully!');
-            }, 1000);
-            
-        } catch (error) {
-            console.error('Download failed:', error);
-            alert(`Failed to download image: ${error.message}`);
-            setIsDownloading(false);
-            setDownloadProgress(0);
-        }
-        };
-
-        //handleMultipleDownload
-        const handleMultipleDownload = async () => {
-            if (selectedImages.length === 0) {
-                alert('Please select at least one image to download');
-                return;
+          const handleSingleDownload = async () => {
+            if (!currentDownloadImage) {
+              alert('No image selected for download');
+              return;
             }
-        
-            console.log('Selected images indices:', selectedImages);
-            console.log('Total gallery images:', galleryImages.length);
-        
+          
             setIsDownloading(true);
             setDownloadProgress(0);
-        
+          
             try {
-                const totalImages = selectedImages.length;
-                let successCount = 0;
-                let failCount = 0;
-        
-                for (let i = 0; i < totalImages; i++) {
-                    const imageIndex = selectedImages[i];
-                    const image = galleryImages[imageIndex];
-        
-                    console.log(`Processing image at index ${imageIndex}:`, image);
-        
-                    if (image && image.imageUrl) {
-                        try {
-                         
-                            const randomNumber = Math.floor(1000 + Math.random() * 9000);
-                            console.log(`Downloading image ${imageIndex + 1} with filename: BCC-image-${imageIndex + 1}-${randomNumber}-${Date.now()}`);
-                            await downloadImage(
-                                image.imageUrl,
-                                `BCC-image-${imageIndex + 1}-${randomNumber}-${Date.now()}`,
-                                selectedFormat
-                            );
-                            successCount++;
-                            console.log(`Successfully downloaded image at index ${imageIndex}`);
-                        } catch (error) {
-                            console.error(`Failed to download image at index ${imageIndex}:`, error);
-                            failCount++;
-                        }
-                    } else {
-                        console.error(`No valid image found at index ${imageIndex}`);
-                        failCount++;
-                    }
-        
-                   
-                    setDownloadProgress(((i + 1) / totalImages) * 100);
-        
-                
-                    await new Promise(resolve => setTimeout(resolve, 1000)); 
-                }
-        
-                console.log(`Download completed: ${successCount} succeeded, ${failCount} failed`);
-        
-                setTimeout(() => {
-                    setShowDownloadModal(false);
-                    setIsDownloading(false);
-                    setDownloadProgress(0);
-                    setSelectedImages([]);
-        
-                    if (failCount > 0) {
-                        alert(`Download completed with some issues. ${successCount} images downloaded successfully, ${failCount} failed.`);
-                    } else {
-                        alert(`All ${successCount} images downloaded successfully!`);
-                    }
-                }, 1000);
-            } catch (error) {
-                console.error('Bulk download failed:', error);
-                alert(`Failed to download images: ${error.message}`);
+              console.log('Starting single download:', currentDownloadImage);
+              const progressInterval = setInterval(() => {
+                setDownloadProgress((prev) => {
+                  if (prev >= 90) {
+                    clearInterval(progressInterval);
+                    return 90;
+                  }
+                  return prev + 15;
+                });
+              }, 200);
+          
+              await downloadImage(
+                currentDownloadImage.imageUrl,
+                `BCC Picture-${Date.now()}`,
+                selectedFormat
+              );
+          
+              clearInterval(progressInterval);
+              setDownloadProgress(100);
+          
+              setTimeout(() => {
+                setShowDownloadModal(false);
                 setIsDownloading(false);
                 setDownloadProgress(0);
+                setCurrentDownloadImage(null);
+                alert('Image downloaded successfully!');
+              }, 1000);
+            } catch (error) {
+              console.error('Single download failed:', {
+                message: error.message,
+                image: currentDownloadImage,
+              });
+              alert(`Failed to download image: ${error.message}`);
+              setIsDownloading(false);
+              setDownloadProgress(0);
             }
-        };
+          };
 
+          const handleMultipleDownload = async () => {
+            if (selectedImages.length === 0) {
+              alert('Please select at least one image to download');
+              return;
+            }
+          
+            console.log('Starting multiple download:', { selectedImages, galleryImages });
+          
+            setIsDownloading(true);
+            setDownloadProgress(0);
+          
+            try {
+              const totalImages = selectedImages.length;
+              let successCount = 0;
+              let failCount = 0;
+          
+              for (let i = 0; i < totalImages; i++) {
+                const imageIndex = selectedImages[i];
+                const image = galleryImages[imageIndex];
+          
+                console.log(`Processing image at index ${imageIndex}:`, image);
+          
+                if (image && image.imageUrl) {
+                  try {
+                    const randomNumber = Math.floor(1000 + Math.random() * 9000);
+                    await downloadImage(
+                      image.imageUrl,
+                      `BCC-image-${imageIndex + 1}-${randomNumber}-${Date.now()}`,
+                      selectedFormat
+                    );
+                    successCount++;
+                    console.log(`Successfully downloaded image at index ${imageIndex}`);
+                  } catch (error) {
+                    console.error(`Failed to download image at index ${imageIndex}:`, error);
+                    failCount++;
+                  }
+                } else {
+                  console.error(`No valid image found at index ${imageIndex}`);
+                  failCount++;
+                }
+          
+                setDownloadProgress(((i + 1) / totalImages) * 100);
+          
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+              }
+          
+              console.log(`Download completed: ${successCount} succeeded, ${failCount} failed`);
+          
+              setTimeout(() => {
+                setShowDownloadModal(false);
+                setIsDownloading(false);
+                setDownloadProgress(0);
+                setSelectedImages([]);
+          
+                if (failCount > 0) {
+                  alert(`Download completed with issues. ${successCount} images downloaded successfully, ${failCount} failed.`);
+                } else {
+                  alert(`All ${successCount} images downloaded successfully!`);
+                }
+              }, 1000);
+            } catch (error) {
+              console.error('Bulk download failed:', error);
+              alert(`Failed to download images: ${error.message}`);
+              setIsDownloading(false);
+              setDownloadProgress(0);
+            }
+          };
 
         useEffect(() => {
             fetchCarouselImages();
@@ -955,7 +965,7 @@ const fetchGalleryImages = async (silent = false) => {
                     </div>
                 ) : (
                     <>
-
+{/* hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjj */}
                     {/* vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */}
                   
 <div className="carousel">
