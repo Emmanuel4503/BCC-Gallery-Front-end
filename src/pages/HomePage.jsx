@@ -2,6 +2,7 @@
         import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2 } from "lucide-react"
         import { Link } from "react-router-dom"
         import "../styles/HomePage.css"
+        import bcclogo from './bcclogo.png';
 
         function HomePage() {
         const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -866,7 +867,7 @@ const fetchGalleryImages = async (silent = false) => {
                 <div className="header-content">
                 <div className="header-left">
                     <div className="logo-container">
-        <img src="bcc logos.png" alt="BCC Logo" className="logos" />
+                    <img src={bcclogo} alt="Logo" className="logos" />
         </div>
                     <h1 className="header-title">
                     BCC Gallery 1.0
