@@ -1,0 +1,100 @@
+
+.page-header {
+    background-color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .page-header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .back-button {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    margin-right: 1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.2s;
+  }
+  
+  .back-button:hover {
+    background-color: #f3f4f6;
+  }
+  
+  .back-icon {
+    height: 1.5rem;
+    width: 1.5rem;
+    color: #374151;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1f2937;
+  }
+  
+  .page-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+  }
+  
+  .page-center {
+    text-align: center;
+  }
+  
+  .page-icon-container {
+    width: 6rem;
+    height: 6rem;
+    background-color: #fe9a65;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+  
+  .page-icon {
+    height: 3rem;
+    width: 3rem;
+    color: white;
+  }
+  
+  .page-heading {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 1rem;
+  }
+  
+  .page-description {
+    font-size: 1.125rem;
+    color: #6b7280;
+    max-width: 32rem;
+    margin: 0 auto;
+  }
+  
+  .page-placeholder {
+    margin-top: 3rem;
+    padding: 2rem;
+    background-color: #f9fafb;
+    border-radius: 0.75rem;
+  }
+  
+  .placeholder-text {
+    color: #6b7280;
+    font-style: italic;
+  }
+  
+
+  @media (min-width: 768px) {
+    .page-title {
+      font-size: 1.875rem;
+    }
+  }
+  
+  
