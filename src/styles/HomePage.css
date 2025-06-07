@@ -400,6 +400,7 @@
     padding: 2rem 1rem;
     max-width: 1300px;
     margin: 0 auto;
+    color: white;
   }
   
   .service-title {
@@ -448,6 +449,7 @@
     mask-composite: exclude;
     -webkit-mask-composite: xor;
     opacity: 1; 
+    color: white;
 }
 
 
