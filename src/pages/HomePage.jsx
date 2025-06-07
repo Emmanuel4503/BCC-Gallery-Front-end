@@ -235,81 +235,76 @@ const fetchGalleryImages = async (silent = false) => {
         // Download functionality
         const downloadImage = async (imageUrl, filename, format) => {
             try {
-            let processedUrl = imageUrl;
-            if (imageUrl.startsWith('/')) {
+              let processedUrl = imageUrl; // imageUrl is the original, high-quality URL
+              if (imageUrl.startsWith('/')) {
                 processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
-            } else if (!imageUrl.startsWith('http')) {
+              } else if (!imageUrl.startsWith('http')) {
                 processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
-            }
-        
-            console.log('Downloading from:', processedUrl);
-        
-            const response = await fetch(processedUrl, {
+              }
+          
+              const response = await fetch(processedUrl, {
                 mode: 'cors',
                 credentials: 'same-origin',
-            });
-        
-            if (!response.ok) {
+              });
+          
+              if (!response.ok) {
                 throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-            }
-        
-            const blob = await response.blob();
-        
-
-            if (!blob.type.startsWith('image/')) {
+              }
+          
+              const blob = await response.blob();
+              if (!blob.type.startsWith('image/')) {
                 throw new Error('Downloaded content is not an image');
-            }
-        
-        
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = document.createElement('img'); 
-        
-            return new Promise((resolve, reject) => {
+              }
+          
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              const img = document.createElement('img');
+          
+              return new Promise((resolve, reject) => {
                 img.onload = () => {
-                try {
+                  try {
                     canvas.width = img.width;
                     canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
-        
+          
                     const mimeType =
-                    format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+                      format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
                     const quality = format === 'jpeg' ? 0.95 : undefined;
-        
+          
                     canvas.toBlob(
-                    (convertedBlob) => {
+                      (convertedBlob) => {
                         if (convertedBlob) {
-                        const url = URL.createObjectURL(convertedBlob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `${filename}.${format}`;
-                        a.style.display = 'none';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        resolve();
+                          const url = URL.createObjectURL(convertedBlob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `${filename}.${format}`;
+                          a.style.display = 'none';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                          resolve();
                         } else {
-                        reject(new Error('Failed to convert image to selected format'));
+                          reject(new Error('Failed to convert image to selected format'));
                         }
-                    },
-                    mimeType,
-                    quality
+                      },
+                      mimeType,
+                      quality
                     );
-                } catch (error) {
+                  } catch (error) {
                     reject(new Error(`Canvas processing failed: ${error.message}`));
-                }
+                  }
                 };
-        
+          
                 img.onerror = () => reject(new Error('Failed to load image for processing'));
-                img.crossOrigin = 'anonymous'; 
+                img.crossOrigin = 'anonymous';
                 img.src = URL.createObjectURL(blob);
-            });
+              });
             } catch (error) {
-            console.error('Download error:', error);
-            throw error;
+              console.error('Download error:', error);
+              throw error;
             }
-        };
+          };
 
         const handleSingleDownload = async () => {
         if (!currentDownloadImage) {
@@ -629,11 +624,11 @@ const fetchGalleryImages = async (silent = false) => {
         const handleDownloadSelected = (index) => {
             const image = galleryImages[index];
             if (image) {
-            setCurrentDownloadImage(image);
-            setDownloadType('single');
-            setShowDownloadModal(true);
+              setCurrentDownloadImage({ ...image, imageUrl: image.imageUrl }); // Use original imageUrl
+              setDownloadType('single');
+              setShowDownloadModal(true);
             }
-        }
+          };
 
         const handleSaveSelected = async (index) => {
             if (!currentUser?.id) {
@@ -960,7 +955,10 @@ const fetchGalleryImages = async (silent = false) => {
                     </div>
                 ) : (
                     <>
-                  <div className="carousel">
+
+                    {/* vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */}
+                    / Carousel rendering
+<div className="carousel">
   {carouselImages.map((image, index) => {
     let slideClass = "carousel-slide";
     if (index === currentSlide && !isTransitioning) {
@@ -974,16 +972,15 @@ const fetchGalleryImages = async (silent = false) => {
     return (
       <div key={image._id || index} className={slideClass}>
         <img
-          src={image.imageUrl || "/placeholder.svg"}
+          src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} // Use thumbnail for display
           alt={`Church gallery image ${index + 1}`}
           className="carousel-image"
-          onClick={() => openFullscreen(image.imageUrl)}
+          onClick={() => openFullscreen(image.imageUrl)} // Use original for fullscreen
         />
         <div className="carousel-overlay" />
       </div>
     );
   })}
-  
   <div className="carousel-content">
     <center></center>
   </div>
@@ -1038,25 +1035,25 @@ const fetchGalleryImages = async (silent = false) => {
                     </div>
                 ) : (
                     <div className="image-gallery">
-                    {galleryImages.map((image, index) => (
-                        <div key={image._id || index} className="image-card">
-                        <div className="image-container">
-                            <img
-                            src={image.imageUrl || "/placeholder.svg"}
-                            alt={`Service ${index + 1}`}
-                            className="gallery-image"
-                            onClick={() => openFullscreen(image.imageUrl)}
-                            />
-                            <div className="image-overlay">
-                            <input
-                                type="checkbox"
-                                className="image-checkbox"
-                                checked={selectedImages.includes(index)}
-                                onChange={() => handleImageSelect(index)}
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                            </div>
-                        </div>
+  {galleryImages.map((image, index) => (
+    <div key={image._id || index} className="image-card">
+      <div className="image-container">
+        <img
+          src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} // Use thumbnail for display
+          alt={`Service ${index + 1}`}
+          className="gallery-image"
+          onClick={() => openFullscreen(image.imageUrl)} // Use original for fullscreen
+        />
+        <div className="image-overlay">
+          <input
+            type="checkbox"
+            className="image-checkbox"
+            checked={selectedImages.includes(index)}
+            onChange={() => handleImageSelect(index)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      </div>
                         
                 {/* Reaction Section */}
                 <div className="reaction-section">
@@ -1095,21 +1092,21 @@ const fetchGalleryImages = async (silent = false) => {
   </div>
                         
                         <div className="image-actions">
-                            <button
-                            onClick={() => handleDownloadSelected(index)}
-                            className="image-btn download-btn"
-                            title="Download"
-                            >
-                            <Download className="image-btn-icon" />
-                            </button>
-                            <button 
-    onClick={() => handleSaveSelected(index)} 
-    className="image-btn save-btn" 
-    title="Save"
-    disabled={isSubmitting}
->
-    <Save className="image-btn-icon" />
-</button>
+                        <button
+          onClick={() => handleDownloadSelected(index)}
+          className="image-btn download-btn"
+          title="Download"
+        >
+          <Download className="image-btn-icon" />
+        </button>
+        <button
+          onClick={() => handleSaveSelected(index)}
+          className="image-btn save-btn"
+          title="Save"
+          disabled={isSubmitting}
+        >
+          <Save className="image-btn-icon" />
+        </button>
                         </div>
                         </div>
                     ))}

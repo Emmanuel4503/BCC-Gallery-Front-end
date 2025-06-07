@@ -371,10 +371,12 @@
   .carousel-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     cursor: pointer;
     transition: transform 0.2s;
     display: block;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
   
   .carousel-overlay {
@@ -564,9 +566,11 @@
   .gallery-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     cursor: pointer;
     transition: transform 0.2s;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
   
   .gallery-image:hover {
