@@ -680,14 +680,14 @@
 }
 
 .reaction-btn.reaction-active {
-  background-color: #fd8332; /* Active state set to #fd8332 */
+  background-color: #fd8332 !important; /* Ensure #fd8332 for active state */
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
 
 .reaction-btn.reaction-active:hover {
-  background-color: #fd8332; /* Maintain #fd8332 for hover on active state */
+  background-color: #fd8332 !important; /* Maintain #fd8332 for hover on active */
   color: white;
 }
 
@@ -716,7 +716,7 @@
   opacity: 1;
   transform: none;
   pointer-events: none;
-  background-color: transparent; /* Transparent for disabled state */
+  background-color: transparent; 
 }
 
 .reaction-btn:disabled:hover {
