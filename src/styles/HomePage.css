@@ -641,11 +641,11 @@
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   margin: 0.5rem 0;
-  flex-wrap: nowrap; /* Prevent wrapping */
-overflow-x: auto; /* Allow scrolling if needed */
-scrollbar-width: none; /* Hide scrollbar */
-width: 100%; /* Ensure it fits within parent */
-gap: 0.3rem; /* Slightly reduced gap */
+  flex-wrap: nowrap; 
+overflow-x: auto; 
+scrollbar-width: none; 
+width: 100%; 
+gap: 0.3rem; 
 }
   
   .reaction-btn {
@@ -2762,4 +2762,3 @@ margin-top: 1.2rem;
 
 
 
-/* jhrffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff */
