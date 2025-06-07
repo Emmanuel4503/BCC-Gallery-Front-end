@@ -971,6 +971,7 @@
       }
     .scrollable-content{
         margin-top: 40vh;
+      
     }
     .hero-section{
         height: 55vh;
@@ -1778,7 +1779,13 @@ margin-top: 1.2rem;
     grid-template-columns: 1fr;
   }
   }
-  
+
+
+   @media (max-width: 368px){
+    .image-gallery{
+      display: grid;
+    }
+   }
  
   @media (max-width: 575px) and (min-width:375px) {
     .reaction-section {
@@ -1822,6 +1829,9 @@ margin-top: 1.2rem;
     .hero-section{
       height: 70vh;
       
+    }
+    .image-gallery{
+      display: flex;
     }
   }
   @media (min-width: 768px)  and (max-width: 769px) {
