@@ -805,7 +805,7 @@ const fetchGalleryImages = async (silent = false) => {
                                     onClick={() => setSelectedFormat('jpeg')}
                                 >
                                     <span className="format-name">JPEG</span>
-                                    <span className="format-desc">Best for photos, smaller size</span>
+                                    <span className="format-desc">Good, smaller size</span>
                                 </button>
                                 <button
                                     className={`format-btn ${selectedFormat === 'png' ? 'format-active' : ''}`}
