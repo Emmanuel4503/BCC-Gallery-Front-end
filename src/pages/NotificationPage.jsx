@@ -23,7 +23,7 @@ function NotificationPage() {
           </div>
           <h2 className="page-heading">Notification</h2>
           <p className="page-description">
-            Stay updated with new photo uploads, and upcoming events. 
+            Stay updated with new photo uploads, and other notifications. 
           </p>
 
           <div className="page-placeholder">
