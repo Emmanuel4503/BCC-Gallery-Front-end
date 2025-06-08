@@ -23,7 +23,7 @@
         const [galleryError, setGalleryError] = useState(null)
         const [showDownloadModal, setShowDownloadModal] = useState(false)
         const [downloadType, setDownloadType] = useState('') 
-        const [selectedFormat, setSelectedFormat] = useState('jpeg')
+        const [selectedFormat, setSelectedFormat] = useState('png');
         const [downloadProgress, setDownloadProgress] = useState(0)
         const [isDownloading, setIsDownloading] = useState(false)
         const [currentDownloadImage, setCurrentDownloadImage] = useState(null)
@@ -691,7 +691,7 @@ const fetchGalleryImages = async (silent = false) => {
             setShowDownloadModal(false);
             setCurrentDownloadImage(null);
             setDownloadProgress(0);
-            setSelectedFormat('jpeg');
+            setSelectedFormat('png');
             }
         }
 
