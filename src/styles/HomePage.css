@@ -1316,7 +1316,7 @@
       height: 1.75rem;
     }
     .hero-section{
-      height: 56vh;
+      height: 58vh;
 
     }
   }
@@ -1541,6 +1541,10 @@
   
     .copyright-text {
       font-size: 0.875rem;
+    }
+    .hero-section{
+ 
+      height: 65vh;
     }
   }
   
