@@ -81,11 +81,12 @@
   }
   
   .image-btn.delete-btn:hover {
-    background-color: #d9363e; /* Darker red on hover */
+    background-color: #d9363e; 
   }
+
   .reaction-btn:disabled {
-    opacity: 0.5; /* Reduce opacity to indicate disabled state */
-    cursor: not-allowed; /* Change cursor to indicate non-interactivity */
+    opacity: 0.50; 
+    cursor: not-allowed; 
   }
   
   .page-description {

@@ -309,9 +309,15 @@ function SavedPage() {
       return;
     }
   
+    // Basic validation for imageId (should be a valid MongoDB ObjectId)
+    if (!imageId || typeof imageId !== "string" || !imageId.match(/^[0-9a-fA-F]{24}$/)) {
+      alert("Invalid image ID");
+      return;
+    }
+  
     try {
       const response = await fetch("https://bcc-gallery-back-end.onrender.com/saved/delete", {
-        method: "POST",
+        method: "DELETE", // Changed from POST to DELETE
         headers: {
           "Content-Type": "application/json",
         },
@@ -321,9 +327,18 @@ function SavedPage() {
         }),
       });
   
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text);
+        throw new Error(`Expected JSON, received: ${text.slice(0, 50)}...`);
+      }
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to delete image: ${response.status}`);
+        throw new Error(data.message || `Failed to delete image: ${response.status}`);
       }
   
       await fetchSavedImages(); // Refresh the saved images list
