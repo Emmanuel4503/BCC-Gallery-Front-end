@@ -70,6 +70,23 @@
     color: #1f2937;
     margin-bottom: 1rem;
   }
+  .image-btn.delete-btn {
+    background-color: #ff4d4f; /* Red background for delete */
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .image-btn.delete-btn:hover {
+    background-color: #d9363e; /* Darker red on hover */
+  }
+  .reaction-btn:disabled {
+    opacity: 0.5; /* Reduce opacity to indicate disabled state */
+    cursor: not-allowed; /* Change cursor to indicate non-interactivity */
+  }
   
   .page-description {
     font-size: 1.125rem;

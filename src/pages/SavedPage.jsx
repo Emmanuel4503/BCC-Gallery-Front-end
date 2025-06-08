@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Heart, Download, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Heart, Download, X, Loader2, Trash2 } from "lucide-react";
 import "../styles/SubPages.css";
+
 
 function SavedPage() {
   const [savedImages, setSavedImages] = useState([]);
@@ -17,6 +18,7 @@ function SavedPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
   const [fullscreenImage, setFullscreenImage] = useState(null);
+  
 
   // Fetch user from localStorage
   useEffect(() => {
@@ -301,6 +303,36 @@ function SavedPage() {
       setShowDownloadModal(true);
     }
   };
+  const handleDeleteSaved = async (imageId) => {
+    if (!currentUser?.id) {
+      alert("Please sign in to remove saved images");
+      return;
+    }
+  
+    try {
+      const response = await fetch("https://bcc-gallery-back-end.onrender.com/saved/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: Number(currentUser.id),
+          imageId,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to delete image: ${response.status}`);
+      }
+  
+      await fetchSavedImages(); // Refresh the saved images list
+      alert("Image removed from saved list!");
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert(`Failed to remove image: ${error.message}`);
+    }
+  };
 
   const openFullscreen = (imageSrc) => {
     setFullscreenImage(imageSrc);
@@ -409,33 +441,29 @@ function SavedPage() {
                   <div className="reaction-section">
   <button
     className={`reaction-btn ${userReactions[`${image._id}_${currentUser?.id}`] === "partyPopper" ? "reaction-active" : ""}`}
-    onClick={() => debouncedHandleReaction(image._id, "partyPopper")}
-    title="Party Popper"
-    disabled={!currentUser || disabledButtons.has(image._id) || isUserReacted(image._id)}
+    title="Reactions are view-only on this page"
+    disabled
   >
     🎉 <span className="reaction-count">{getReactionCount(image, "partyPopper")}</span>
   </button>
   <button
     className={`reaction-btn ${userReactions[`${image._id}_${currentUser?.id}`] === "thumbsUp" ? "reaction-active" : ""}`}
-    onClick={() => debouncedHandleReaction(image._id, "thumbsUp")}
-    title="Thumbs Up"
-    disabled={!currentUser || disabledButtons.has(image._id) || isUserReacted(image._id)}
+    title="Reactions are view-only on this page"
+    disabled
   >
     👍 <span className="reaction-count">{getReactionCount(image, "thumbsUp")}</span>
   </button>
   <button
     className={`reaction-btn ${userReactions[`${image._id}_${currentUser?.id}`] === "redHeart" ? "reaction-active" : ""}`}
-    onClick={() => debouncedHandleReaction(image._id, "redHeart")}
-    title="Red Heart"
-    disabled={!currentUser || disabledButtons.has(image._id) || isUserReacted(image._id)}
+    title="Reactions are view-only on this page"
+    disabled
   >
     ❤️ <span className="reaction-count">{getReactionCount(image, "redHeart")}</span>
   </button>
   <button
     className={`reaction-btn ${userReactions[`${image._id}_${currentUser?.id}`] === "fire" ? "reaction-active" : ""}`}
-    onClick={() => debouncedHandleReaction(image._id, "fire")}
-    title="Fire"
-    disabled={!currentUser || disabledButtons.has(image._id) || isUserReacted(image._id)}
+    title="Reactions are view-only on this page"
+    disabled
   >
     🔥 <span className="reaction-count">{getReactionCount(image, "fire")}</span>
   </button>
@@ -448,6 +476,13 @@ function SavedPage() {
                     >
                       <Download className="image-btn-icon" />
                     </button>
+                    <button
+    onClick={() => handleDeleteSaved(image._id)}
+    className="image-btn delete-btn"
+    title="Remove from Saved"
+  >
+    <Trash2 className="image-btn-icon" />
+  </button>
                   </div>
                 </div>
               ))}
