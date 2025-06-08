@@ -1,4 +1,11 @@
 /*  Header  */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
 .header {
     background-color: white;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -32,8 +39,8 @@
   }
   
   .logos {
-    width: 4rem; 
-    height: 4rem;
+    width: 5rem; 
+    height: 5rem;
     border-radius: 10%;
     object-fit: contain; 
     z-index: 1000;
@@ -41,7 +48,7 @@
   }
   
   .header-title {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: bold;
     color: black;
     letter-spacing: 0.025em;
@@ -90,7 +97,7 @@
   
   .sliding-menu {
     position: fixed;
-    top: 0;
+    top: 4%;
     left: 0;
     height: 100%;
     width: 16rem;
@@ -99,7 +106,7 @@
     z-index: 95;
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
-    margin-top: 1.2rem;
+    /* margin-top: 1rem; */
   }
   
   .menu-open {
@@ -183,7 +190,7 @@
   
   .menu-item-text {
     font-weight: 500;
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   
 
@@ -192,11 +199,12 @@
     padding-top: 1.5rem;
     border-top: 1px solid #e5e7eb;
     position: absolute;
-    bottom: 32px;
+    bottom: 6%;
     display: flex;
     justify-content: center;
     align-items: center; 
    width: 90%;
+ 
 }
 
 .user-name {
@@ -211,12 +219,8 @@
 }
   
   /* Hero Section*/
-  .hero-section {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 70vh; 
+  /* .hero-section {
+    height: 60vh;
     background: linear-gradient(135deg, rgba(254, 154, 101, 0.1), white, rgba(254, 154, 101, 0.05));
     display: flex;
     align-items: center;
@@ -224,7 +228,22 @@
     text-align: center;
     z-index: 1;
     overflow: hidden;
-  }
+} */
+
+.hero-section {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 75vh; 
+  background: linear-gradient(135deg, rgba(254, 154, 101, 0.1), white, rgba(254, 154, 101, 0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 1;
+  overflow: hidden;
+}
   
   .decoration-top {
     position: absolute;
@@ -247,16 +266,13 @@
     border-radius: 50%;
     transform: translate(2.5rem, 2.5rem);
   }
-  
   .hero-content {
     position: relative;
     z-index: 10;
-    padding: 1rem;
-    margin-top: 1rem; 
-  }
-  
+    padding: 0.5rem;
+}
   .welcome-title {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: bold;
     color: #1f2937;
     margin-bottom: 1rem;
@@ -310,15 +326,17 @@
     border-radius: 9999px;
   }
   
-  /* Scrollable Content */
+
   .scrollable-content {
     position: relative;
     z-index: 10;
-    margin-top: 62vh; 
+    margin-top: 70vh;
     background-color: white;
     border-radius: 1.5rem 1.5rem 0 0;
     box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
-  }
+}
+
+
  
   .carousel-container {
     position: relative;
@@ -806,46 +824,46 @@
   }
   
   
-  /* Footer */
-  .footer {
-    background-color: #1f2937;
-    color: white;
-    padding: 1.5rem 0;
-    margin-top: 2rem;
-  }
-  
-  .footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-    text-align: center;
-  }
-  
-  .footer-info {
-    margin-bottom: 1rem;
-  }
-  
-  .footer-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-  }
-  
-  .footer-subtitle {
-    color: #9ca3af;
-    font-size: 0.875rem;
-  }
-  
-  .footer-copyright {
-    border-top: 1px solid #374151;
-    padding-top: 1rem;
-  }
-  
-  .copyright-text {
-    color: #9ca3af;
-    font-size: 0.75rem;
-  }
-  
+  /* Footer styling */
+.footer {
+  background-color: #1f2937;
+  color: white;
+  padding: 1.5rem 0;
+  margin-top: auto;
+  margin-bottom: 10px; /* 10px space from bottom */
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  text-align: center;
+}
+
+.footer-info {
+  margin-bottom: 1rem;
+}
+
+.footer-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.footer-subtitle {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.footer-copyright {
+  border-top: 1px solid #374151;
+  padding-top: 1rem;
+}
+
+.copyright-text {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
   
   
    /* Extra Small devices  */
@@ -911,10 +929,10 @@
         width: 1rem;
         height: 1rem;
       }
-    .hero-section{
-        height: 85vh;
-      
-    }
+      .hero-section{
+        margin-top: 1.3rem;
+      }
+   
   }
  
 
@@ -978,28 +996,20 @@
         width: 1.125rem;
         height: 1.125rem;
       }
-    .scrollable-content{
-        margin-top: 40vh;
-      
-    }
-    .hero-section{
-        height: 55vh;
-
-        
-    }
+   
   
     .header-content {
       padding: 0.5rem;
     }
   
     .logos {
-      width: 1.75rem;
-      height: 1.75rem;
+      width: 1.85rem;
+      height: 1.85rem;
       font-size: 0.925rem;
     }
   
     .header-title {
-      font-size: 0.95rem;
+      font-size: 1.1rem;
     }
   
     .menu-icon {
@@ -1054,7 +1064,7 @@
     }
   
     .welcome-title {
-      font-size: 1.6rem;
+      font-size: 1.8rem;
       margin-bottom: 0.75rem;
     }
   
@@ -1242,17 +1252,15 @@
       
     }
   
-    .scrollable-content{
-        margin-top: 50vh;
-    }
+ 
     .logos {
-      width: 2.25rem;
-      height: 2.25rem;
+      width: 2.35rem;
+      height: 2.35rem;
       font-size: 0.875rem;
     }
   
     .header-title {
-      font-size: 1.25rem;
+      font-size: 1.4rem;
     }
   
     .sliding-menu {
@@ -1270,7 +1278,7 @@
     }
   
     .welcome-title {
-      font-size: 2rem;
+      font-size: 2.2rem;
     }
   
     .welcome-description {
@@ -1315,10 +1323,7 @@
       width: 1.75rem;
       height: 1.75rem;
     }
-    .hero-section{
-      height: 58vh;
-
-    }
+ 
   }
   
   /* Medium devices */
@@ -1387,13 +1392,13 @@
     }
   
     .logos {
-      width: 2.5rem;
-      height: 2.5rem;
+      width: 3.5rem;
+      height: 3.5rem;
       font-size: 1rem;
     }
   
     .header-title {
-      font-size: 1.35rem;
+      font-size: 1.5rem;
     }
   
     .menu-icon {
@@ -1452,7 +1457,7 @@
     }
   
     .welcome-title {
-      font-size: 2.5rem;
+      font-size: 2.6rem;
       margin-bottom: 1.5rem;
     }
   
@@ -1542,10 +1547,7 @@
     .copyright-text {
       font-size: 0.875rem;
     }
-    .hero-section{
- 
-      height: 65vh;
-    }
+   
   }
   
   /* Large devices */
@@ -1615,7 +1617,7 @@
         height: 1.5rem;
       }
     .header-title {
-      font-size: 1.65rem;
+      font-size: 1.75rem;
     }
   
     .hero-content {
@@ -1640,7 +1642,7 @@
     }
   
     .welcome-title {
-      font-size: 3rem;
+      font-size: 3.1rem;
     }
   
     .welcome-description {
@@ -1744,11 +1746,11 @@
         height: 1.625rem;
       }
     .header-title {
-      font-size: 1.85rem;
+      font-size: 1.95rem;
     }
   
     .welcome-title {
-      font-size: 3.2rem;
+      font-size: 3.3rem;
     }
   
     .welcome-description {
@@ -1769,9 +1771,7 @@
   }
 
 @media (max-width: 320px){
-.hero-section{
-margin-top: 1.2rem;
-}
+
   
     .reaction-section {
       padding: 0.25rem 0.375rem;
@@ -1812,9 +1812,7 @@ margin-top: 1.2rem;
       font-size: 0.625rem;
       min-width: 0.75rem;
     }
-    .hero-section{
-      height: 53vh;
-    }
+   
   }
   
  
@@ -1834,18 +1832,9 @@ margin-top: 1.2rem;
       font-size: 0.6875rem;
       min-width: 0.875rem;
     }
-    .hero-section{
-      height: 70vh;
-      
-    }
+   
   }
-  @media (min-width: 768px)  and (max-width: 769px) {
 
-        .hero-section{
-      height: 68vh;
-      
-    }
-  }
   
  
   @media (min-width: 770px) {
@@ -1868,23 +1857,8 @@ margin-top: 1.2rem;
 
 
   }
-  
-  @media (min-width: 771px) and  (max-width: 799px) {
-    .hero-section{
-     
-      height: 80vh;
-    }
-    
-  }
 
-  @media (min-width: 799px) and  (max-width: 992px) {
-    .hero-section{
-     
-      height: 65vh;
-    
-    }
-    
-  }
+ 
 
   
 
@@ -1934,11 +1908,7 @@ margin-top: 1.2rem;
   }
 
 
-@media (min-width: 1201px) {
- .hero-section{
-  height: 80vh;
- }
-  }
+
 
   @media (hover: none) {
     .form-submit-btn:hover:not(:disabled) {
