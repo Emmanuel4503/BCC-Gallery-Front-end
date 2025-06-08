@@ -232,6 +232,7 @@ const fetchGalleryImages = async (silent = false) => {
             return userReactions[reactionKey] === reactionType
         }
 
+        // Download functionality
         const downloadImage = async (imageUrl, filename, format) => {
             try {
               console.log('Downloading image:', { imageUrl, filename, format });
@@ -241,17 +242,15 @@ const fetchGalleryImages = async (silent = false) => {
                 throw new Error('Invalid image URL provided');
               }
           
-              // Proxy through backend to avoid CORS
+              // Use imageUrl directly if it starts with http(s), otherwise construct Cloudinary URL
               let processedUrl = imageUrl;
-              if (imageUrl.startsWith('http')) {
-                // Extract public ID from Cloudinary URL if possible
-                const publicIdMatch = imageUrl.match(/\/(?:upload\/(?:v\d+\/)?)?(.+?)(?:\.\w+)?$/);
-                processedUrl = publicIdMatch ? publicIdMatch[1] : encodeURIComponent(imageUrl);
+              if (!imageUrl.startsWith('http')) {
+                processedUrl = `https://res.cloudinary.com/dqxhczhxk/image/upload/${imageUrl}`;
               }
-              const proxyUrl = `https://bcc-gallery-back-end.onrender.com/images/proxy-image/${processedUrl}`;
-              console.log('Fetching image via proxy:', proxyUrl);
           
-              const response = await fetch(proxyUrl, {
+              console.log('Fetching image from:', processedUrl);
+          
+              const response = await fetch(processedUrl, {
                 mode: 'cors',
                 credentials: 'same-origin',
               });
@@ -316,8 +315,7 @@ const fetchGalleryImages = async (silent = false) => {
                 stack: error.stack,
                 imageUrl,
                 filename,
-                format,
-                proxyUrl: `https://bcc-gallery-back-end.onrender.com/images/proxy-image/${processedUrl}`
+                format
               });
               throw error;
             }
@@ -333,10 +331,7 @@ const fetchGalleryImages = async (silent = false) => {
             setDownloadProgress(0);
           
             try {
-              console.log('Starting single download:', {
-                imageUrl: currentDownloadImage.imageUrl,
-                format: selectedFormat
-              });
+              console.log('Starting single download:', currentDownloadImage);
               const progressInterval = setInterval(() => {
                 setDownloadProgress((prev) => {
                   if (prev >= 90) {
@@ -366,25 +361,21 @@ const fetchGalleryImages = async (silent = false) => {
             } catch (error) {
               console.error('Single download failed:', {
                 message: error.message,
-                stack: error.stack,
-                image: currentDownloadImage
+                image: currentDownloadImage,
               });
               alert(`Failed to download image: ${error.message}`);
               setIsDownloading(false);
               setDownloadProgress(0);
             }
           };
-          
+
           const handleMultipleDownload = async () => {
             if (selectedImages.length === 0) {
               alert('Please select at least one image to download');
               return;
             }
           
-            console.log('Starting multiple download:', {
-              selectedImages,
-              totalImages: galleryImages.length
-            });
+            console.log('Starting multiple download:', { selectedImages, galleryImages });
           
             setIsDownloading(true);
             setDownloadProgress(0);
@@ -398,10 +389,7 @@ const fetchGalleryImages = async (silent = false) => {
                 const imageIndex = selectedImages[i];
                 const image = galleryImages[imageIndex];
           
-                console.log(`Processing image at index ${imageIndex}:`, {
-                  imageUrl: image?.imageUrl,
-                  format: selectedFormat
-                });
+                console.log(`Processing image at index ${imageIndex}:`, image);
           
                 if (image && image.imageUrl) {
                   try {
@@ -414,10 +402,7 @@ const fetchGalleryImages = async (silent = false) => {
                     successCount++;
                     console.log(`Successfully downloaded image at index ${imageIndex}`);
                   } catch (error) {
-                    console.error(`Failed to download image at index ${imageIndex}:`, {
-                      message: error.message,
-                      stack: error.stack
-                    });
+                    console.error(`Failed to download image at index ${imageIndex}:`, error);
                     failCount++;
                   }
                 } else {
@@ -426,6 +411,7 @@ const fetchGalleryImages = async (silent = false) => {
                 }
           
                 setDownloadProgress(((i + 1) / totalImages) * 100);
+          
                 await new Promise((resolve) => setTimeout(resolve, 1000));
               }
           
@@ -444,10 +430,7 @@ const fetchGalleryImages = async (silent = false) => {
                 }
               }, 1000);
             } catch (error) {
-              console.error('Bulk download failed:', {
-                message: error.message,
-                stack: error.stack
-              });
+              console.error('Bulk download failed:', error);
               alert(`Failed to download images: ${error.message}`);
               setIsDownloading(false);
               setDownloadProgress(0);
@@ -1179,5 +1162,4 @@ const fetchGalleryImages = async (silent = false) => {
 
      
         // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-        // fgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggfffffff
-        // fhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+        
