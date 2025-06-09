@@ -39,13 +39,12 @@ function AlbumsPage() {
   // Fetch all albums
   const fetchAlbums = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
+    setAlbumImages({}); // Reset album images to ensure fresh data
     try {
       const response = await fetch("https://bcc-gallery-back-end.onrender.com/album/get", {
         mode: 'cors',
         credentials: 'omit',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
       });
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -91,9 +90,6 @@ function AlbumsPage() {
         method: 'HEAD', 
         mode: 'cors', 
         credentials: 'omit',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
       });
       return response.ok && response.headers.get('content-type')?.startsWith('image/');
     } catch {
@@ -116,9 +112,6 @@ function AlbumsPage() {
         const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
           mode: 'cors',
           credentials: 'omit',
-          headers: {
-            'Cache-Control': 'no-cache',
-          },
         });
 
         if (!response.ok) {
@@ -232,9 +225,6 @@ function AlbumsPage() {
       const response = await fetch(processedUrl, { 
         mode: 'cors', 
         credentials: 'omit',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
       });
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.status}`);
@@ -368,6 +358,18 @@ function AlbumsPage() {
     };
   }, [fullscreenImage, showDownloadModal, closeFullscreen, closeDownloadModal]);
 
+  // Retry album fetch
+  const retryFetchAlbums = useCallback(() => {
+    fetchAlbums();
+  }, [fetchAlbums]);
+
+  // Retry image fetch for a specific album
+  const retryFetchImages = useCallback((albumTitle) => {
+    setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
+    setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: true }));
+    fetchAlbumImages(albumTitle);
+  }, [fetchAlbumImages]);
+
   // ImageThumbnail component
   const ImageThumbnail = memo(({ image, index, albumTitle, onFullscreen, onDownload }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
@@ -422,6 +424,7 @@ function AlbumsPage() {
             width: "100%",
             height: "150px",
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "#f0f0f0",
@@ -430,6 +433,23 @@ function AlbumsPage() {
             textAlign: "center"
           }}>
             Failed to load image
+            <button
+              onClick={() => {
+                setImageError(false);
+                setImageLoaded(false);
+              }}
+              style={{
+                marginTop: "0.5rem",
+                padding: "0.5rem 1rem",
+                backgroundColor: "#fe9a65",
+                color: "white",
+                border: "none",
+                borderRadius: "0.25rem",
+                cursor: "pointer"
+              }}
+            >
+              Retry
+            </button>
           </div>
         )}
         <img
@@ -512,6 +532,20 @@ function AlbumsPage() {
             ) : error ? (
               <div className="page-placeholder">
                 <p className="page-text" style={{ color: "#b91c1c" }}>{error}</p>
+                <button
+                  onClick={retryFetchAlbums}
+                  style={{
+                    marginTop: "1rem",
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#fe9a65",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "0.25rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  Retry
+                </button>
               </div>
             ) : albums.length > 0 ? (
               <>
@@ -567,9 +601,30 @@ function AlbumsPage() {
                           }}
                         >
                           {imageErrors[album.displayName] ? (
-                            <p style={{ color: "red", fontStyle: "italic" }}>
-                              {imageErrors[album.displayName]}
-                            </p>
+                            <div style={{ 
+                              display: "flex", 
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "2rem",
+                              color: "#b91c1c" 
+                            }}>
+                              <p>{imageErrors[album.displayName]}</p>
+                              <button
+                                onClick={() => retryFetchImages(album.displayName)}
+                                style={{
+                                  marginTop: "1rem",
+                                  padding: "0.5rem 1rem",
+                                  backgroundColor: "#fe9a65",
+                                  color: "white",
+                                  border: "none",
+                                  borderRadius: "0.25rem",
+                                  cursor: "pointer"
+                                }}
+                              >
+                                Retry
+                              </button>
+                            </div>
                           ) : imageLoadingStates[album.displayName] ? (
                             <div style={{ 
                               display: "flex", 
