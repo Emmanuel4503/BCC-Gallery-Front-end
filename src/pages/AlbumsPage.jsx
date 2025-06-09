@@ -16,8 +16,6 @@ function AlbumsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
-  
-  // NEW: Add loading states for individual images
   const [imageLoadingStates, setImageLoadingStates] = useState({});
   const [fullscreenImageLoaded, setFullscreenImageLoaded] = useState(false);
 
@@ -30,7 +28,7 @@ function AlbumsPage() {
     return [title, ""];
   };
 
-  // NEW: Memoize processed albums to prevent unnecessary re-renders
+  // Memoize processed albums to prevent unnecessary re-renders
   const processedAlbums = useMemo(() => {
     return albums
       .filter((album) => album && (album.title || album._id))
@@ -51,6 +49,7 @@ function AlbumsPage() {
         return response.json();
       })
       .then((data) => {
+        console.log('Fetched albums:', data);
         setAlbums(data);
         setIsLoading(false);
       })
@@ -61,45 +60,52 @@ function AlbumsPage() {
       });
   }, []);
 
-  // NEW: Optimized image URL processing with thumbnail support
+  // Optimized image URL processing with thumbnail support and validation
   const processImageUrl = useCallback((image, useThumbnail = true) => {
-    // Use thumbnail for grid view, full image for fullscreen
     let imageUrl = useThumbnail && image.thumbnailUrl ? image.thumbnailUrl : image.imageUrl;
     
-    if (imageUrl && !imageUrl.startsWith('http')) {
+    if (!imageUrl) {
+      console.warn(`No valid URL for image: ${JSON.stringify(image)}`);
+      return 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
+    }
+    
+    if (!imageUrl.startsWith('http')) {
       imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
     }
     return imageUrl;
   }, []);
 
-  // NEW: Optimized fetchAlbumImages with better error handling and thumbnail support
+  // Optimized fetchAlbumImages with better error handling and logging
   const fetchAlbumImages = useCallback(async (albumTitle, retries = 3) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
+      console.error(`Invalid album title: ${albumTitle}`);
       setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }));
+      setImageLoadingStates(prev => ({ ...prev, [albumTitle]: false }));
       return;
     }
     
-    // Set loading state for this album
     setImageLoadingStates(prev => ({ ...prev, [albumTitle]: true }));
     
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
+        console.log(`Fetching images for album: ${albumTitle}, attempt ${attempt}`);
         const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
           mode: 'cors',
-          credentials: 'same-origin',
+          credentials: 'omit',
         });
         
+        console.log(`Response status for ${albumTitle}: ${response.status}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
+        console.log(`Received ${data.length} images for album: ${albumTitle}`);
         
         if (!Array.isArray(data)) {
           throw new Error('Invalid response: Expected an array of images');
         }
         
-        // Process only first 20 images for performance
         const processedData = data.slice(0, 20).map((image) => ({
           ...image,
           thumbnailUrl: processImageUrl(image, true),
@@ -114,10 +120,9 @@ function AlbumsPage() {
       } catch (error) {
         console.error(`Attempt ${attempt} failed for album ${albumTitle}:`, error.message);
         if (attempt === retries) {
-          setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images after ${retries} attempts: ${error.message}` }));
+          setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
           setImageLoadingStates(prev => ({ ...prev, [albumTitle]: false }));
         }
-        // Exponential backoff for retries
         await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 500));
       }
     }
@@ -135,7 +140,7 @@ function AlbumsPage() {
     }
   }, [openAlbum, albumImages, imageErrors, imageLoadingStates, fetchAlbumImages]);
 
-  // NEW: Preload fullscreen image for better performance
+  // Preload fullscreen image for better performance
   const preloadImage = useCallback((imageUrl) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -145,19 +150,18 @@ function AlbumsPage() {
     });
   }, []);
 
-  // NEW: Optimized fullscreen image opening with preloading
+  // Optimized fullscreen image opening with preloading
   const openFullscreen = useCallback(async (imageUrl, fullImageUrl) => {
-    setFullscreenImage(imageUrl); // Show thumbnail first
+    setFullscreenImage(imageUrl);
     setFullscreenImageLoaded(false);
     
     try {
-      // Preload the full resolution image
       await preloadImage(fullImageUrl || imageUrl);
       setFullscreenImage(fullImageUrl || imageUrl);
       setFullscreenImageLoaded(true);
     } catch (error) {
       console.error('Failed to preload fullscreen image:', error);
-      setFullscreenImageLoaded(true); // Show whatever we have
+      setFullscreenImageLoaded(true);
     }
   }, [preloadImage]);
 
@@ -166,19 +170,17 @@ function AlbumsPage() {
     setFullscreenImageLoaded(false);
   }, []);
 
-  // Download image function (keeping original logic)
+  // Download image function
   const downloadImage = async (imageUrl, filename, format) => {
     try {
       let processedUrl = imageUrl;
-      if (imageUrl.startsWith('/')) {
-        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
-      } else if (!imageUrl.startsWith('http')) {
-        processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
+      if (!imageUrl.startsWith('http')) {
+        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
       }
 
       const response = await fetch(processedUrl, {
         mode: 'cors',
-        credentials: 'same-origin',
+        credentials: 'omit',
       });
 
       if (!response.ok) {
@@ -321,7 +323,7 @@ function AlbumsPage() {
     };
   }, [fullscreenImage, showDownloadModal, closeFullscreen, closeDownloadModal]);
 
-  // NEW: Individual image component for better performance
+  // Individual image component
   const ImageThumbnail = ({ image, index, albumTitle, onFullscreen, onDownload }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
@@ -336,7 +338,7 @@ function AlbumsPage() {
           backgroundColor: "#f0f0f0",
         }}
       >
-        {!imageLoaded && !imageError && (
+        {!imageLoaded && (
           <div style={{
             width: "100%",
             height: "150px",
@@ -356,12 +358,15 @@ function AlbumsPage() {
             width: "100%",
             height: "150px",
             objectFit: "cover",
-            display: imageLoaded || imageError ? "block" : "none",
+            display: imageLoaded ? "block" : "none",
             cursor: "pointer",
             backgroundColor: "#f0f0f0",
           }}
           onClick={() => !imageError && onFullscreen(image.thumbnailUrl || image.imageUrl, image.fullImageUrl || image.imageUrl)}
-          onLoad={() => setImageLoaded(true)}
+          onLoad={() => {
+            setImageLoaded(true);
+            setImageError(false);
+          }}
           onError={(e) => {
             console.error(`Failed to load image: ${image.thumbnailUrl || image.imageUrl || 'No URL provided'}`);
             setImageError(true);
@@ -407,7 +412,6 @@ function AlbumsPage() {
 
   return (
     <div className="page-container">
-      {/* Header */}
       <header className="page-header">
         <div className="page-header-content">
           <Link to="/" className="back-button">
@@ -417,7 +421,6 @@ function AlbumsPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="page-main">
         <div className="page-center">
           <div className="page-icon-container">
@@ -550,7 +553,6 @@ function AlbumsPage() {
         </div>
       </main>
 
-      {/* Download Modal - keeping original */}
       {showDownloadModal && (
         <div className="download-modal-overlay">
           <div className="download-modal">
@@ -635,12 +637,11 @@ function AlbumsPage() {
         </div>
       )}
 
-      {/* Footer */}
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-info">
             <h3 className="footer-title">Believers Community Church</h3>
-            <p className="footer-subtitle">God's platfrom for building men</p>
+            <p className="footer-subtitle">God's platform for building men</p>
           </div>
           <div className="footer-copyright">
             <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
@@ -648,7 +649,6 @@ function AlbumsPage() {
         </div>
       </footer>
 
-      {/* NEW: Optimized Fullscreen Image Modal */}
       {fullscreenImage && (
         <div className="fullscreen-modal" onClick={closeFullscreen}>
           <button className="fullscreen-close" onClick={closeFullscreen}>
