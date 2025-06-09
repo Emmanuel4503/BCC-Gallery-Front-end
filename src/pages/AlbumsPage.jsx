@@ -1,408 +1,387 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft, ImageIcon, ChevronDown, Download, X, Loader2 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
-import "../styles/SubPages.css";
+"use client"
+
+import { Link } from "react-router-dom"
+import { ArrowLeft, ImageIcon, ChevronDown, Download, X, Loader2 } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import "../styles/SubPages.css"
 
 function AlbumsPage() {
-  const [albums, setAlbums] = useState([]);
-  const [albumImages, setAlbumImages] = useState({});
-  const [openAlbum, setOpenAlbum] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [imageErrors, setImageErrors] = useState({});
-  const [fullscreenImage, setFullscreenImage] = useState(null);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState('png');
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
-  const [imageLoadingStates, setImageLoadingStates] = useState({});
+  const [albums, setAlbums] = useState([])
+  const [albumImages, setAlbumImages] = useState({})
+  const [openAlbum, setOpenAlbum] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [imageErrors, setImageErrors] = useState({})
+  const [fullscreenImage, setFullscreenImage] = useState(null)
+  const [showDownloadModal, setShowDownloadModal] = useState(false)
+  const [selectedFormat, setSelectedFormat] = useState("png")
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState(0)
+  const [currentDownloadImage, setCurrentDownloadImage] = useState(null)
+  const [imageLoadingStates, setImageLoadingStates] = useState({})
 
-  // Debug albumImages state changes
-  useEffect(() => {
-    console.log('albumImages state updated:', albumImages);
-  }, [albumImages]);
-
-  // Split title into event name and date
+  // Split title into event name and date - FIXED REGEX
   const splitTitle = (title) => {
-    const match = title.match(/^(.*?)\s*(\(.*\))$/);
+    const match = title.match(/^(.*?)\s*($$.*$$)$/)
     if (match) {
-      return [match[1].trim(), match[2]];
+      return [match[1].trim(), match[2]]
     }
-    return [title, ""];
-  };
+    return [title, ""]
+  }
 
   // Fetch all albums
   const fetchAlbums = useCallback(async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const response = await fetch("https://bcc-gallery-back-end.onrender.com/album/get", {
-        mode: 'cors',
-        credentials: 'omit',
-      });
+        mode: "cors",
+        credentials: "omit",
+      })
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(`HTTP error! Status: ${response.status}`)
       }
-      const data = await response.json();
-      console.log('Fetched albums:', data);
+      const data = await response.json()
+      console.log("Fetched albums:", data)
       const validAlbums = data
         .filter((album) => album && (album.title || album._id))
         .map((album, index) => ({
           ...album,
           displayName: album.title || album._id || `Album ${index + 1}`,
-        }));
-      setAlbums(validAlbums);
-      setIsLoading(false);
+        }))
+      setAlbums(validAlbums)
+      setIsLoading(false)
     } catch (error) {
-      console.error("Error fetching albums:", error);
-      setError("Failed to load albums. Please try again later.");
-      setIsLoading(false);
+      console.error("Error fetching albums:", error)
+      setError("Failed to load albums. Please try again later.")
+      setIsLoading(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    fetchAlbums();
-  }, [fetchAlbums]);
+    fetchAlbums()
+  }, [fetchAlbums])
 
   // Fetch album images
   const fetchAlbumImages = useCallback(async (albumTitle, retries = 3) => {
-    if (!albumTitle || typeof albumTitle !== 'string') {
-      console.error(`Invalid album title: ${albumTitle}`);
-      setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }));
-      setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }));
-      return;
+    if (!albumTitle || typeof albumTitle !== "string") {
+      console.error(`Invalid album title: ${albumTitle}`)
+      setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }))
+      setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }))
+      return
     }
 
-    console.log(`Starting image fetch for album: ${albumTitle}`);
-    setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: true }));
+    setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: true }))
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        console.log(`Fetching images for album: ${albumTitle}, attempt ${attempt}`);
-        const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
-          mode: 'cors',
-          credentials: 'omit',
-        });
+        console.log(`Fetching images for album: ${albumTitle}, attempt ${attempt}`)
+        const response = await fetch(
+          `https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`,
+          {
+            mode: "cors",
+            credentials: "omit",
+          },
+        )
 
         if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
+          throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`)
         }
 
-        const data = await response.json();
-        console.log(`Received ${data.length} images for album: ${albumTitle}`, data);
+        const data = await response.json()
+        console.log(`Received ${data.length} images for album: ${albumTitle}`)
 
         if (!Array.isArray(data)) {
-          throw new Error('Invalid response: Expected an array of images');
+          throw new Error("Invalid response: Expected an array of images")
         }
 
-        const processedData = data.slice(0, 20).map((image, index) => {
-          let imageUrl = image.imageUrl || image.thumbnailUrl;
-          if (imageUrl && !imageUrl.startsWith('http')) {
-            imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+        const processedData = data.slice(0, 20).map((image) => {
+          let imageUrl = image.imageUrl || image.thumbnailUrl
+          if (imageUrl && !imageUrl.startsWith("http")) {
+            imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`}`
           }
-          console.log(`Processed image ${index + 1} URL: ${imageUrl}`);
           return {
             ...image,
-            imageUrl: imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
-            _id: image._id || `image-${index}`,
-          };
-        });
+            imageUrl: imageUrl || "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==",
+          }
+        })
 
-        setAlbumImages((prev) => {
-          console.log(`Updating albumImages for ${albumTitle} with ${processedData.length} images`);
-          return { ...prev, [albumTitle]: processedData };
-        });
-        setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
-        setImageLoadingStates((prev) => {
-          console.log(`Setting loading state to false for ${albumTitle}`);
-          return { ...prev, [albumTitle]: false };
-        });
-        return;
+        setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }))
+        setImageErrors((prev) => ({ ...prev, [albumTitle]: null }))
+        setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }))
+        return
       } catch (error) {
-        console.error(`Attempt ${attempt} failed for album ${albumTitle}:`, error.message);
+        console.error(`Attempt ${attempt} failed for album ${albumTitle}:`, error.message)
         if (attempt === retries) {
-          setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images after ${retries} attempts: ${error.message}` }));
-          setImageLoadingStates((prev) => {
-            console.log(`Setting loading state to false for ${albumTitle} on error`);
-            return { ...prev, [albumTitle]: false };
-          });
+          setImageErrors((prev) => ({
+            ...prev,
+            [albumTitle]: `Failed to load images after ${retries} attempts: ${error.message}`,
+          }))
+          setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }))
         }
-        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000))
       }
     }
-  }, []);
+  }, [])
 
   // Toggle album dropdown
-  const toggleAlbum = useCallback((albumTitle) => {
-    console.log(`Toggling album: ${albumTitle}, current openAlbum: ${openAlbum}`);
-    if (openAlbum === albumTitle) {
-      setOpenAlbum(null);
-    } else {
-      setOpenAlbum(albumTitle);
-      if (!albumImages[albumTitle] && !imageErrors[albumTitle] && !imageLoadingStates[albumTitle]) {
-        console.log(`Triggering fetch for album: ${albumTitle}`);
-        fetchAlbumImages(albumTitle);
+  const toggleAlbum = useCallback(
+    (albumTitle) => {
+      if (openAlbum === albumTitle) {
+        setOpenAlbum(null)
       } else {
-        console.log(`No fetch needed for ${albumTitle}: images=${!!albumImages[albumTitle]}, error=${!!imageErrors[albumTitle]}, loading=${!!imageLoadingStates[albumTitle]}`);
+        setOpenAlbum(albumTitle)
+        if (!albumImages[albumTitle] && !imageErrors[albumTitle] && !imageLoadingStates[albumTitle]) {
+          fetchAlbumImages(albumTitle)
+        }
       }
-    }
-  }, [openAlbum, albumImages, imageErrors, imageLoadingStates, fetchAlbumImages]);
+    },
+    [openAlbum, albumImages, imageErrors, imageLoadingStates, fetchAlbumImages],
+  )
 
   // Preload image for better performance
   const preloadImage = useCallback((imageUrl) => {
     return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = imageUrl;
-    });
-  }, []);
+      const img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = reject
+      img.src = imageUrl
+    })
+  }, [])
 
   // Optimized fullscreen image opening with preloading
-  const openFullscreen = useCallback(async (imageUrl) => {
-    try {
-      await preloadImage(imageUrl);
-      setFullscreenImage(imageUrl);
-    } catch (error) {
-      console.error(`Failed to preload image: ${imageUrl}`, error);
-      setFullscreenImage(imageUrl);
-    }
-  }, [preloadImage]);
+  const openFullscreen = useCallback(
+    async (imageUrl) => {
+      try {
+        await preloadImage(imageUrl)
+        setFullscreenImage(imageUrl)
+      } catch (error) {
+        console.error(`Failed to preload image: ${imageUrl}`, error)
+        setFullscreenImage(imageUrl)
+      }
+    },
+    [preloadImage],
+  )
 
   const closeFullscreen = useCallback(() => {
-    setFullscreenImage(null);
-  }, []);
+    setFullscreenImage(null)
+  }, [])
 
   // Download image function
   const downloadImage = useCallback(async (imageUrl, filename, format) => {
     try {
-      let processedUrl = imageUrl;
-      if (!imageUrl.startsWith('http')) {
-        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+      let processedUrl = imageUrl
+      if (!imageUrl.startsWith("http")) {
+        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`}`
       }
 
       const response = await fetch(processedUrl, {
-        mode: 'cors',
-        credentials: 'omit',
-      });
+        mode: "cors",
+        credentials: "omit",
+      })
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`)
       }
 
-      const blob = await response.blob();
-      if (!blob.type.startsWith('image/')) {
-        throw new Error('Downloaded content is not an image');
+      const blob = await response.blob()
+      if (!blob.type.startsWith("image/")) {
+        throw new Error("Downloaded content is not an image")
       }
 
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = document.createElement('img');
+      const canvas = document.createElement("canvas")
+      const ctx = canvas.getContext("2d")
+      const img = document.createElement("img")
 
       return new Promise((resolve, reject) => {
         img.onload = () => {
           try {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
+            canvas.width = img.width
+            canvas.height = img.height
+            ctx.drawImage(img, 0, 0)
 
-            const mimeType =
-              format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
-            const quality = format === 'jpeg' ? 0.95 : undefined;
+            const mimeType = format === "png" ? "image/png" : format === "webp" ? "image/webp" : "image/jpeg"
+            const quality = format === "jpeg" ? 0.95 : undefined
 
             canvas.toBlob(
               (convertedBlob) => {
                 if (convertedBlob) {
-                  const url = URL.createObjectURL(convertedBlob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `${filename}.${format}`;
-                  a.style.display = 'none';
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                  resolve();
+                  const url = URL.createObjectURL(convertedBlob)
+                  const a = document.createElement("a")
+                  a.href = url
+                  a.download = `${filename}.${format}`
+                  a.style.display = "none"
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  URL.revokeObjectURL(url)
+                  resolve()
                 } else {
-                  reject(new Error('Failed to convert image to selected format'));
+                  reject(new Error("Failed to convert image to selected format"))
                 }
               },
               mimeType,
-              quality
-            );
+              quality,
+            )
           } catch (error) {
-            reject(new Error(`Canvas processing failed: ${error.message}`));
+            reject(new Error(`Canvas processing failed: ${error.message}`))
           }
-        };
+        }
 
-        img.onerror = () => reject(new Error('Failed to load image for processing'));
-        img.crossOrigin = 'anonymous';
-        img.src = URL.createObjectURL(blob);
-      });
+        img.onerror = () => reject(new Error("Failed to load image for processing"))
+        img.crossOrigin = "anonymous"
+        img.src = URL.createObjectURL(blob)
+      })
     } catch (error) {
-      console.error('Download error:', error);
-      throw error;
+      console.error("Download error:", error)
+      throw error
     }
-  }, []);
+  }, [])
 
   // Handle image download
   const handleDownload = useCallback((imageUrl) => {
-    setCurrentDownloadImage(imageUrl);
-    setShowDownloadModal(true);
-  }, []);
+    setCurrentDownloadImage(imageUrl)
+    setShowDownloadModal(true)
+  }, [])
 
   const handleSingleDownload = useCallback(async () => {
     if (!currentDownloadImage) {
-      alert('No image selected for download');
-      return;
+      alert("No image selected for download")
+      return
     }
 
-    setIsDownloading(true);
-    setDownloadProgress(0);
+    setIsDownloading(true)
+    setDownloadProgress(0)
 
     try {
       const progressInterval = setInterval(() => {
         setDownloadProgress((prev) => {
           if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
+            clearInterval(progressInterval)
+            return 90
           }
-          return prev + 15;
-        });
-      }, 200);
+          return prev + 15
+        })
+      }, 200)
 
-      await downloadImage(
-        currentDownloadImage,
-        `BCC Picture-${Date.now()}`,
-        selectedFormat
-      );
+      await downloadImage(currentDownloadImage, `BCC Picture-${Date.now()}`, selectedFormat)
 
-      clearInterval(progressInterval);
-      setDownloadProgress(100);
+      clearInterval(progressInterval)
+      setDownloadProgress(100)
 
       setTimeout(() => {
-        setShowDownloadModal(false);
-        setIsDownloading(false);
-        setDownloadProgress(0);
-        setCurrentDownloadImage(null);
-        alert('Image downloaded successfully!');
-      }, 1000);
+        setShowDownloadModal(false)
+        setIsDownloading(false)
+        setDownloadProgress(0)
+        setCurrentDownloadImage(null)
+        alert("Image downloaded successfully!")
+      }, 1000)
     } catch (error) {
-      console.error('Download failed:', error);
-      alert(`Failed to download image: ${error.message}`);
-      setIsDownloading(false);
-      setDownloadProgress(0);
+      console.error("Download failed:", error)
+      alert(`Failed to download image: ${error.message}`)
+      setIsDownloading(false)
+      setDownloadProgress(0)
     }
-  }, [currentDownloadImage, selectedFormat, downloadImage]);
+  }, [currentDownloadImage, selectedFormat, downloadImage])
 
   const closeDownloadModal = useCallback(() => {
     if (!isDownloading) {
-      setShowDownloadModal(false);
-      setCurrentDownloadImage(null);
-      setDownloadProgress(0);
-      setSelectedFormat('png');
+      setShowDownloadModal(false)
+      setCurrentDownloadImage(null)
+      setDownloadProgress(0)
+      setSelectedFormat("png")
     }
-  }, [isDownloading]);
+  }, [isDownloading])
 
   // Handle Escape key for fullscreen and download modal
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === "Escape") {
-        closeFullscreen();
-        closeDownloadModal();
+        closeFullscreen()
+        closeDownloadModal()
       }
-    };
+    }
 
     if (fullscreenImage || showDownloadModal) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", handleEscape)
+      document.body.style.overflow = "hidden"
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = "unset"
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "unset";
-    };
-  }, [fullscreenImage, showDownloadModal, closeFullscreen, closeDownloadModal]);
+      document.removeEventListener("keydown", handleEscape)
+      document.body.style.overflow = "unset"
+    }
+  }, [fullscreenImage, showDownloadModal, closeFullscreen, closeDownloadModal])
 
-  // ImageThumbnail component
+  // ImageThumbnail component - FIXED VERSION
   const ImageThumbnail = ({ image, index, albumTitle, onFullscreen, onDownload }) => {
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [imageError, setImageError] = useState(false);
-
-    useEffect(() => {
-      console.log(`ImageThumbnail for ${albumTitle} index ${index}: imageUrl=${image.imageUrl}, loaded=${imageLoaded}, error=${imageError}`);
-      
-      const timeoutId = setTimeout(() => {
-        if (!imageLoaded && !imageError) {
-          console.error(`Image load timeout for ${albumTitle} index ${index}: ${image.imageUrl}`);
-          setImageError(true);
-          setImageLoaded(true);
-        }
-      }, 10000);
-
-      return () => clearTimeout(timeoutId);
-    }, [imageLoaded, imageError, image.imageUrl, albumTitle, index]);
+    const [imageLoaded, setImageLoaded] = useState(false)
+    const [imageError, setImageError] = useState(false)
 
     return (
-      <div>
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "0.5rem", backgroundColor: "#f0f0f0" }}>
         {!imageLoaded && !imageError && (
-          <div style={{
-            width: "100%",
-            height: "150px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#f3f4f6"
-          }}>
+          <div
+            style={{
+              width: "100%",
+              height: "150px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#f3f4f6",
+            }}
+          >
             <Loader2 style={{ width: "2rem", height: "2rem", color: "#9ca3af" }} className="animate-spin" />
           </div>
         )}
-        {imageError && (
-          <div style={{
-            width: "100%",
-            height: "150px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#f0f0f0",
-            color: "#b91c1c",
-            fontSize: "0.9rem",
-            textAlign: "center",
-            padding: "0.5rem"
-          }}>
-            Failed to load image
-          </div>
-        )}
+
         <img
-          src={image.imageUrl}
+          src={image.imageUrl || "/placeholder.svg"}
           alt={`Image ${index + 1}`}
+          loading="lazy"
           style={{
             width: "100%",
             height: "150px",
             objectFit: "cover",
-            display: imageLoaded && !imageError ? "block" : "none",
+            display: imageLoaded ? "block" : "none",
             cursor: "pointer",
-            backgroundColor: "#f0f0f0",
           }}
           onClick={() => !imageError && onFullscreen(image.imageUrl)}
           onLoad={() => {
-            console.log(`Image loaded successfully: ${image.imageUrl}`);
-            setImageLoaded(true);
-            setImageError(false);
+            console.log(`Image loaded: ${image.imageUrl}`)
+            setImageLoaded(true)
+            setImageError(false)
           }}
-          onError={() => {
-            console.error(`Failed to load image: ${image.imageUrl}`);
-            setImageError(true);
-            setImageLoaded(true);
+          onError={(e) => {
+            console.error(`Failed to load image: ${image.imageUrl}`)
+            setImageError(true)
+            setImageLoaded(true)
+            // Set fallback image
+            e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
           }}
         />
+
+        {imageError && (
+          <div
+            style={{
+              width: "100%",
+              height: "150px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#f3f4f6",
+            }}
+          >
+            <ImageIcon style={{ width: "2rem", height: "2rem", color: "#9ca3af" }} />
+          </div>
+        )}
+
         {imageLoaded && !imageError && (
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              onDownload(image.imageUrl);
+              e.stopPropagation()
+              onDownload(image.imageUrl)
             }}
             style={{
               position: "absolute",
@@ -431,8 +410,8 @@ function AlbumsPage() {
           </button>
         )}
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="page-container">
@@ -452,7 +431,8 @@ function AlbumsPage() {
           </div>
           <h2 className="page-heading">Albums</h2>
           <p className="page-description">
-            Welcome to the Albums section! Here you'll find all the pictures from the church events and services, categorized.
+            Welcome to the Albums section! Here you'll find all the pictures from the church events and services,
+            categorized.
           </p>
           <br />
 
@@ -474,7 +454,7 @@ function AlbumsPage() {
                   Found {albums.length} album{albums.length !== 1 ? "s" : ""}
                 </p>
                 {albums.map((album, index) => {
-                  const [eventName, date] = splitTitle(album.displayName);
+                  const [eventName, date] = splitTitle(album.displayName)
                   return (
                     <div key={`album-${album.displayName}-${index}`} style={{ marginBottom: "1rem" }}>
                       <div
@@ -495,9 +475,7 @@ function AlbumsPage() {
                         <span className="service-title">
                           {eventName}
                           {date && (
-                            <span style={{ display: "block", fontSize: "1rem", fontWeight: "normal" }}>
-                              {date}
-                            </span>
+                            <span style={{ display: "block", fontSize: "1rem", fontWeight: "normal" }}>{date}</span>
                           )}
                           <b className="welcome-underline"></b>
                         </span>
@@ -522,24 +500,24 @@ function AlbumsPage() {
                           }}
                         >
                           {imageErrors[album.displayName] ? (
-                            <p style={{ color: "#b91c1c", fontStyle: "italic" }}>
-                              {imageErrors[album.displayName]}
-                            </p>
+                            <p style={{ color: "#b91c1c", fontStyle: "italic" }}>{imageErrors[album.displayName]}</p>
                           ) : imageLoadingStates[album.displayName] ? (
-                            <div style={{ 
-                              display: "flex", 
-                              alignItems: "center", 
-                              justifyContent: "center", 
-                              padding: "2rem",
-                              color: "#6b7280" 
-                            }}>
-                              <Loader2 
-                                style={{ width: "2rem", height: "2rem", marginRight: "0.5rem" }} 
-                                className="animate-spin" 
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "2rem",
+                                color: "#6b7280",
+                              }}
+                            >
+                              <Loader2
+                                style={{ width: "2rem", height: "2rem", marginRight: "0.5rem" }}
+                                className="animate-spin"
                               />
                               Loading images...
                             </div>
-                          ) : albumImages[album.displayName] && albumImages[album.displayName].length > 0 ? (
+                          ) : albumImages[album.displayName]?.length > 0 ? (
                             <div
                               style={{
                                 display: "grid",
@@ -547,45 +525,29 @@ function AlbumsPage() {
                                 gap: "1rem",
                               }}
                             >
-                              {albumImages[album.displayName].slice(0, 20).map((image, index) => {
-                                console.log(`Rendering image ${index + 1} for ${album.displayName}: ${image.imageUrl}`);
-                                return (
-                                  <div
-                                    key={`image-${album.displayName}-${image._id}`}
-                                    style={{
-                                      position: "relative",
-                                      overflow: "hidden",
-                                      borderRadius: "0.5rem",
-                                      backgroundColor: "#f0f0f0",
-                                    }}
-                                  >
-                                    <ImageThumbnail
-                                      image={image}
-                                      index={index}
-                                      albumTitle={album.displayName}
-                                      onFullscreen={openFullscreen}
-                                      onDownload={handleDownload}
-                                    />
-                                  </div>
-                                );
-                              })}
+                              {albumImages[album.displayName].slice(0, 20).map((image, imageIndex) => (
+                                <ImageThumbnail
+                                  key={`image-${album.displayName}-${image._id || imageIndex}`}
+                                  image={image}
+                                  index={imageIndex}
+                                  albumTitle={album.displayName}
+                                  onFullscreen={openFullscreen}
+                                  onDownload={handleDownload}
+                                />
+                              ))}
                             </div>
                           ) : (
-                            <p style={{ color: "#6b7280", fontStyle: "italic" }}>
-                              No images found for this album.
-                            </p>
+                            <p style={{ color: "#6b7280", fontStyle: "italic" }}>No images found for this album.</p>
                           )}
                         </div>
                       )}
                     </div>
-                  );
+                  )
                 })}
               </>
             ) : (
               <div className="page-placeholder">
-                <p className="placeholder-text">
-                  Photo albums will be displayed here.
-                </p>
+                <p className="placeholder-text">Photo albums will be displayed here.</p>
               </div>
             )}
           </div>
@@ -615,22 +577,22 @@ function AlbumsPage() {
                     <h3 className="format-title">Select Format:</h3>
                     <div className="format-options">
                       <button
-                        className={`format-btn ${selectedFormat === 'jpeg' ? 'format-active' : ''}`}
-                        onClick={() => setSelectedFormat('jpeg')}
+                        className={`format-btn ${selectedFormat === "jpeg" ? "format-active" : ""}`}
+                        onClick={() => setSelectedFormat("jpeg")}
                       >
                         <span className="format-name">JPEG</span>
                         <span className="format-desc">Good, smaller size</span>
                       </button>
                       <button
-                        className={`format-btn ${selectedFormat === 'png' ? 'format-active' : ''}`}
-                        onClick={() => setSelectedFormat('png')}
+                        className={`format-btn ${selectedFormat === "png" ? "format-active" : ""}`}
+                        onClick={() => setSelectedFormat("png")}
                       >
                         <span className="format-name">PNG</span>
                         <span className="format-desc">High quality, larger size</span>
                       </button>
                       <button
-                        className={`format-btn ${selectedFormat === 'webp' ? 'format-active' : ''}`}
-                        onClick={() => setSelectedFormat('webp')}
+                        className={`format-btn ${selectedFormat === "webp" ? "format-active" : ""}`}
+                        onClick={() => setSelectedFormat("webp")}
                       >
                         <span className="format-name">WebP</span>
                         <span className="format-desc">Modern format, good compression</span>
@@ -639,11 +601,7 @@ function AlbumsPage() {
                   </div>
 
                   <div className="download-actions">
-                    <button
-                      onClick={handleSingleDownload}
-                      className="download-start-btn"
-                      disabled={isDownloading}
-                    >
+                    <button onClick={handleSingleDownload} className="download-start-btn" disabled={isDownloading}>
                       <Download className="btn-icon" />
                       Start Download
                     </button>
@@ -657,10 +615,7 @@ function AlbumsPage() {
 
                   <div className="progress-container">
                     <div className="progress-bar">
-                      <div
-                        className="progress-fill"
-                        style={{ width: `${downloadProgress}%` }}
-                      ></div>
+                      <div className="progress-fill" style={{ width: `${downloadProgress}%` }}></div>
                     </div>
                     <span className="progress-percentage">{Math.round(downloadProgress)}%</span>
                   </div>
@@ -695,20 +650,21 @@ function AlbumsPage() {
           </button>
           <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
             <img
-              src={fullscreenImage}
+              src={fullscreenImage || "/placeholder.svg"}
               alt="Fullscreen view"
               className="fullscreen-image"
-              style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
-              onError={() => {
-                console.error(`Failed to load fullscreen image: ${fullscreenImage}`);
-                setFullscreenImage('data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==');
+              loading="lazy"
+              style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain" }}
+              onError={(e) => {
+                console.error(`Failed to load fullscreen image: ${fullscreenImage}`)
+                e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
               }}
             />
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default AlbumsPage;
+export default AlbumsPage
