@@ -64,6 +64,13 @@ function AlbumsPage() {
     fetchAlbums();
   }, [fetchAlbums]);
 
+  // Normalize Cloudinary URL
+  const normalizeImageUrl = useCallback((url) => {
+    if (!url || typeof url !== 'string') return '/placeholder.svg';
+    if (url.startsWith('http')) return url;
+    return `https://res.cloudinary.com/dqxhczhxk/image/upload/${url.startsWith('/') ? url.slice(1) : url}`;
+  }, []);
+
   // Fetch album images
   const fetchAlbumImages = useCallback(async (albumTitle, retries = 3) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
@@ -92,16 +99,20 @@ function AlbumsPage() {
 
         const processedData = data.slice(0, 20).map((image, index) => ({
           ...image,
-          thumbnailUrl: image.thumbnailUrl || image.imageUrl,
-          imageUrl: image.imageUrl || image.thumbnailUrl,
+          thumbnailUrl: normalizeImageUrl(image.thumbnailUrl || image.imageUrl),
+          imageUrl: normalizeImageUrl(image.imageUrl || image.thumbnailUrl),
           _id: image._id || `image-${index}`,
         }));
+
+        // Log response for debugging
+        console.log(`Fetched images for ${albumTitle}:`, processedData);
 
         setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
         setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
         setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }));
         return;
       } catch (error) {
+        console.error(`Attempt ${attempt} failed for ${albumTitle}:`, error.message);
         if (attempt === retries) {
           setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
           setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }));
@@ -109,7 +120,7 @@ function AlbumsPage() {
         await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
     }
-  }, []);
+  }, [normalizeImageUrl]);
 
   // Debounced toggle album
   const debouncedToggleAlbum = useMemo(
@@ -159,7 +170,7 @@ function AlbumsPage() {
     try {
       let processedUrl = imageUrl;
       if (!imageUrl.startsWith('http')) {
-        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+        processedUrl = normalizeImageUrl(imageUrl);
       }
 
       const response = await fetch(processedUrl, { mode: 'cors', credentials: 'omit' });
@@ -213,7 +224,7 @@ function AlbumsPage() {
     } catch (error) {
       throw error;
     }
-  }, []);
+  }, [normalizeImageUrl]);
 
   // Handle download
   const handleDownload = useCallback((imageUrl) => {
@@ -306,7 +317,7 @@ function AlbumsPage() {
         timeoutId = setTimeout(() => {
           setImageError(true);
           setImageLoaded(true);
-        }, 10000);
+        }, 15000); // Extended timeout to 15 seconds
       }
       return () => clearTimeout(timeoutId);
     }, [imageLoaded, imageError]);
@@ -357,6 +368,7 @@ function AlbumsPage() {
             setImageError(false);
           }}
           onError={() => {
+            console.error(`Failed to load image: ${image.thumbnailUrl}`);
             setImageError(true);
             setImageLoaded(true);
           }}
