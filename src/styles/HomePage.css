@@ -845,14 +845,14 @@ html, body {
 }
 
 .footer-title {
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
 }
 
 .footer-subtitle {
   color: #9ca3af;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .footer-copyright {
@@ -1161,12 +1161,12 @@ html, body {
     }
   
     .footer-title {
-      font-size: 0.875rem;
+      font-size: 1rem;
       margin-bottom: 0.125rem;
     }
   
     .footer-subtitle {
-      font-size: 0.75rem;
+      font-size: 0.90rem;
     }
   
     .copyright-text {
@@ -1536,12 +1536,12 @@ html, body {
     }
   
     .footer-title {
-      font-size: 1.125rem;
+      font-size: 1.5rem;
       margin-bottom: 0.5rem;
     }
   
     .footer-subtitle {
-      font-size: 1rem;
+      font-size: 1.1rem;
     }
   
     .copyright-text {
@@ -1682,7 +1682,7 @@ html, body {
     }
   
     .footer-title {
-      font-size: 1.25rem;
+      font-size: 1.35rem;
     }
   }
 
