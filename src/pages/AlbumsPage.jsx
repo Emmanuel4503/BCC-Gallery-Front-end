@@ -12,6 +12,9 @@ const debounce = (func, wait) => {
   };
 };
 
+// Placeholder image as data URI
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
+
 function AlbumsPage() {
   const [albums, setAlbums] = useState([]);
   const [albumImages, setAlbumImages] = useState({});
@@ -45,6 +48,7 @@ function AlbumsPage() {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
+      console.log("Albums response:", data); // Debug log
       const validAlbums = data
         .filter((album) => album && (album.title || album._id))
         .map((album, index) => ({
@@ -54,6 +58,7 @@ function AlbumsPage() {
       setAlbums(validAlbums);
       setError(null);
     } catch (error) {
+      console.error("Failed to fetch albums:", error.message);
       setError("Failed to load albums. Please try again later.");
     } finally {
       setIsLoading(false);
@@ -64,15 +69,31 @@ function AlbumsPage() {
     fetchAlbums();
   }, [fetchAlbums]);
 
-  // Normalize Cloudinary URL
+  // Validate and normalize image URL
   const normalizeImageUrl = useCallback((url) => {
-    if (!url || typeof url !== 'string') return '/placeholder.svg';
-    if (url.startsWith('http')) return url;
+    if (!url || typeof url !== 'string' || url.trim() === '') {
+      return PLACEHOLDER_IMAGE;
+    }
+    if (url.startsWith('http')) {
+      return url;
+    }
+    // Assume Cloudinary path
     return `https://res.cloudinary.com/dqxhczhxk/image/upload/${url.startsWith('/') ? url.slice(1) : url}`;
   }, []);
 
+  // Validate image URL accessibility
+  const validateImageUrl = useCallback(async (url) => {
+    if (url === PLACEHOLDER_IMAGE) return false;
+    try {
+      const response = await fetch(url, { method: 'HEAD', mode: 'cors', credentials: 'omit' });
+      return response.ok && response.headers.get('content-type')?.startsWith('image/');
+    } catch {
+      return false;
+    }
+  }, []);
+
   // Fetch album images
-  const fetchAlbumImages = useCallback(async (albumTitle, retries = 3) => {
+  const fetchAlbumImages = useCallback(async (albumTitle, retries = 4) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
       setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }));
       setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }));
@@ -92,20 +113,43 @@ function AlbumsPage() {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (e) {
+          throw new Error('Invalid JSON response');
+        }
+
         if (!Array.isArray(data)) {
           throw new Error('Invalid response: Expected an array of images');
         }
 
-        const processedData = data.slice(0, 20).map((image, index) => ({
-          ...image,
-          thumbnailUrl: normalizeImageUrl(image.thumbnailUrl || image.imageUrl),
-          imageUrl: normalizeImageUrl(image.imageUrl || image.thumbnailUrl),
-          _id: image._id || `image-${index}`,
-        }));
+        console.log(`Raw images response for ${albumTitle}:`, data); // Debug log
 
-        // Log response for debugging
-        console.log(`Fetched images for ${albumTitle}:`, processedData);
+        const processedData = [];
+        for (const image of data.slice(0, 20)) {
+          const thumbnailUrl = normalizeImageUrl(image.thumbnailUrl || image.imageUrl);
+          const imageUrl = normalizeImageUrl(image.imageUrl || image.thumbnailUrl);
+          const isThumbnailValid = await validateImageUrl(thumbnailUrl);
+          const isImageValid = await validateImageUrl(imageUrl);
+
+          if (isThumbnailValid || isImageValid) {
+            processedData.push({
+              ...image,
+              thumbnailUrl,
+              imageUrl,
+              _id: image._id || `image-${processedData.length}`,
+            });
+          } else {
+            console.warn(`Skipping invalid image for ${albumTitle}:`, { thumbnailUrl, imageUrl });
+          }
+        }
+
+        console.log(`Processed images for ${albumTitle}:`, processedData);
+
+        if (processedData.length === 0 && data.length > 0) {
+          throw new Error('No valid images found in response');
+        }
 
         setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
         setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
@@ -120,7 +164,7 @@ function AlbumsPage() {
         await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
     }
-  }, [normalizeImageUrl]);
+  }, [normalizeImageUrl, validateImageUrl]);
 
   // Debounced toggle album
   const debouncedToggleAlbum = useMemo(
@@ -153,6 +197,7 @@ function AlbumsPage() {
 
   // Open fullscreen
   const openFullscreen = useCallback(async (imageUrl) => {
+    if (imageUrl === PLACEHOLDER_IMAGE) return;
     try {
       await preloadImage(imageUrl);
       setFullscreenImage(imageUrl);
@@ -167,6 +212,10 @@ function AlbumsPage() {
 
   // Download image
   const downloadImage = useCallback(async (imageUrl, filename, format) => {
+    if (imageUrl === PLACEHOLDER_IMAGE) {
+      alert('Cannot download placeholder image');
+      return;
+    }
     try {
       let processedUrl = imageUrl;
       if (!imageUrl.startsWith('http')) {
@@ -317,10 +366,29 @@ function AlbumsPage() {
         timeoutId = setTimeout(() => {
           setImageError(true);
           setImageLoaded(true);
-        }, 15000); // Extended timeout to 15 seconds
+        }, 15000);
       }
       return () => clearTimeout(timeoutId);
     }, [imageLoaded, imageError]);
+
+    if (image.thumbnailUrl === PLACEHOLDER_IMAGE) {
+      return (
+        <div style={{
+          width: "100%",
+          height: "150px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f0f0f0",
+          color: "#6b7280",
+          fontSize: "0.9rem",
+          textAlign: "center",
+          borderRadius: "0.5rem"
+        }}>
+          No Image Available
+        </div>
+      );
+    }
 
     return (
       <div style={{ position: 'relative' }}>
@@ -482,11 +550,11 @@ function AlbumsPage() {
                             backgroundColor: "white",
                             borderRadius: "0.5rem",
                             marginTop: "0.5rem",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.06)",
+                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.06)",
                           }}
                         >
                           {imageErrors[album.displayName] ? (
-                            <p style={{ color: "#b91c1c", fontStyle: "italic" }}>
+                            <p style={{ color: "red", fontStyle: "italic" }}>
                               {imageErrors[album.displayName]}
                             </p>
                           ) : imageLoadingStates[album.displayName] ? (
