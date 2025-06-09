@@ -52,24 +52,38 @@ function AlbumsPage() {
         setIsLoading(false);
       });
   }, []);
+  // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  // sssssssssssssssssssssssssssssssssssssssssssssssss
 
-  // Fetch images for a specific album
   const fetchAlbumImages = async (albumTitle) => {
+    if (!albumTitle || typeof albumTitle !== 'string') {
+      setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }));
+      return;
+    }
     try {
       const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
-        headers: {
-          'Cache-Control': 'public, max-age=604800', // Cache for 7 days
-        },
+        mode: 'cors',
+        credentials: 'same-origin',
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
-      setAlbumImages((prev) => ({ ...prev, [albumTitle]: data }));
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid response: Expected an array of images');
+      }
+      const processedData = data.map((image) => {
+        let imageUrl = image.imageUrl;
+        if (imageUrl && !imageUrl.startsWith('http')) {
+          imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+        }
+        return { ...image, imageUrl };
+      });
+      setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
       setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
     } catch (error) {
-      console.error(`Error fetching images for album ${albumTitle}:`, error);
-      setImageErrors((prev) => ({ ...prev, [albumTitle]: "Failed to load images for this album." }));
+      console.error(`Error fetching images for album ${albumTitle}:`, error.message);
+      setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
     }
   };
 
@@ -360,7 +374,7 @@ function AlbumsPage() {
                                   }}
                                 >
                                  <img
-  src={image.imageUrl}
+  src={image.imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
   alt={`Image ${index + 1}`}
   loading="lazy"
   style={{
@@ -371,10 +385,10 @@ function AlbumsPage() {
     cursor: "pointer",
     backgroundColor: "#f0f0f0",
   }}
-  onClick={() => openFullscreen(image.imageUrl)}
+  onClick={() => image.imageUrl && openFullscreen(image.imageUrl)}
   onError={(e) => {
-    console.error(`Failed to load image: ${image.imageUrl}`);
-    e.target.src = "/placeholder.jpg";
+    console.error(`Failed to load image: ${image.imageUrl || 'No URL provided'}`);
+    e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
     e.target.style.display = "block";
   }}
 />
@@ -536,10 +550,14 @@ function AlbumsPage() {
     </button>
     <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
       <img
-        src={fullscreenImage}
+        src={fullscreenImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
         alt="Fullscreen view"
         className="fullscreen-image"
         loading="lazy"
+        onError={(e) => {
+          console.error(`Failed to load fullscreen image: ${fullscreenImage || 'No URL provided'}`);
+          e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
+        }}
       />
     </div>
   </div>
