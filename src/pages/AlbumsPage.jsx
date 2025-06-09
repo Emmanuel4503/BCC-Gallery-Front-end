@@ -16,8 +16,6 @@ function AlbumsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
-  const [imageLoadingStates, setImageLoadingStates] = useState({});
-  const [fullscreenImageLoaded, setFullscreenImageLoaded] = useState(false);
 
   // Split title into event name and date
   const splitTitle = (title) => {
@@ -27,16 +25,6 @@ function AlbumsPage() {
     }
     return [title, ""];
   };
-
-  // Memoize processed albums to prevent unnecessary re-renders
-  const processedAlbums = useMemo(() => {
-    return albums
-      .filter((album) => album && (album.title || album._id))
-      .map((album, index) => ({
-        ...album,
-        displayName: album.title || album._id || `Album ${index + 1}`,
-      }));
-  }, [albums]);
 
   // Fetch all albums
   useEffect(() => {
@@ -49,8 +37,13 @@ function AlbumsPage() {
         return response.json();
       })
       .then((data) => {
-        console.log('Fetched albums:', data);
-        setAlbums(data);
+        const validAlbums = data
+          .filter((album) => album && (album.title || album._id))
+          .map((album, index) => ({
+            ...album,
+            displayName: album.title || album._id || `Album ${index + 1}`,
+          }));
+        setAlbums(validAlbums);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -60,32 +53,14 @@ function AlbumsPage() {
       });
   }, []);
 
-  // Optimized image URL processing with thumbnail support and validation
-  const processImageUrl = useCallback((image, useThumbnail = true) => {
-    let imageUrl = useThumbnail && image.thumbnailUrl ? image.thumbnailUrl : image.imageUrl;
-    
-    if (!imageUrl) {
-      console.warn(`No valid URL for image: ${JSON.stringify(image)}`);
-      return 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
-    }
-    
-    if (!imageUrl.startsWith('http')) {
-      imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
-    }
-    return imageUrl;
-  }, []);
-
-  // Optimized fetchAlbumImages with better error handling and logging
+  // Fetch album images
   const fetchAlbumImages = useCallback(async (albumTitle, retries = 3) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
       console.error(`Invalid album title: ${albumTitle}`);
       setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }));
-      setImageLoadingStates(prev => ({ ...prev, [albumTitle]: false }));
       return;
     }
-    
-    setImageLoadingStates(prev => ({ ...prev, [albumTitle]: true }));
-    
+
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         console.log(`Fetching images for album: ${albumTitle}, attempt ${attempt}`);
@@ -93,40 +68,38 @@ function AlbumsPage() {
           mode: 'cors',
           credentials: 'omit',
         });
-        
-        console.log(`Response status for ${albumTitle}: ${response.status}`);
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
         }
-        
+
         const data = await response.json();
         console.log(`Received ${data.length} images for album: ${albumTitle}`);
-        
+
         if (!Array.isArray(data)) {
           throw new Error('Invalid response: Expected an array of images');
         }
-        
-        const processedData = data.slice(0, 20).map((image) => ({
-          ...image,
-          thumbnailUrl: processImageUrl(image, true),
-          fullImageUrl: processImageUrl(image, false)
-        }));
-        
+
+        const processedData = data.slice(0, 20).map((image) => {
+          let imageUrl = image.imageUrl || image.thumbnailUrl;
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+          }
+          return { ...image, imageUrl: imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==' };
+        });
+
         setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
         setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
-        setImageLoadingStates(prev => ({ ...prev, [albumTitle]: false }));
         return;
-        
       } catch (error) {
         console.error(`Attempt ${attempt} failed for album ${albumTitle}:`, error.message);
         if (attempt === retries) {
-          setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
-          setImageLoadingStates(prev => ({ ...prev, [albumTitle]: false }));
+          setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images after ${retries} attempts: ${error.message}` }));
         }
-        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 500));
+        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
     }
-  }, [processImageUrl]);
+  }, []);
 
   // Toggle album dropdown
   const toggleAlbum = useCallback((albumTitle) => {
@@ -134,13 +107,13 @@ function AlbumsPage() {
       setOpenAlbum(null);
     } else {
       setOpenAlbum(albumTitle);
-      if (!albumImages[albumTitle] && !imageErrors[albumTitle] && !imageLoadingStates[albumTitle]) {
+      if (!albumImages[albumTitle] && !imageErrors[albumTitle]) {
         fetchAlbumImages(albumTitle);
       }
     }
-  }, [openAlbum, albumImages, imageErrors, imageLoadingStates, fetchAlbumImages]);
+  }, [openAlbum, albumImages, imageErrors, fetchAlbumImages]);
 
-  // Preload fullscreen image for better performance
+  // Preload image for better performance
   const preloadImage = useCallback((imageUrl) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -151,27 +124,22 @@ function AlbumsPage() {
   }, []);
 
   // Optimized fullscreen image opening with preloading
-  const openFullscreen = useCallback(async (imageUrl, fullImageUrl) => {
-    setFullscreenImage(imageUrl);
-    setFullscreenImageLoaded(false);
-    
+  const openFullscreen = useCallback(async (imageUrl) => {
     try {
-      await preloadImage(fullImageUrl || imageUrl);
-      setFullscreenImage(fullImageUrl || imageUrl);
-      setFullscreenImageLoaded(true);
+      await preloadImage(imageUrl);
+      setFullscreenImage(imageUrl);
     } catch (error) {
-      console.error('Failed to preload fullscreen image:', error);
-      setFullscreenImageLoaded(true);
+      console.error(`Failed to preload image: ${imageUrl}`, error);
+      setFullscreenImage(imageUrl);
     }
   }, [preloadImage]);
 
   const closeFullscreen = useCallback(() => {
     setFullscreenImage(null);
-    setFullscreenImageLoaded(false);
   }, []);
 
   // Download image function
-  const downloadImage = async (imageUrl, filename, format) => {
+  const downloadImage = useCallback(async (imageUrl, filename, format) => {
     try {
       let processedUrl = imageUrl;
       if (!imageUrl.startsWith('http')) {
@@ -240,7 +208,7 @@ function AlbumsPage() {
       console.error('Download error:', error);
       throw error;
     }
-  };
+  }, []);
 
   // Handle image download
   const handleDownload = useCallback((imageUrl) => {
@@ -248,7 +216,7 @@ function AlbumsPage() {
     setShowDownloadModal(true);
   }, []);
 
-  const handleSingleDownload = async () => {
+  const handleSingleDownload = useCallback(async () => {
     if (!currentDownloadImage) {
       alert('No image selected for download');
       return;
@@ -290,7 +258,7 @@ function AlbumsPage() {
       setIsDownloading(false);
       setDownloadProgress(0);
     }
-  };
+  }, [currentDownloadImage, selectedFormat, downloadImage]);
 
   const closeDownloadModal = useCallback(() => {
     if (!isDownloading) {
@@ -323,21 +291,13 @@ function AlbumsPage() {
     };
   }, [fullscreenImage, showDownloadModal, closeFullscreen, closeDownloadModal]);
 
-  // Individual image component
+  // ImageThumbnail component
   const ImageThumbnail = ({ image, index, albumTitle, onFullscreen, onDownload }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
     return (
-      <div
-        key={`image-${albumTitle}-${image._id || index}`}
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          borderRadius: "0.5rem",
-          backgroundColor: "#f0f0f0",
-        }}
-      >
+      <div>
         {!imageLoaded && (
           <div style={{
             width: "100%",
@@ -351,7 +311,7 @@ function AlbumsPage() {
           </div>
         )}
         <img
-          src={image.thumbnailUrl || image.imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
+          src={image.imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
           alt={`Image ${index + 1}`}
           loading="lazy"
           style={{
@@ -362,13 +322,13 @@ function AlbumsPage() {
             cursor: "pointer",
             backgroundColor: "#f0f0f0",
           }}
-          onClick={() => !imageError && onFullscreen(image.thumbnailUrl || image.imageUrl, image.fullImageUrl || image.imageUrl)}
+          onClick={() => !imageError && onFullscreen(image.imageUrl)}
           onLoad={() => {
             setImageLoaded(true);
             setImageError(false);
           }}
           onError={(e) => {
-            console.error(`Failed to load image: ${image.thumbnailUrl || image.imageUrl || 'No URL provided'}`);
+            console.error(`Failed to load image: ${image.imageUrl || 'No URL provided'}`);
             setImageError(true);
             setImageLoaded(true);
             e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
@@ -378,7 +338,7 @@ function AlbumsPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDownload(image.fullImageUrl || image.imageUrl);
+              onDownload(image.imageUrl);
             }}
             style={{
               position: "absolute",
@@ -444,12 +404,12 @@ function AlbumsPage() {
                   {error}
                 </p>
               </div>
-            ) : processedAlbums.length > 0 ? (
+            ) : albums.length > 0 ? (
               <>
                 <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
-                  Found {processedAlbums.length} album{processedAlbums.length !== 1 ? "s" : ""}
+                  Found {albums.length} album{albums.length !== 1 ? "s" : ""}
                 </p>
-                {processedAlbums.map((album, index) => {
+                {albums.map((album, index) => {
                   const [eventName, date] = splitTitle(album.displayName);
                   return (
                     <div key={`album-${album.displayName}-${index}`} style={{ marginBottom: "1rem" }}>
@@ -501,17 +461,6 @@ function AlbumsPage() {
                             <p style={{ color: "#b91c1c", fontStyle: "italic" }}>
                               {imageErrors[album.displayName]}
                             </p>
-                          ) : imageLoadingStates[album.displayName] ? (
-                            <div style={{ 
-                              display: "flex", 
-                              alignItems: "center", 
-                              justifyContent: "center", 
-                              padding: "2rem",
-                              color: "#6b7280" 
-                            }}>
-                              <Loader2 style={{ width: "2rem", height: "2rem", marginRight: "0.5rem" }} className="animate-spin" />
-                              Loading images...
-                            </div>
                           ) : albumImages[album.displayName]?.length > 0 ? (
                             <div
                               style={{
@@ -521,19 +470,30 @@ function AlbumsPage() {
                               }}
                             >
                               {albumImages[album.displayName].slice(0, 20).map((image, index) => (
-                                <ImageThumbnail
-                                  key={`image-${album.displayName}-${image._id || index}`}
-                                  image={image}
-                                  index={index}
-                                  albumTitle={album.displayName}
-                                  onFullscreen={openFullscreen}
-                                  onDownload={handleDownload}
-                                />
+                                useMemo(() => (
+                                  <div
+                                    key={`image-${album.displayName}-${image._id || index}`}
+                                    style={{
+                                      position: "relative",
+                                      overflow: "hidden",
+                                      borderRadius: "0.5rem",
+                                      backgroundColor: "#f0f0f0",
+                                    }}
+                                  >
+                                    <ImageThumbnail
+                                      image={image}
+                                      index={index}
+                                      albumTitle={album.displayName}
+                                      onFullscreen={openFullscreen}
+                                      onDownload={handleDownload}
+                                    />
+                                  </div>
+                                ), [image, index, album.displayName, openFullscreen, handleDownload])
                               ))}
                             </div>
                           ) : (
                             <p style={{ color: "#6b7280", fontStyle: "italic" }}>
-                              No images found for this album.
+                              {albumImages[album.displayName] ? "No images found for this album." : "Loading images..."}
                             </p>
                           )}
                         </div>
@@ -655,37 +615,15 @@ function AlbumsPage() {
             <X className="close-icon-large" />
           </button>
           <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
-            {!fullscreenImageLoaded && (
-              <div style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                zIndex: 1002
-              }}>
-                <Loader2 style={{ width: "3rem", height: "3rem", marginRight: "1rem" }} className="animate-spin" />
-                Loading full resolution...
-              </div>
-            )}
             <img
-              src={fullscreenImage}
+              src={fullscreenImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
               alt="Fullscreen view"
               className="fullscreen-image"
-              style={{ 
-                maxWidth: '90vw', 
-                maxHeight: '90vh', 
-                objectFit: 'contain',
-                opacity: fullscreenImageLoaded ? 1 : 0.7,
-                transition: 'opacity 0.3s ease-in-out'
-              }}
-              onLoad={() => setFullscreenImageLoaded(true)}
+              loading="lazy"
+              style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
               onError={(e) => {
                 console.error(`Failed to load fullscreen image: ${fullscreenImage || 'No URL provided'}`);
-                setFullscreenImageLoaded(true);
+                e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
               }}
             />
           </div>
