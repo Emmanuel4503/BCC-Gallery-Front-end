@@ -1,19 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ImageIcon, ChevronDown, Download, X, Loader2 } from "lucide-react";
-import { useState, useEffect, useCallback, useMemo, memo } from "react";
+import { useState, useEffect } from "react";
 import "../styles/SubPages.css";
-
-// Debounce utility
-const debounce = (func, wait) => {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), wait);
-  };
-};
-
-// Placeholder image as data URI
-const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 function AlbumsPage() {
   const [albums, setAlbums] = useState([]);
@@ -28,206 +16,127 @@ function AlbumsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
-  const [imageLoadingStates, setImageLoadingStates] = useState({});
+  const [albumLoading, setAlbumLoading] = useState({}); 
+const [albumErrors, setAlbumErrors] = useState({});
 
   // Split title into event name and date
-  const splitTitle = useCallback((title) => {
-    const match = title?.match(/^(.*?)\s*(\(.*\))$/);
-    return match ? [match[1].trim(), match[2]] : [title || '', ''];
-  }, []);
+  const splitTitle = (title) => {
+    const match = title.match(/^(.*?)\s*(\(.*\))$/);
+    if (match) {
+      return [match[1].trim(), match[2]];
+    }
+    return [title, ""];
+  };
 
   // Fetch all albums
-  const fetchAlbums = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    setAlbumImages({}); // Reset album images to ensure fresh data
-    try {
-      const response = await fetch("https://bcc-gallery-back-end.onrender.com/album/get", {
-        mode: 'cors',
-        credentials: 'omit',
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Albums response:", data);
-      const validAlbums = data
-        .filter((album) => album && (album.title || album._id))
-        .map((album, index) => ({
-          ...album,
-          displayName: album.title || album._id || `Album ${index + 1}`,
-        }));
-      setAlbums(validAlbums);
-      setError(null);
-    } catch (error) {
-      console.error("Failed to fetch albums:", error.message);
-      setError("Failed to load albums. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchAlbums();
-  }, [fetchAlbums]);
-
-  // Validate and normalize image URL
-  const normalizeImageUrl = useCallback((url) => {
-    if (!url || typeof url !== 'string' || url.trim() === '') {
-      return PLACEHOLDER_IMAGE;
-    }
-    if (url.startsWith('http')) {
-      return url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now();
-    }
-    return `https://res.cloudinary.com/dqxhczhxk/image/upload/${url.startsWith('/') ? url.slice(1) : url}?v=${Date.now()}`;
-  }, []);
-
-  // Validate image URL accessibility
-  const validateImageUrl = useCallback(async (url) => {
-    if (url === PLACEHOLDER_IMAGE) return false;
-    try {
-      const response = await fetch(url, { 
-        method: 'HEAD', 
-        mode: 'cors', 
-        credentials: 'omit',
-      });
-      return response.ok && response.headers.get('content-type')?.startsWith('image/');
-    } catch {
-      return false;
-    }
-  }, []);
-
-  // Fetch album images
-  const fetchAlbumImages = useCallback(async (albumTitle, retries = 4) => {
-    if (!albumTitle || typeof albumTitle !== 'string') {
-      setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }));
-      setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }));
-      return;
-    }
-
-    setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: true }));
-
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
-          mode: 'cors',
-          credentials: 'omit',
-        });
-
+    setIsLoading(true);
+    fetch("https://bcc-gallery-back-end.onrender.com/album/get")
+      .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
-        let data;
-        try {
-          data = await response.json();
-        } catch (e) {
-          throw new Error('Invalid JSON response');
-        }
-
-        if (!Array.isArray(data)) {
-          throw new Error('Invalid response: Expected an array of images');
-        }
-
-        console.log(`Raw images response for ${albumTitle}:`, data);
-
-        const processedData = [];
-        for (const image of data.slice(0, 20)) {
-          const thumbnailUrl = normalizeImageUrl(image.thumbnailUrl || image.imageUrl);
-          const imageUrl = normalizeImageUrl(image.imageUrl || image.thumbnailUrl);
-          const isThumbnailValid = await validateImageUrl(thumbnailUrl);
-          const isImageValid = await validateImageUrl(imageUrl);
-
-          processedData.push({
-            ...image,
-            thumbnailUrl: isThumbnailValid ? thumbnailUrl : PLACEHOLDER_IMAGE,
-            imageUrl: isImageValid ? imageUrl : PLACEHOLDER_IMAGE,
-            _id: image._id || `image-${processedData.length}`,
-          });
-        }
-
-        console.log(`Processed images for ${albumTitle}:`, processedData);
-
-        setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
-        setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
-        setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }));
-        return;
-      } catch (error) {
-        console.error(`Attempt ${attempt} failed for ${albumTitle}:`, error.message);
-        if (attempt === retries) {
-          setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
-          setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: false }));
-        }
-        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-      }
-    }
-  }, [normalizeImageUrl, validateImageUrl]);
-
-  // Debounced toggle album
-  const debouncedToggleAlbum = useMemo(
-    () => debounce((albumTitle) => {
-      if (openAlbum === albumTitle) {
-        setOpenAlbum(null);
-      } else {
-        setOpenAlbum(albumTitle);
-        if (!albumImages[albumTitle] || albumImages[albumTitle].length === 0) {
-          setAlbumImages((prev) => ({ ...prev, [albumTitle]: [] }));
-          fetchAlbumImages(albumTitle);
-        }
-      }
-    }, 200),
-    [openAlbum, albumImages, fetchAlbumImages]
-  );
-
-  const toggleAlbum = useCallback((albumTitle) => {
-    debouncedToggleAlbum(albumTitle);
-  }, [debouncedToggleAlbum]);
-
-  // Preload image
-  const preloadImage = useCallback((imageUrl) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => resolve(null);
-      img.src = imageUrl;
-    });
+        return response.json();
+      })
+      .then((data) => {
+        const validAlbums = data
+          .filter((album) => album && (album.title || album._id))
+          .map((album, index) => ({
+            ...album,
+            displayName: album.title || album._id || `Album ${index + 1}`,
+          }));
+        setAlbums(validAlbums);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching albums:", error);
+        setError("Failed to load albums. Please try again later.");
+        setIsLoading(false);
+      });
   }, []);
+  // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  // sssssssssssssssssssssssssssssssssssssssssssssssss
 
-  // Open fullscreen
-  const openFullscreen = useCallback(async (imageUrl) => {
-    if (imageUrl === PLACEHOLDER_IMAGE) return;
-    try {
-      const img = await preloadImage(imageUrl);
-      if (img) {
-        setFullscreenImage(imageUrl);
-      }
-    } catch {
-      console.warn(`Failed to preload image: ${imageUrl}`);
-    }
-  }, [preloadImage]);
-
-  const closeFullscreen = useCallback(() => {
-    setFullscreenImage(null);
-  }, []);
-
-  // Download image
-  const downloadImage = useCallback(async (imageUrl, filename, format) => {
-    if (imageUrl === PLACEHOLDER_IMAGE) {
-      alert('Cannot download placeholder image');
+  const fetchAlbumImages = async (albumTitle, silent = false) => {
+    if (!albumTitle || typeof albumTitle !== 'string') {
+      setAlbumErrors((prev) => ({ ...prev, [albumTitle]: 'Invalid album title' }));
       return;
     }
+  
+    try {
+      if (!silent) {
+        setAlbumLoading((prev) => ({ ...prev, [albumTitle]: true }));
+        setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
+      }
+  
+      const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
+        mode: 'cors',
+        credentials: 'same-origin',
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to fetch images for album ${albumTitle}: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid response: Expected an array of images');
+      }
+  
+      const processedData = data.slice(0, 20).map((image) => {
+        let imageUrl = image.imageUrl;
+        let thumbnailUrl = image.thumbnailUrl || image.imageUrl; // Fallback to imageUrl if no thumbnail
+        if (imageUrl && !imageUrl.startsWith('http')) {
+          imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+        }
+        if (thumbnailUrl && !thumbnailUrl.startsWith('http')) {
+          thumbnailUrl = `https://bcc-gallery-back-end.onrender.com${thumbnailUrl.startsWith('/') ? thumbnailUrl : `/${thumbnailUrl}`}`;
+        }
+        return { ...image, imageUrl, thumbnailUrl };
+      });
+  
+      setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
+      setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
+    } catch (error) {
+      console.error(`Error fetching images for album ${albumTitle}:`, error);
+      setAlbumErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
+      setAlbumImages((prev) => ({ ...prev, [albumTitle]: [] }));
+    } finally {
+      if (!silent) {
+        setAlbumLoading((prev) => ({ ...prev, [albumTitle]: false }));
+      }
+    }
+  };
+
+  // Toggle album dropdown
+  const toggleAlbum = (albumTitle) => {
+    if (openAlbum === albumTitle) {
+      setOpenAlbum(null);
+    } else {
+      setOpenAlbum(albumTitle);
+      if (!albumImages[albumTitle] && !albumErrors[albumTitle] && !albumLoading[albumTitle]) {
+        fetchAlbumImages(albumTitle);
+      }
+    }
+  };
+
+  // Download image function
+  const downloadImage = async (imageUrl, filename, format) => {
     try {
       let processedUrl = imageUrl;
-      if (!imageUrl.startsWith('http')) {
-        processedUrl = normalizeImageUrl(imageUrl);
+      if (imageUrl.startsWith('/')) {
+        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
+      } else if (!imageUrl.startsWith('http')) {
+        processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
       }
 
-      const response = await fetch(processedUrl, { 
-        mode: 'cors', 
-        credentials: 'omit',
+      const response = await fetch(processedUrl, {
+        mode: 'cors',
+        credentials: 'same-origin',
       });
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status}`);
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
       }
 
       const blob = await response.blob();
@@ -241,32 +150,38 @@ function AlbumsPage() {
 
       return new Promise((resolve, reject) => {
         img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
+          try {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
 
-          const mimeType = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
-          const quality = format === 'jpeg' ? 0.95 : undefined;
+            const mimeType =
+              format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+            const quality = format === 'jpeg' ? 0.95 : undefined;
 
-          canvas.toBlob(
-            (convertedBlob) => {
-              if (convertedBlob) {
-                const url = URL.createObjectURL(convertedBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${filename}.${format}`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                resolve();
-              } else {
-                reject(new Error('Failed to convert image'));
-              }
-            },
-            mimeType,
-            quality
-          );
+            canvas.toBlob(
+              (convertedBlob) => {
+                if (convertedBlob) {
+                  const url = URL.createObjectURL(convertedBlob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${filename}.${format}`;
+                  a.style.display = 'none';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  resolve();
+                } else {
+                  reject(new Error('Failed to convert image to selected format'));
+                }
+              },
+              mimeType,
+              quality
+            );
+          } catch (error) {
+            reject(new Error(`Canvas processing failed: ${error.message}`));
+          }
         };
 
         img.onerror = () => reject(new Error('Failed to load image for processing'));
@@ -274,17 +189,18 @@ function AlbumsPage() {
         img.src = URL.createObjectURL(blob);
       });
     } catch (error) {
+      console.error('Download error:', error);
       throw error;
     }
-  }, [normalizeImageUrl]);
+  };
 
-  // Handle download
-  const handleDownload = useCallback((imageUrl) => {
+  // Handle image download
+  const handleDownload = (imageUrl) => {
     setCurrentDownloadImage(imageUrl);
     setShowDownloadModal(true);
-  }, []);
+  };
 
-  const handleSingleDownload = useCallback(async () => {
+  const handleSingleDownload = async () => {
     if (!currentDownloadImage) {
       alert('No image selected for download');
       return;
@@ -321,22 +237,32 @@ function AlbumsPage() {
         alert('Image downloaded successfully!');
       }, 1000);
     } catch (error) {
+      console.error('Download failed:', error);
       alert(`Failed to download image: ${error.message}`);
       setIsDownloading(false);
       setDownloadProgress(0);
     }
-  }, [currentDownloadImage, selectedFormat, downloadImage]);
+  };
 
-  const closeDownloadModal = useCallback(() => {
+  const closeDownloadModal = () => {
     if (!isDownloading) {
       setShowDownloadModal(false);
       setCurrentDownloadImage(null);
       setDownloadProgress(0);
       setSelectedFormat('png');
     }
-  }, [isDownloading]);
+  };
 
-  // Handle Escape key
+  // Open/close fullscreen image
+  const openFullscreen = (imageUrl) => {
+    setFullscreenImage(imageUrl);
+  };
+
+  const closeFullscreen = () => {
+    setFullscreenImage(null);
+  };
+
+  // Handle Escape key for fullscreen and download modal
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === "Escape") {
@@ -356,155 +282,11 @@ function AlbumsPage() {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "unset";
     };
-  }, [fullscreenImage, showDownloadModal, closeFullscreen, closeDownloadModal]);
-
-  // Retry album fetch
-  const retryFetchAlbums = useCallback(() => {
-    fetchAlbums();
-  }, [fetchAlbums]);
-
-  // Retry image fetch for a specific album
-  const retryFetchImages = useCallback((albumTitle) => {
-    setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
-    setImageLoadingStates((prev) => ({ ...prev, [albumTitle]: true }));
-    fetchAlbumImages(albumTitle);
-  }, [fetchAlbumImages]);
-
-  // ImageThumbnail component
-  const ImageThumbnail = memo(({ image, index, albumTitle, onFullscreen, onDownload }) => {
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [imageError, setImageError] = useState(false);
-
-    useEffect(() => {
-      let timeoutId;
-      if (!imageLoaded && !imageError) {
-        timeoutId = setTimeout(() => {
-          setImageError(true);
-          setImageLoaded(true);
-        }, 15000);
-      }
-      return () => clearTimeout(timeoutId);
-    }, [imageLoaded, imageError]);
-
-    if (image.thumbnailUrl === PLACEHOLDER_IMAGE) {
-      return (
-        <div style={{
-          width: "100%",
-          height: "150px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#f0f0f0",
-          color: "#6b7280",
-          fontSize: "0.9rem",
-          textAlign: "center",
-          borderRadius: "0.5rem"
-        }}>
-          No Image Available
-        </div>
-      );
-    }
-
-    return (
-      <div style={{ position: 'relative' }}>
-        {!imageLoaded && !imageError && (
-          <div style={{
-            width: "100%",
-            height: "150px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#f3f4f6"
-          }}>
-            <Loader2 className="animate-spin" style={{ width: "2rem", height: "2rem", color: "gray" }} />
-          </div>
-        )}
-        {imageError && (
-          <div style={{
-            width: "100%",
-            height: "150px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#f0f0f0",
-            color: "#b91c1c",
-            fontSize: "0.9rem",
-            textAlign: "center"
-          }}>
-            Failed to load image
-            <button
-              onClick={() => {
-                setImageError(false);
-                setImageLoaded(false);
-              }}
-              style={{
-                marginTop: "0.5rem",
-                padding: "0.5rem 1rem",
-                backgroundColor: "#fe9a65",
-                color: "white",
-                border: "none",
-                borderRadius: "0.25rem",
-                cursor: "pointer"
-              }}
-            >
-              Retry
-            </button>
-          </div>
-        )}
-        <img
-          src={image.thumbnailUrl}
-          alt={`Image ${index + 1}`}
-          style={{
-            width: "100%",
-            height: "150px",
-            objectFit: "cover",
-            display: imageLoaded && !imageError ? "block" : "none",
-            cursor: "pointer"
-          }}
-          loading="lazy"
-          onClick={() => !imageError && onFullscreen(image.imageUrl)}
-          onLoad={() => {
-            setImageLoaded(true);
-            setImageError(false);
-          }}
-          onError={() => {
-            console.error(`Failed to load image: ${image.thumbnailUrl}`);
-            setImageError(true);
-            setImageLoaded(true);
-          }}
-        />
-        {imageLoaded && !imageError && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDownload(image.imageUrl);
-            }}
-            style={{
-              position: "absolute",
-              bottom: "10px",
-              right: "10px",
-              backgroundColor: "#fe9a65",
-              borderRadius: "50%",
-              padding: "10px",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fd8c4e")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#fe9a65")}
-          >
-            <Download style={{ height: "1.25rem", width: "1.25rem", color: "white" }} />
-          </button>
-        )}
-      </div>
-    );
-  });
+  }, [fullscreenImage, showDownloadModal]);
 
   return (
     <div className="page-container">
+      {/* Header */}
       <header className="page-header">
         <div className="page-header-content">
           <Link to="/" className="back-button">
@@ -514,6 +296,7 @@ function AlbumsPage() {
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="page-main">
         <div className="page-center">
           <div className="page-icon-container">
@@ -523,29 +306,19 @@ function AlbumsPage() {
           <p className="page-description">
             Welcome to the Albums section! Here you'll find all the pictures from the church events and services, categorized.
           </p>
+          <br />
+
           <hr />
           <div className="albums-container" style={{ marginTop: "2rem" }}>
             {isLoading ? (
               <div className="page-placeholder">
-                <p className="page-text">Loading albums...</p>
+                <p className="placeholder-text">Loading albums...</p>
               </div>
             ) : error ? (
               <div className="page-placeholder">
-                <p className="page-text" style={{ color: "#b91c1c" }}>{error}</p>
-                <button
-                  onClick={retryFetchAlbums}
-                  style={{
-                    marginTop: "1rem",
-                    padding: "0.5rem 1rem",
-                    backgroundColor: "#fe9a65",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "0.25rem",
-                    cursor: "pointer"
-                  }}
-                >
-                  Retry
-                </button>
+                <p className="placeholder-text" style={{ color: "#b91c1c" }}>
+                  {error}
+                </p>
               </div>
             ) : albums.length > 0 ? (
               <>
@@ -594,48 +367,16 @@ function AlbumsPage() {
                         <div
                           style={{
                             padding: "1rem",
-                            backgroundColor: "white",
+                            backgroundColor: "#ffffff",
                             borderRadius: "0.5rem",
                             marginTop: "0.5rem",
                             boxShadow: "0 2px 4px rgba(0, 0, 0, 0.06)",
                           }}
                         >
                           {imageErrors[album.displayName] ? (
-                            <div style={{ 
-                              display: "flex", 
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              padding: "2rem",
-                              color: "#b91c1c" 
-                            }}>
-                              <p>{imageErrors[album.displayName]}</p>
-                              <button
-                                onClick={() => retryFetchImages(album.displayName)}
-                                style={{
-                                  marginTop: "1rem",
-                                  padding: "0.5rem 1rem",
-                                  backgroundColor: "#fe9a65",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "0.25rem",
-                                  cursor: "pointer"
-                                }}
-                              >
-                                Retry
-                              </button>
-                            </div>
-                          ) : imageLoadingStates[album.displayName] ? (
-                            <div style={{ 
-                              display: "flex", 
-                              alignItems: "center", 
-                              justifyContent: "center", 
-                              padding: "2rem",
-                              color: "#6b7280" 
-                            }}>
-                              <Loader2 className="animate-spin" style={{ width: "2rem", height: "2rem", marginRight: "0.5rem" }} />
-                              Loading images...
-                            </div>
+                            <p style={{ color: "#b91c1c", fontStyle: "italic" }}>
+                              {imageErrors[album.displayName]}
+                            </p>
                           ) : albumImages[album.displayName]?.length > 0 ? (
                             <div
                               style={{
@@ -644,29 +385,85 @@ function AlbumsPage() {
                                 gap: "1rem",
                               }}
                             >
-                              {albumImages[album.displayName].map((image, index) => (
-                                <div
-                                  key={`image-${album.displayName}-${image._id}`}
-                                  style={{
-                                    position: "relative",
-                                    overflow: "hidden",
-                                    borderRadius: "0.5rem",
-                                    backgroundColor: "#f0f0f0",
-                                  }}
-                                >
-                                  <ImageThumbnail
-                                    image={image}
-                                    index={index}
-                                    albumTitle={album.displayName}
-                                    onFullscreen={openFullscreen}
-                                    onDownload={handleDownload}
-                                  />
-                                </div>
-                              ))}
+                   {albumImages[album.displayName]?.length > 0 ? (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+      gap: '1rem',
+    }}
+  >
+    {albumImages[album.displayName].slice(0, 20).map((image, index) => (
+      <div
+        key={`image-${album.displayName}-${image._id || index}`}
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: '0.5rem',
+        }}
+      >
+        <img
+          src={image.thumbnailUrl || image.imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
+          alt={`Image ${index + 1}`}
+          loading="lazy"
+          style={{
+            width: '100%',
+            height: '150px',
+            objectFit: 'cover',
+            display: 'block',
+            cursor: 'pointer',
+            backgroundColor: '#f0f0f0',
+          }}
+          onClick={() => image.imageUrl && openFullscreen(image.imageUrl)}
+          onError={(e) => {
+            console.error(`Failed to load image: ${image.thumbnailUrl || image.imageUrl || 'No URL provided'}`);
+            e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
+            e.target.style.display = 'block';
+          }}
+        />
+        <button
+          onClick={() => handleDownload(image.imageUrl)}
+          style={{
+            position: 'absolute',
+            top: '0.5rem',
+            right: '0.5rem',
+            backgroundColor: '#fe9a65',
+            borderRadius: '50%',
+            padding: '0.5rem',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background-color 0.2s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fd8c4e')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fe9a65')}
+        >
+          <Download
+            style={{
+              height: '1.25rem',
+              width: '1.25rem',
+              color: 'white',
+            }}
+          />
+        </button>
+      </div>
+    ))}
+  </div>
+) : (
+  <p style={{ color: '#6b7280', fontStyle: 'italic' }}>
+    {albumLoading[album.displayName]
+      ? 'Loading images...'
+      : albumImages[album.displayName]
+      ? 'No images found for this album.'
+      : 'Click to load images...'}
+  </p>
+)}
                             </div>
                           ) : (
                             <p style={{ color: "#6b7280", fontStyle: "italic" }}>
-                              No images found for this album.
+                              {albumImages[album.displayName] ? "No images found for this album." : "Loading images..."}
                             </p>
                           )}
                         </div>
@@ -677,13 +474,16 @@ function AlbumsPage() {
               </>
             ) : (
               <div className="page-placeholder">
-                <p className="page-text">Photo albums will be displayed here.</p>
+                <p className="placeholder-text">
+                  Photo albums will be displayed here.
+                </p>
               </div>
             )}
           </div>
         </div>
       </main>
 
+      {/* Download Modal */}
       {showDownloadModal && (
         <div className="download-modal-overlay">
           <div className="download-modal">
@@ -699,6 +499,7 @@ function AlbumsPage() {
                 </button>
               )}
             </div>
+
             <div className="download-modal-content">
               {!isDownloading ? (
                 <>
@@ -728,6 +529,7 @@ function AlbumsPage() {
                       </button>
                     </div>
                   </div>
+
                   <div className="download-actions">
                     <button
                       onClick={handleSingleDownload}
@@ -744,6 +546,7 @@ function AlbumsPage() {
                   <div className="progress-info">
                     <h3 className="progress-title">Downloading Image...</h3>
                   </div>
+
                   <div className="progress-container">
                     <div className="progress-bar">
                       <div
@@ -753,6 +556,7 @@ function AlbumsPage() {
                     </div>
                     <span className="progress-percentage">{Math.round(downloadProgress)}%</span>
                   </div>
+
                   <div className="progress-status">
                     <Loader2 className="progress-spinner" />
                     <span>Please wait while we prepare your image...</span>
@@ -764,34 +568,48 @@ function AlbumsPage() {
         </div>
       )}
 
+      {/* Footer */}
       <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-info">
-            <h3 className="footer-title">Believers Community Church</h3>
-            <p className="footer-subtitle">God's platform for building men</p>
-          </div>
-          <div className="footer-copyright">
-            <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+                <div className="footer-content">
+                    <div className="footer-info">
+                    <h3 className="footer-title">Believers Community Church</h3>
+                    <p className="footer-subtitle">God's platfrom for building men</p>
+                    </div>
+                    <div className="footer-copyright">
+                    <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
+                    </div>
+                </div>
+                </footer>
 
+      {/* Fullscreen Image Modal */}
       {fullscreenImage && (
-        <div className="fullscreen-modal" onClick={closeFullscreen}>
-          <button className="fullscreen-close" onClick={closeFullscreen}>
-            <X className="close-icon-large" />
-          </button>
-          <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={fullscreenImage}
-              alt="Fullscreen view"
-              style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
-            />
-          </div>
-        </div>
-      )}
+  <div className="fullscreen-modal" onClick={closeFullscreen}>
+    <button className="fullscreen-close" onClick={closeFullscreen}>
+      <X className="close-icon-large" />
+    </button>
+    <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
+      <img
+        src={fullscreenImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
+        alt="Fullscreen view"
+        className="fullscreen-image"
+        loading="lazy"
+        style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
+        onError={(e) => {
+          console.error(`Failed to load fullscreen image: ${fullscreenImage || 'No URL provided'}`);
+          e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
+        }}
+      />
+    </div>
+  </div>
+)}
     </div>
   );
 }
 
+
 export default AlbumsPage;
+
+// dhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+// hdddddddddddddddddddddddd
+
+// HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
