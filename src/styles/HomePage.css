@@ -1408,6 +1408,8 @@ html, body {
   
     .sliding-menu {
       width: 20rem;
+      position: fixed;
+    top: 5%;
     }
   
     .menu-content {
