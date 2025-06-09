@@ -138,29 +138,11 @@ function AlbumsPage() {
     [openAlbum, albumImages, imageErrors, imageLoadingStates, fetchAlbumImages],
   )
 
-  // Preload image for better performance
-  const preloadImage = useCallback((imageUrl) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = reject
-      img.src = imageUrl
-    })
+  // Simple fullscreen image opening - NO PRELOADING
+  const openFullscreen = useCallback((imageUrl) => {
+    console.log("Opening fullscreen for:", imageUrl)
+    setFullscreenImage(imageUrl)
   }, [])
-
-  // Optimized fullscreen image opening with preloading
-  const openFullscreen = useCallback(
-    async (imageUrl) => {
-      try {
-        await preloadImage(imageUrl)
-        setFullscreenImage(imageUrl)
-      } catch (error) {
-        console.error(`Failed to preload image: ${imageUrl}`, error)
-        setFullscreenImage(imageUrl)
-      }
-    },
-    [preloadImage],
-  )
 
   const closeFullscreen = useCallback(() => {
     setFullscreenImage(null)
@@ -314,14 +296,27 @@ function AlbumsPage() {
     }
   }, [fullscreenImage, showDownloadModal, closeFullscreen, closeDownloadModal])
 
-  // ImageThumbnail component - FIXED VERSION
+  // ImageThumbnail component - SIMPLIFIED VERSION
   const ImageThumbnail = ({ image, index, albumTitle, onFullscreen, onDownload }) => {
     const [imageLoaded, setImageLoaded] = useState(false)
     const [imageError, setImageError] = useState(false)
 
+    const handleImageLoad = () => {
+      console.log(`Image loaded successfully: ${image.imageUrl}`)
+      setImageLoaded(true)
+      setImageError(false)
+    }
+
+    const handleImageError = (e) => {
+      console.error(`Failed to load image: ${image.imageUrl}`)
+      setImageError(true)
+      setImageLoaded(true)
+      e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
+    }
+
     return (
       <div style={{ position: "relative", overflow: "hidden", borderRadius: "0.5rem", backgroundColor: "#f0f0f0" }}>
-        {!imageLoaded && !imageError && (
+        {!imageLoaded && (
           <div
             style={{
               width: "100%",
@@ -339,27 +334,16 @@ function AlbumsPage() {
         <img
           src={image.imageUrl || "/placeholder.svg"}
           alt={`Image ${index + 1}`}
-          loading="lazy"
           style={{
             width: "100%",
             height: "150px",
             objectFit: "cover",
-            display: imageLoaded ? "block" : "none",
+            display: imageLoaded && !imageError ? "block" : "none",
             cursor: "pointer",
           }}
           onClick={() => !imageError && onFullscreen(image.imageUrl)}
-          onLoad={() => {
-            console.log(`Image loaded: ${image.imageUrl}`)
-            setImageLoaded(true)
-            setImageError(false)
-          }}
-          onError={(e) => {
-            console.error(`Failed to load image: ${image.imageUrl}`)
-            setImageError(true)
-            setImageLoaded(true)
-            // Set fallback image
-            e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
-          }}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
         />
 
         {imageError && (
@@ -653,8 +637,12 @@ function AlbumsPage() {
               src={fullscreenImage || "/placeholder.svg"}
               alt="Fullscreen view"
               className="fullscreen-image"
-              loading="lazy"
-              style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain" }}
+              style={{
+                maxWidth: "90vw",
+                maxHeight: "90vh",
+                objectFit: "contain",
+                display: "block",
+              }}
               onError={(e) => {
                 console.error(`Failed to load fullscreen image: ${fullscreenImage}`)
                 e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
