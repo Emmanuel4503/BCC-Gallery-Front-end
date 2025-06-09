@@ -55,35 +55,41 @@ function AlbumsPage() {
   // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
   // sssssssssssssssssssssssssssssssssssssssssssssssss
 
-  const fetchAlbumImages = async (albumTitle) => {
+  const fetchAlbumImages = async (albumTitle, retries = 3) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
       setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }));
       return;
     }
-    try {
-      const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
-        mode: 'cors',
-        credentials: 'same-origin',
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response: Expected an array of images');
-      }
-      const processedData = data.map((image) => {
-        let imageUrl = image.imageUrl;
-        if (imageUrl && !imageUrl.startsWith('http')) {
-          imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
+          mode: 'cors',
+          credentials: 'same-origin',
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
         }
-        return { ...image, imageUrl };
-      });
-      setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
-      setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
-    } catch (error) {
-      console.error(`Error fetching images for album ${albumTitle}:`, error.message);
-      setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid response: Expected an array of images');
+        }
+        const processedData = data.slice(0, 20).map((image) => {
+          let imageUrl = image.imageUrl;
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+          }
+          return { ...image, imageUrl };
+        });
+        setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
+        setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
+        return;
+      } catch (error) {
+        console.error(`Attempt ${attempt} failed for album ${albumTitle}:`, error.message);
+        if (attempt === retries) {
+          setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images after ${retries} attempts: ${error.message}` }));
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1s before retry
+      }
     }
   };
 
@@ -364,63 +370,63 @@ function AlbumsPage() {
                                 gap: "1rem",
                               }}
                             >
-                              {albumImages[album.displayName].map((image, index) => (
-                                <div
-                                  key={`image-${album.displayName}-${image.imageUrl}-${index}`}
-                                  style={{
-                                    position: "relative",
-                                    overflow: "hidden",
-                                    borderRadius: "0.5rem",
-                                  }}
-                                >
-                                 <img
-  src={image.imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
-  alt={`Image ${index + 1}`}
-  loading="lazy"
-  style={{
-    width: "100%",
-    height: "150px",
-    objectFit: "cover",
-    display: "block",
-    cursor: "pointer",
-    backgroundColor: "#f0f0f0",
-  }}
-  onClick={() => image.imageUrl && openFullscreen(image.imageUrl)}
-  onError={(e) => {
-    console.error(`Failed to load image: ${image.imageUrl || 'No URL provided'}`);
-    e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
-    e.target.style.display = "block";
-  }}
-/>
-                                  <button
-                                    onClick={() => handleDownload(image.imageUrl)}
-                                    style={{
-                                      position: "absolute",
-                                      top: "0.5rem",
-                                      right: "0.5rem",
-                                      backgroundColor: "#fe9a65",
-                                      borderRadius: "50%",
-                                      padding: "0.5rem",
-                                      border: "none",
-                                      cursor: "pointer",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      transition: "background-color 0.2s",
-                                    }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fd8c4e")}
-                                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#fe9a65")}
-                                  >
-                                    <Download
-                                      style={{
-                                        height: "1.25rem",
-                                        width: "1.25rem",
-                                        color: "white",
-                                      }}
-                                    />
-                                  </button>
-                                </div>
-                              ))}
+                      {albumImages[album.displayName].slice(0, 20).map((image, index) => (
+  <div
+    key={`image-${album.displayName}-${image.imageUrl}-${index}`}
+    style={{
+      position: "relative",
+      overflow: "hidden",
+      borderRadius: "0.5rem",
+    }}
+  >
+    <img
+      src={image.imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
+      alt={`Image ${index + 1}`}
+      loading="lazy"
+      style={{
+        width: "100%",
+        height: "150px",
+        objectFit: "cover",
+        display: "block",
+        cursor: "pointer",
+        backgroundColor: "#f0f0f0",
+      }}
+      onClick={() => image.imageUrl && openFullscreen(image.imageUrl)}
+      onError={(e) => {
+        console.error(`Failed to load image: ${image.imageUrl || 'No URL provided'}`);
+        e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
+        e.target.style.display = "block";
+      }}
+    />
+    <button
+      onClick={() => handleDownload(image.imageUrl)}
+      style={{
+        position: "absolute",
+        top: "0.5rem",
+        right: "0.5rem",
+        backgroundColor: "#fe9a65",
+        borderRadius: "50%",
+        padding: "0.5rem",
+        border: "none",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "background-color 0.2s",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fd8c4e")}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#fe9a65")}
+    >
+      <Download
+        style={{
+          height: "1.25rem",
+          width: "1.25rem",
+          color: "white",
+        }}
+      />
+    </button>
+  </div>
+))}
                             </div>
                           ) : (
                             <p style={{ color: "#6b7280", fontStyle: "italic" }}>
@@ -554,6 +560,7 @@ function AlbumsPage() {
         alt="Fullscreen view"
         className="fullscreen-image"
         loading="lazy"
+        style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
         onError={(e) => {
           console.error(`Failed to load fullscreen image: ${fullscreenImage || 'No URL provided'}`);
           e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
