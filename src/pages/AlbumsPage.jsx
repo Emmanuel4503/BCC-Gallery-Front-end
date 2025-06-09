@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, ImageIcon, ChevronDown, Download, X, Loader2 } from "lucide-react";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import "../styles/SubPages.css";
 
 function AlbumsPage() {
@@ -52,42 +52,34 @@ function AlbumsPage() {
         setIsLoading(false);
       });
   }, []);
+  // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  // sssssssssssssssssssssssssssssssssssssssssssssssss
 
-  // Fetch album images
-  const fetchAlbumImages = useCallback(async (albumTitle, retries = 3) => {
+  const fetchAlbumImages = async (albumTitle, retries = 3) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
-      console.error(`Invalid album title: ${albumTitle}`);
       setImageErrors((prev) => ({ ...prev, [albumTitle]: "Invalid album title" }));
       return;
     }
-
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        console.log(`Fetching images for album: ${albumTitle}, attempt ${attempt}`);
         const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
           mode: 'cors',
-          credentials: 'omit',
+          credentials: 'same-origin',
         });
-
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
         }
-
         const data = await response.json();
-        console.log(`Received ${data.length} images for album: ${albumTitle}`);
-
         if (!Array.isArray(data)) {
           throw new Error('Invalid response: Expected an array of images');
         }
-
         const processedData = data.slice(0, 20).map((image) => {
-          let imageUrl = image.imageUrl || image.thumbnailUrl;
+          let imageUrl = image.imageUrl;
           if (imageUrl && !imageUrl.startsWith('http')) {
             imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
           }
-          return { ...image, imageUrl: imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==' };
+          return { ...image, imageUrl };
         });
-
         setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
         setImageErrors((prev) => ({ ...prev, [albumTitle]: null }));
         return;
@@ -96,13 +88,13 @@ function AlbumsPage() {
         if (attempt === retries) {
           setImageErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images after ${retries} attempts: ${error.message}` }));
         }
-        await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1s before retry
       }
     }
-  }, []);
+  };
 
   // Toggle album dropdown
-  const toggleAlbum = useCallback((albumTitle) => {
+  const toggleAlbum = (albumTitle) => {
     if (openAlbum === albumTitle) {
       setOpenAlbum(null);
     } else {
@@ -111,44 +103,21 @@ function AlbumsPage() {
         fetchAlbumImages(albumTitle);
       }
     }
-  }, [openAlbum, albumImages, imageErrors, fetchAlbumImages]);
-
-  // Preload image for better performance
-  const preloadImage = useCallback((imageUrl) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = imageUrl;
-    });
-  }, []);
-
-  // Optimized fullscreen image opening with preloading
-  const openFullscreen = useCallback(async (imageUrl) => {
-    try {
-      await preloadImage(imageUrl);
-      setFullscreenImage(imageUrl);
-    } catch (error) {
-      console.error(`Failed to preload image: ${imageUrl}`, error);
-      setFullscreenImage(imageUrl);
-    }
-  }, [preloadImage]);
-
-  const closeFullscreen = useCallback(() => {
-    setFullscreenImage(null);
-  }, []);
+  };
 
   // Download image function
-  const downloadImage = useCallback(async (imageUrl, filename, format) => {
+  const downloadImage = async (imageUrl, filename, format) => {
     try {
       let processedUrl = imageUrl;
-      if (!imageUrl.startsWith('http')) {
-        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+      if (imageUrl.startsWith('/')) {
+        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
+      } else if (!imageUrl.startsWith('http')) {
+        processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
       }
 
       const response = await fetch(processedUrl, {
         mode: 'cors',
-        credentials: 'omit',
+        credentials: 'same-origin',
       });
 
       if (!response.ok) {
@@ -208,15 +177,15 @@ function AlbumsPage() {
       console.error('Download error:', error);
       throw error;
     }
-  }, []);
+  };
 
   // Handle image download
-  const handleDownload = useCallback((imageUrl) => {
+  const handleDownload = (imageUrl) => {
     setCurrentDownloadImage(imageUrl);
     setShowDownloadModal(true);
-  }, []);
+  };
 
-  const handleSingleDownload = useCallback(async () => {
+  const handleSingleDownload = async () => {
     if (!currentDownloadImage) {
       alert('No image selected for download');
       return;
@@ -258,16 +227,25 @@ function AlbumsPage() {
       setIsDownloading(false);
       setDownloadProgress(0);
     }
-  }, [currentDownloadImage, selectedFormat, downloadImage]);
+  };
 
-  const closeDownloadModal = useCallback(() => {
+  const closeDownloadModal = () => {
     if (!isDownloading) {
       setShowDownloadModal(false);
       setCurrentDownloadImage(null);
       setDownloadProgress(0);
       setSelectedFormat('png');
     }
-  }, [isDownloading]);
+  };
+
+  // Open/close fullscreen image
+  const openFullscreen = (imageUrl) => {
+    setFullscreenImage(imageUrl);
+  };
+
+  const closeFullscreen = () => {
+    setFullscreenImage(null);
+  };
 
   // Handle Escape key for fullscreen and download modal
   useEffect(() => {
@@ -289,89 +267,11 @@ function AlbumsPage() {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "unset";
     };
-  }, [fullscreenImage, showDownloadModal, closeFullscreen, closeDownloadModal]);
-
-  // ImageThumbnail component
-  const ImageThumbnail = ({ image, index, albumTitle, onFullscreen, onDownload }) => {
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [imageError, setImageError] = useState(false);
-
-    return (
-      <div>
-        {!imageLoaded && (
-          <div style={{
-            width: "100%",
-            height: "150px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#f3f4f6"
-          }}>
-            <Loader2 style={{ width: "2rem", height: "2rem", color: "#9ca3af" }} className="animate-spin" />
-          </div>
-        )}
-        <img
-          src={image.imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
-          alt={`Image ${index + 1}`}
-          loading="lazy"
-          style={{
-            width: "100%",
-            height: "150px",
-            objectFit: "cover",
-            display: imageLoaded ? "block" : "none",
-            cursor: "pointer",
-            backgroundColor: "#f0f0f0",
-          }}
-          onClick={() => !imageError && onFullscreen(image.imageUrl)}
-          onLoad={() => {
-            setImageLoaded(true);
-            setImageError(false);
-          }}
-          onError={(e) => {
-            console.error(`Failed to load image: ${image.imageUrl || 'No URL provided'}`);
-            setImageError(true);
-            setImageLoaded(true);
-            e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
-          }}
-        />
-        {imageLoaded && !imageError && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDownload(image.imageUrl);
-            }}
-            style={{
-              position: "absolute",
-              top: "0.5rem",
-              right: "0.5rem",
-              backgroundColor: "#fe9a65",
-              borderRadius: "50%",
-              padding: "0.5rem",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "background-color 0.2s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fd8c4e")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#fe9a65")}
-          >
-            <Download
-              style={{
-                height: "1.25rem",
-                width: "1.25rem",
-                color: "white",
-              }}
-            />
-          </button>
-        )}
-      </div>
-    );
-  };
+  }, [fullscreenImage, showDownloadModal]);
 
   return (
     <div className="page-container">
+      {/* Header */}
       <header className="page-header">
         <div className="page-header-content">
           <Link to="/" className="back-button">
@@ -381,6 +281,7 @@ function AlbumsPage() {
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="page-main">
         <div className="page-center">
           <div className="page-icon-container">
@@ -469,27 +370,63 @@ function AlbumsPage() {
                                 gap: "1rem",
                               }}
                             >
-                              {albumImages[album.displayName].slice(0, 20).map((image, index) => (
-                                useMemo(() => (
-                                  <div
-                                    key={`image-${album.displayName}-${image._id || index}`}
-                                    style={{
-                                      position: "relative",
-                                      overflow: "hidden",
-                                      borderRadius: "0.5rem",
-                                      backgroundColor: "#f0f0f0",
-                                    }}
-                                  >
-                                    <ImageThumbnail
-                                      image={image}
-                                      index={index}
-                                      albumTitle={album.displayName}
-                                      onFullscreen={openFullscreen}
-                                      onDownload={handleDownload}
-                                    />
-                                  </div>
-                                ), [image, index, album.displayName, openFullscreen, handleDownload])
-                              ))}
+                      {albumImages[album.displayName].slice(0, 20).map((image, index) => (
+  <div
+    key={`image-${album.displayName}-${image.imageUrl}-${index}`}
+    style={{
+      position: "relative",
+      overflow: "hidden",
+      borderRadius: "0.5rem",
+    }}
+  >
+    <img
+      src={image.imageUrl || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
+      alt={`Image ${index + 1}`}
+      loading="lazy"
+      style={{
+        width: "100%",
+        height: "150px",
+        objectFit: "cover",
+        display: "block",
+        cursor: "pointer",
+        backgroundColor: "#f0f0f0",
+      }}
+      onClick={() => image.imageUrl && openFullscreen(image.imageUrl)}
+      onError={(e) => {
+        console.error(`Failed to load image: ${image.imageUrl || 'No URL provided'}`);
+        e.target.src = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
+        e.target.style.display = "block";
+      }}
+    />
+    <button
+      onClick={() => handleDownload(image.imageUrl)}
+      style={{
+        position: "absolute",
+        top: "0.5rem",
+        right: "0.5rem",
+        backgroundColor: "#fe9a65",
+        borderRadius: "50%",
+        padding: "0.5rem",
+        border: "none",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "background-color 0.2s",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#fd8c4e")}
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#fe9a65")}
+    >
+      <Download
+        style={{
+          height: "1.25rem",
+          width: "1.25rem",
+          color: "white",
+        }}
+      />
+    </button>
+  </div>
+))}
                             </div>
                           ) : (
                             <p style={{ color: "#6b7280", fontStyle: "italic" }}>
@@ -513,6 +450,7 @@ function AlbumsPage() {
         </div>
       </main>
 
+      {/* Download Modal */}
       {showDownloadModal && (
         <div className="download-modal-overlay">
           <div className="download-modal">
@@ -597,38 +535,40 @@ function AlbumsPage() {
         </div>
       )}
 
+      {/* Footer */}
       <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-info">
-            <h3 className="footer-title">Believers Community Church</h3>
-            <p className="footer-subtitle">God's platform for building men</p>
-          </div>
-          <div className="footer-copyright">
-            <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+                <div className="footer-content">
+                    <div className="footer-info">
+                    <h3 className="footer-title">Believers Community Church</h3>
+                    <p className="footer-subtitle">God's platfrom for building men</p>
+                    </div>
+                    <div className="footer-copyright">
+                    <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
+                    </div>
+                </div>
+                </footer>
 
+      {/* Fullscreen Image Modal */}
       {fullscreenImage && (
-        <div className="fullscreen-modal" onClick={closeFullscreen}>
-          <button className="fullscreen-close" onClick={closeFullscreen}>
-            <X className="close-icon-large" />
-          </button>
-          <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={fullscreenImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
-              alt="Fullscreen view"
-              className="fullscreen-image"
-              loading="lazy"
-              style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
-              onError={(e) => {
-                console.error(`Failed to load fullscreen image: ${fullscreenImage || 'No URL provided'}`);
-                e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
-              }}
-            />
-          </div>
-        </div>
-      )}
+  <div className="fullscreen-modal" onClick={closeFullscreen}>
+    <button className="fullscreen-close" onClick={closeFullscreen}>
+      <X className="close-icon-large" />
+    </button>
+    <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
+      <img
+        src={fullscreenImage || 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=='}
+        alt="Fullscreen view"
+        className="fullscreen-image"
+        loading="lazy"
+        style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
+        onError={(e) => {
+          console.error(`Failed to load fullscreen image: ${fullscreenImage || 'No URL provided'}`);
+          e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
+        }}
+      />
+    </div>
+  </div>
+)}
     </div>
   );
 }
