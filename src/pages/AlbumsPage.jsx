@@ -54,10 +54,9 @@ function AlbumsPage() {
       });
   }, []);
 
-  // Fetch album images
   const fetchAlbumImages = async (albumTitle, silent = false) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
-      setAlbumErrors((prev) => ({ ...prev, [albumTitle]:43 'Invalid album title' }));
+      setAlbumErrors((prev) => ({ ...prev, [albumTitle]: 'Invalid album title' }));
       return;
     }
 
@@ -375,6 +374,10 @@ function AlbumsPage() {
                             <p style={{ color: "#b91c1c", fontStyle: "italic" }}>
                               {albumErrors[album.displayName]}
                             </p>
+                          ) : albumLoading[album.displayName] ? (
+                            <p style={{ color: "#6b7280", fontStyle: "italic" }}>
+                              Loading images...
+                            </p>
                           ) : albumImages[album.displayName]?.length > 0 ? (
                             <div
                               style={{
@@ -408,7 +411,7 @@ function AlbumsPage() {
                                     onError={(e) => {
                                       console.error(`Failed to load image: ${image.thumbnailUrl || image.imageUrl || 'No URL provided'}`);
                                       e.target.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==';
-                                      e.target.style.display = 'block';
+                                      e.target.style.display = "block";
                                     }}
                                   />
                                   <button
@@ -443,11 +446,7 @@ function AlbumsPage() {
                             </div>
                           ) : (
                             <p style={{ color: "#6b7280", fontStyle: "italic" }}>
-                              {albumLoading[album.displayName]
-                                ? 'Loading images...'
-                                : albumImages[album.displayName]
-                                ? 'No images found for this album.'
-                                : 'Click to load images...'}
+                              No images found for this album.
                             </p>
                           )}
                         </div>
