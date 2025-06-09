@@ -13,7 +13,7 @@ function SavedPage() {
   const [disabledButtons, setDisabledButtons] = useState(new Set());
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloadType, setDownloadType] = useState("single");
-  const [selectedFormat, setSelectedFormat] = useState("jpeg");
+  const [selectedFormat, setSelectedFormat] = useState("png");
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
@@ -362,7 +362,7 @@ function SavedPage() {
       setShowDownloadModal(false);
       setCurrentDownloadImage(null);
       setDownloadProgress(0);
-      setSelectedFormat("jpeg");
+      setSelectedFormat("png");
     }
   };
 
@@ -533,7 +533,7 @@ function SavedPage() {
                         onClick={() => setSelectedFormat("jpeg")}
                       >
                         <span className="format-name">JPEG</span>
-                        <span className="format-desc">Best for photos, smaller size</span>
+                        <span className="format-desc">Good, smaller size</span>
                       </button>
                       <button
                         className={`format-btn ${selectedFormat === "png" ? "format-active" : ""}`}

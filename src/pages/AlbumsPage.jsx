@@ -12,7 +12,7 @@ function AlbumsPage() {
   const [imageErrors, setImageErrors] = useState({});
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState('jpeg');
+  const [selectedFormat, setSelectedFormat] = useState('png');
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
@@ -56,7 +56,11 @@ function AlbumsPage() {
   // Fetch images for a specific album
   const fetchAlbumImages = async (albumTitle) => {
     try {
-      const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`);
+      const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
+        headers: {
+          'Cache-Control': 'public, max-age=604800', // Cache for 7 days
+        },
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -210,7 +214,7 @@ function AlbumsPage() {
       setShowDownloadModal(false);
       setCurrentDownloadImage(null);
       setDownloadProgress(0);
-      setSelectedFormat('jpeg');
+      setSelectedFormat('png');
     }
   };
 
@@ -355,22 +359,25 @@ function AlbumsPage() {
                                     borderRadius: "0.5rem",
                                   }}
                                 >
-                                  <img
-                                    src={image.imageUrl}
-                                    alt={`Image ${index + 1}`}
-                                    style={{
-                                      width: "100%",
-                                      height: "150px",
-                                      objectFit: "cover",
-                                      display: "block",
-                                      cursor: "pointer",
-                                    }}
-                                    onClick={() => openFullscreen(image.imageUrl)}
-                                    onError={(e) => {
-                                      console.error(`Failed to load image: ${image.imageUrl}`);
-                                      e.target.style.display = "none";
-                                    }}
-                                  />
+                                 <img
+  src={image.imageUrl}
+  alt={`Image ${index + 1}`}
+  loading="lazy"
+  style={{
+    width: "100%",
+    height: "150px",
+    objectFit: "cover",
+    display: "block",
+    cursor: "pointer",
+    backgroundColor: "#f0f0f0",
+  }}
+  onClick={() => openFullscreen(image.imageUrl)}
+  onError={(e) => {
+    console.error(`Failed to load image: ${image.imageUrl}`);
+    e.target.src = "/placeholder.jpg";
+    e.target.style.display = "block";
+  }}
+/>
                                   <button
                                     onClick={() => handleDownload(image.imageUrl)}
                                     style={{
@@ -451,7 +458,7 @@ function AlbumsPage() {
                         onClick={() => setSelectedFormat('jpeg')}
                       >
                         <span className="format-name">JPEG</span>
-                        <span className="format-desc">Best for photos, smaller size</span>
+                        <span className="format-desc">Good, smaller size</span>
                       </button>
                       <button
                         className={`format-btn ${selectedFormat === 'png' ? 'format-active' : ''}`}
@@ -523,19 +530,20 @@ function AlbumsPage() {
 
       {/* Fullscreen Image Modal */}
       {fullscreenImage && (
-        <div className="fullscreen-modal" onClick={closeFullscreen}>
-          <button className="fullscreen-close" onClick={closeFullscreen}>
-            <X className="close-icon-large" />
-          </button>
-          <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={fullscreenImage}
-              alt="Fullscreen view"
-              className="fullscreen-image"
-            />
-          </div>
-        </div>
-      )}
+  <div className="fullscreen-modal" onClick={closeFullscreen}>
+    <button className="fullscreen-close" onClick={closeFullscreen}>
+      <X className="close-icon-large" />
+    </button>
+    <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
+      <img
+        src={fullscreenImage}
+        alt="Fullscreen view"
+        className="fullscreen-image"
+        loading="lazy"
+      />
+    </div>
+  </div>
+)}
     </div>
   );
 }
