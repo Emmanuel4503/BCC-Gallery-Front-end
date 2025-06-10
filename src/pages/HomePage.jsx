@@ -448,32 +448,50 @@ const fetchGalleryImages = async (silent = false) => {
         }, [currentUser?.id]);
 
         useEffect(() => {
-            
-            const preloadTimeout = setTimeout(() => {
-                setIsPreLoading(false);
-            }, 10000); 
-            
-            Promise.all([
-                ...carouselImages.map(image => new Promise((resolve) => {
-                    const img = new Image();
-                    img.src = image.imageUrl;
-                    img.onload = resolve;
-                    img.onerror = resolve; // Resolve even if image fails to load
-                })),
-                ...galleryImages.map(image => new Promise((resolve) => {
-                    const img = new Image();
-                    img.src = image.thumbnailUrl || image.imageUrl;
-                    img.onload = resolve;
-                    img.onerror = resolve;
-                }))
-            ]).then(() => {
-                
-                setTimeout(() => setIsPreLoading(false), 1000);
-            }).catch(() => {
-                setIsPreLoading(false); 
+            if (!carouselImages.length && !galleryImages.length) return;
+        
+            const allImages = [
+                ...carouselImages.map(image => image.imageUrl),
+                ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
+            ].filter(url => url && typeof url === 'string');
+        
+            if (!allImages.length) {
+                setPreloadProgress(100);
+                setTimeout(() => setIsPreLoading(false), 1000); // Minimum display time
+                return;
+            }
+        
+            let loadedImages = 0;
+            const totalImages = allImages.length;
+        
+            const updateProgress = () => {
+                loadedImages += 1;
+                const progress = (loadedImages / totalImages) * 100;
+                setPreloadProgress(Math.min(progress, 100)); // Cap at 100%
+                if (loadedImages >= totalImages) {
+                    setTimeout(() => {
+                        setPreloadProgress(100); // Ensure it hits 100%
+                        setIsPreLoading(false); // Hide pre-loader after progress completes
+                    }, 1000); // Delay to ensure progress bar animation completes
+                }
+            };
+        
+            allImages.forEach(url => {
+                const img = new Image();
+                img.src = url;
+                img.onload = updateProgress;
+                img.onerror = updateProgress; 
             });
         
-            return () => clearTimeout(preloadTimeout);
+          
+            const fallbackTimeout = setTimeout(() => {
+                if (loadedImages < totalImages) {
+                    setPreloadProgress(100);
+                    setIsPreLoading(false);
+                }
+            }, 10000); 
+        
+            return () => clearTimeout(fallbackTimeout);
         }, [carouselImages, galleryImages]);
     
             useEffect(() => {
@@ -784,20 +802,20 @@ const fetchGalleryImages = async (silent = false) => {
 
 return (
     <div className="page-container">
-        {isPreLoading ? (
-            <div className="preloader-overlay">
-                <div className="preloader-container">
-                    <div className="preloader-spinner">
-                        <Loader2 className="spinner-icon" />
-                    </div>
-                    <h2 className="preloader-title">Loading BCC Gallery</h2>
-                    <p className="preloader-subtitle">Preparing your beautiful moments...</p>
-                    <div className="preloader-progress">
-                        <div className="preloader-progress-fill"></div>
-                    </div>
-                </div>
+       {isPreLoading ? (
+    <div className="preloader-overlay">
+        <div className="preloader-container">
+            <div className="preloader-spinner">
+                <Loader2 className="spinner-icon" />
             </div>
-        ) : (
+            <h2 className="preloader-title">Loading BCC Gallery</h2>
+            <p className="preloader-subtitle">Preparing your beautiful moments...</p>
+            <div className="preloader-progress">
+                <div className="preloader-progress-fill" style={{ width: `${preloadProgress}%` }}></div>
+            </div>
+        </div>
+    </div>
+) : (
             <>
                 {/* User Signup Modal */}
                 {showUserModal && (
