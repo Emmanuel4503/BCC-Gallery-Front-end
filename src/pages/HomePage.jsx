@@ -565,7 +565,7 @@ const fetchGalleryImages = async (silent = false) => {
 
         const handleDownloadAll = () => {
             if (selectedImages.length === 0) {
-            alert('Please select at least one image by checking the checkboxes before downloading');
+            alert('Please select at least one image using the checkboxes before Downloading.');
             return;
             }
           
@@ -580,7 +580,7 @@ const fetchGalleryImages = async (silent = false) => {
             }
         
             if (selectedImages.length === 0) {
-                alert('Please select at least one image to save')
+                alert('Please select at least one image using the checkboxes before saving.')
                 return
             }
         
