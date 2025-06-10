@@ -449,7 +449,24 @@ useEffect(() => {
 }, [currentUser?.id]);
 
 useEffect(() => {
-    if (!carouselImages.length && !galleryImages.length) return;
+    // Check if preloader has already been shown in this session
+    const hasShownPreloader = sessionStorage.getItem('hasShownPreloader');
+
+    if (hasShownPreloader) {
+        // Skip preloader if it has already been shown
+        setIsPreLoading(false);
+        setPreloadProgress(100);
+        return;
+    }
+
+    if (!carouselImages.length && !galleryImages.length) {
+        setPreloadProgress(100);
+        setTimeout(() => {
+            setIsPreLoading(false);
+            sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
+        }, 1000);
+        return;
+    }
 
     const allImages = [
         ...carouselImages.map(image => image.imageUrl),
@@ -458,7 +475,10 @@ useEffect(() => {
 
     if (!allImages.length) {
         setPreloadProgress(100);
-        setTimeout(() => setIsPreLoading(false), 1000); 
+        setTimeout(() => {
+            setIsPreLoading(false);
+            sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
+        }, 1000);
         return;
     }
 
@@ -473,23 +493,25 @@ useEffect(() => {
             setTimeout(() => {
                 setPreloadProgress(100);
                 setIsPreLoading(false);
-            }, 1000); 
+                sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
+            }, 1000);
         }
     };
 
     allImages.forEach(url => {
-        const img = new window.Image(); 
+        const img = new window.Image();
         img.src = url;
         img.onload = updateProgress;
-        img.onerror = updateProgress; 
+        img.onerror = updateProgress;
     });
 
     const fallbackTimeout = setTimeout(() => {
         if (loadedImages < totalImages) {
             setPreloadProgress(100);
             setIsPreLoading(false);
+            sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
         }
-    }, 10000); 
+    }, 10000);
 
     return () => clearTimeout(fallbackTimeout);
 }, [carouselImages, galleryImages]);
