@@ -1,6 +1,6 @@
         import { useState, useEffect, useCallback } from "react"
         import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
-        import { Link, useLocation } from "react-router-dom"
+        import { Link } from "react-router-dom"
         import "../styles/HomePage.css"
         import bcclogo from './bcclogo.png';
 
@@ -35,7 +35,6 @@
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [isPreLoading, setIsPreLoading] = useState(true);
     const [preloadProgress, setPreloadProgress] = useState(0);
-    const [isBackNavigation, setIsBackNavigation] = useState(false);
 
         // Fetch carousel images
         const fetchCarouselImages = async () => {
@@ -440,16 +439,6 @@ const fetchGalleryImages = async (silent = false) => {
             }
           };
 
-          useEffect(() => {
-            const navEntry = performance.getEntriesByType('navigation')[0];
-            if (navEntry?.type === 'back_forward') {
-                setIsBackNavigation(true);
-                setIsPreLoading(false); // Skip preloader for back navigation
-            } else {
-                setIsBackNavigation(false);
-            }
-        }, []);
-        
         useEffect(() => {
             fetchCarouselImages();
             fetchGalleryImages();
@@ -459,66 +448,51 @@ const fetchGalleryImages = async (silent = false) => {
             }
         }, [currentUser?.id]);
 
-
         useEffect(() => {
-            if (isBackNavigation || (!carouselImages.length && !galleryImages.length)) {
-                setIsPreLoading(false);
-                return;
-            }
+            if (!carouselImages.length && !galleryImages.length) return;
         
             const allImages = [
                 ...carouselImages.map(image => image.imageUrl),
                 ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
             ].filter(url => url && typeof url === 'string');
         
-            const minDuration = 6000; // 6 seconds for progress bar
-            const progressInterval = 50; // Update every 50ms
-            const finalDelay = 2000; // 2 seconds delay at 100%
+            if (!allImages.length) {
+                setPreloadProgress(100);
+                setTimeout(() => setIsPreLoading(false), 1000); 
+                return;
+            }
+        
             let loadedImages = 0;
             const totalImages = allImages.length;
-            let targetProgress = 0;
-            let currentProgress = 0;
         
             const updateProgress = () => {
                 loadedImages += 1;
-                targetProgress = Math.min((loadedImages / totalImages) * 100, 100);
+                const progress = (loadedImages / totalImages) * 100;
+                setPreloadProgress(Math.min(progress, 100));
+                if (loadedImages >= totalImages) {
+                    setTimeout(() => {
+                        setPreloadProgress(100);
+                        setIsPreLoading(false);
+                    }, 1000); 
+                }
             };
         
-            if (allImages.length) {
-                allImages.forEach(url => {
-                    const img = new window.Image();
-                    img.src = url;
-                    img.onload = updateProgress;
-                    img.onerror = updateProgress;
-                });
-            } else {
-                targetProgress = 100;
-            }
-        
-            const interval = setInterval(() => {
-                if (currentProgress < 100) {
-                    currentProgress += (100 / (minDuration / progressInterval));
-                    if (currentProgress > targetProgress) currentProgress = targetProgress;
-                    setPreloadProgress(Math.min(currentProgress, 100));
-                }
-                if (currentProgress >= 100 || (loadedImages >= totalImages && currentProgress >= targetProgress)) {
-                    clearInterval(interval);
-                    setPreloadProgress(100);
-                    setTimeout(() => setIsPreLoading(false), finalDelay);
-                }
-            }, progressInterval);
+            allImages.forEach(url => {
+                const img = new window.Image(); 
+                img.src = url;
+                img.onload = updateProgress;
+                img.onerror = updateProgress; 
+            });
         
             const fallbackTimeout = setTimeout(() => {
-                clearInterval(interval);
-                setPreloadProgress(100);
-                setIsPreLoading(false);
-            }, 10000);
+                if (loadedImages < totalImages) {
+                    setPreloadProgress(100);
+                    setIsPreLoading(false);
+                }
+            }, 10000); 
         
-            return () => {
-                clearInterval(interval);
-                clearTimeout(fallbackTimeout);
-            };
-        }, [isBackNavigation, carouselImages, galleryImages]);
+            return () => clearTimeout(fallbackTimeout);
+        }, [carouselImages, galleryImages]);
         
             useEffect(() => {
                 const checkExistingUser = () => {
@@ -841,7 +815,8 @@ return (
             </div>
         </div>
     </div>
-) : (       <>
+) : (
+            <>
                 {/* User Signup Modal */}
                 {showUserModal && (
                     <div className="user-modal-overlay">
