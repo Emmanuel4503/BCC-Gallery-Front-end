@@ -439,17 +439,16 @@ const fetchGalleryImages = async (silent = false) => {
               setDownloadProgress(0);
             }
           };
-
           useEffect(() => {
             const hasShownPreloader = sessionStorage.getItem('hasShownPreloader');
-            const referrer = document.referrer;
-            const isSameOrigin = referrer && new URL(referrer).origin === window.location.origin;
+            const isNavigated = performance.getEntriesByType('navigation')[0]?.type === 'navigate';
         
-            if (!hasShownPreloader && (!referrer || !isSameOrigin)) {
+            if (!hasShownPreloader && isNavigated) {
                 setIsDirectVisit(true);
                 sessionStorage.setItem('hasShownPreloader', 'true');
             } else {
-                setIsPreLoading(false); 
+                setIsDirectVisit(false);
+                setIsPreLoading(false); // Skip pre-loader for non-direct visits
             }
         }, []);
 
@@ -830,7 +829,7 @@ const fetchGalleryImages = async (silent = false) => {
 
 return (
     <div className="page-container">
-    {isPreLoading && isDirectVisit ? (
+       {isPreLoading && isDirectVisit ? (
     <div className="preloader-overlay">
         <div className="preloader-container">
             <div className="preloader-spinner">
@@ -844,6 +843,7 @@ return (
         </div>
     </div>
 ) : (
+        
             <>
                 {/* User Signup Modal */}
                 {showUserModal && (
