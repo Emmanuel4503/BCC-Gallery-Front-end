@@ -365,10 +365,12 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    transform: translateX(100%) rotateY(90deg);
+    transform: translateX(100%);
     opacity: 0;
     transition: all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     transform-origin: left center;
+    will-change: transform, opacity; 
+    backface-visibility: hidden; 
   }
   
   .carousel-slide.slide-active {
@@ -395,6 +397,7 @@ html, body {
     display: block;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+    image-rendering: pixelated; 
   }
   
   .carousel-overlay {
