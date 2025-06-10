@@ -696,27 +696,27 @@ const fetchGalleryImages = async (silent = false) => {
         }
 
         const [showScrollTop, setShowScrollTop] = useState(false);
-
-const handleScroll = useCallback(() => {
-  const fourRowsHeight = 4 * 200; 
-  if (window.scrollY > fourRowsHeight) {
-    setShowScrollTop(true);
-  } else {
-    setShowScrollTop(false);
-  }
-}, []);
-
-const scrollToTop = () => {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth',
-  });
-};
-
-useEffect(() => {
-  window.addEventListener('scroll', handleScroll);
-  return () => window.removeEventListener('scroll', handleScroll);
-}, [handleScroll]);
+        const handleScroll = useCallback(() => {
+            const fourRowsHeight = 4 * 150 + 3 * 16; // Adjust based on your .image-card height and gap
+            console.log('ScrollY:', window.scrollY, 'Threshold:', fourRowsHeight, 'ShowScrollTop:', showScrollTop);
+            if (window.scrollY > fourRowsHeight) {
+              setShowScrollTop(true);
+            } else {
+              setShowScrollTop(false);
+            }
+          }, []);
+          
+          const scrollToTop = () => {
+            window.scrollTo({
+              top: 0,
+              behavior: 'smooth',
+            });
+          };
+          
+          useEffect(() => {
+            window.addEventListener('scroll', handleScroll);
+            return () => window.removeEventListener('scroll', handleScroll);
+          }, [handleScroll]);
         
         useEffect(() => {
             const handleEscape = (e) => {
@@ -971,14 +971,14 @@ useEffect(() => {
             <div className="scrollable-content">
 
             {showScrollTop && (
-  <button
-    onClick={scrollToTop}
-    className="scroll-top-btn"
-    aria-label="Scroll to top"
-  >
-    <ArrowUp className="scroll-top-icon" />
-  </button>
-)}
+    <button
+      onClick={scrollToTop}
+      className={`scroll-top-btn ${showScrollTop ? 'visible' : ''}`}
+      aria-label="Scroll to top"
+    >
+      <ArrowUp className="scroll-top-icon" />
+    </button>
+  )}
                 {/* Auto-sliding Carousel */}
                 <div className="carousel-container">
                 {isLoadingCarousel ? (
