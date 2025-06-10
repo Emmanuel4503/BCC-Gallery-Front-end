@@ -35,6 +35,7 @@
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [isPreLoading, setIsPreLoading] = useState(true);
     const [preloadProgress, setPreloadProgress] = useState(0);
+    const [isDirectVisit, setIsDirectVisit] = useState(false);
 
         // Fetch carousel images
         const fetchCarouselImages = async () => {
@@ -439,6 +440,19 @@ const fetchGalleryImages = async (silent = false) => {
             }
           };
 
+          useEffect(() => {
+            const hasShownPreloader = sessionStorage.getItem('hasShownPreloader');
+            const referrer = document.referrer;
+            const isSameOrigin = referrer && new URL(referrer).origin === window.location.origin;
+        
+            if (!hasShownPreloader && (!referrer || !isSameOrigin)) {
+                setIsDirectVisit(true);
+                sessionStorage.setItem('hasShownPreloader', 'true');
+            } else {
+                setIsPreLoading(false); 
+            }
+        }, []);
+
         useEffect(() => {
             fetchCarouselImages();
             fetchGalleryImages();
@@ -449,50 +463,64 @@ const fetchGalleryImages = async (silent = false) => {
         }, [currentUser?.id]);
 
         useEffect(() => {
-            if (!carouselImages.length && !galleryImages.length) return;
+            if (!isDirectVisit || (!carouselImages.length && !galleryImages.length)) {
+                setIsPreLoading(false);
+                return;
+            }
         
             const allImages = [
                 ...carouselImages.map(image => image.imageUrl),
                 ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
             ].filter(url => url && typeof url === 'string');
         
-            if (!allImages.length) {
-                setPreloadProgress(100);
-                setTimeout(() => setIsPreLoading(false), 1000); // Minimum display time
-                return;
-            }
-        
+            const minDuration = 6000; // 6 seconds for progress bar
+            const progressInterval = 50; // Update every 50ms
+            const finalDelay = 2000; // 2 seconds delay at 100%
             let loadedImages = 0;
             const totalImages = allImages.length;
+            let targetProgress = 0;
+            let currentProgress = 0;
         
             const updateProgress = () => {
                 loadedImages += 1;
-                const progress = (loadedImages / totalImages) * 100;
-                setPreloadProgress(Math.min(progress, 100));
-                if (loadedImages >= totalImages) {
-                    setTimeout(() => {
-                        setPreloadProgress(100);
-                        setIsPreLoading(false);
-                    }, 1000); // Delay for smooth transition
-                }
+                targetProgress = Math.min((loadedImages / totalImages) * 100, 100);
             };
         
-            allImages.forEach(url => {
-                const img = new window.Image(); // Use window.Image to avoid conflicts
-                img.src = url;
-                img.onload = updateProgress;
-                img.onerror = updateProgress; // Count failed images as loaded
-            });
+            if (allImages.length) {
+                allImages.forEach(url => {
+                    const img = new window.Image();
+                    img.src = url;
+                    img.onload = updateProgress;
+                    img.onerror = updateProgress;
+                });
+            } else {
+                targetProgress = 100;
+            }
+        
+            const interval = setInterval(() => {
+                if (currentProgress < 100) {
+                    currentProgress += (100 / (minDuration / progressInterval));
+                    if (currentProgress > targetProgress) currentProgress = targetProgress;
+                    setPreloadProgress(Math.min(currentProgress, 100));
+                }
+                if (currentProgress >= 100 || (loadedImages >= totalImages && currentProgress >= targetProgress)) {
+                    clearInterval(interval);
+                    setPreloadProgress(100);
+                    setTimeout(() => setIsPreLoading(false), finalDelay);
+                }
+            }, progressInterval);
         
             const fallbackTimeout = setTimeout(() => {
-                if (loadedImages < totalImages) {
-                    setPreloadProgress(100);
-                    setIsPreLoading(false);
-                }
-            }, 10000); // 10s fallback
+                clearInterval(interval);
+                setPreloadProgress(100);
+                setIsPreLoading(false);
+            }, 10000);
         
-            return () => clearTimeout(fallbackTimeout);
-        }, [carouselImages, galleryImages]);
+            return () => {
+                clearInterval(interval);
+                clearTimeout(fallbackTimeout);
+            };
+        }, [isDirectVisit, carouselImages, galleryImages]);
         
             useEffect(() => {
                 const checkExistingUser = () => {
@@ -802,7 +830,7 @@ const fetchGalleryImages = async (silent = false) => {
 
 return (
     <div className="page-container">
-       {isPreLoading ? (
+    {isPreLoading && isDirectVisit ? (
     <div className="preloader-overlay">
         <div className="preloader-container">
             <div className="preloader-spinner">
