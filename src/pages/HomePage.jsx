@@ -457,7 +457,7 @@ const fetchGalleryImages = async (silent = false) => {
         
             const minDuration = 4000; 
             const progressInterval = 50; 
-            const finalDelay = 2000; 
+            const finalDelay = 1000; 
             let loadedImages = 0;
             const totalImages = allImages.length;
             let targetProgress = 0; 
