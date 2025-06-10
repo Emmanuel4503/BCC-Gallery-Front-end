@@ -449,72 +449,75 @@ useEffect(() => {
 }, [currentUser?.id]);
 
 useEffect(() => {
-    // Check if preloader has already been shown in this session
-    const hasShownPreloader = sessionStorage.getItem('hasShownPreloader');
+    // Reset hasShownPreloader on initial mount (e.g., page refresh)
+    sessionStorage.removeItem('hasShownPreloader');
 
-    if (hasShownPreloader) {
-        // Skip preloader if it has already been shown
-        setIsPreLoading(false);
-        setPreloadProgress(100);
-        return;
-    }
+    // Initialize preloader
+    setIsPreLoading(true);
+    setPreloadProgress(0);
 
-    if (!carouselImages.length && !galleryImages.length) {
-        setPreloadProgress(100);
-        setTimeout(() => {
-            setIsPreLoading(false);
-            sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
-        }, 1000);
-        return;
-    }
+    const checkImagesLoaded = () => {
+        const allImages = [
+            ...carouselImages.map(image => image.imageUrl),
+            ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
+        ].filter(url => url && typeof url === 'string');
 
-    const allImages = [
-        ...carouselImages.map(image => image.imageUrl),
-        ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
-    ].filter(url => url && typeof url === 'string');
-
-    if (!allImages.length) {
-        setPreloadProgress(100);
-        setTimeout(() => {
-            setIsPreLoading(false);
-            sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
-        }, 1000);
-        return;
-    }
-
-    let loadedImages = 0;
-    const totalImages = allImages.length;
-
-    const updateProgress = () => {
-        loadedImages += 1;
-        const progress = (loadedImages / totalImages) * 100;
-        setPreloadProgress(Math.min(progress, 100));
-        if (loadedImages >= totalImages) {
+        if (!allImages.length) {
+            setPreloadProgress(100);
             setTimeout(() => {
-                setPreloadProgress(100);
                 setIsPreLoading(false);
                 sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
             }, 1000);
+            return;
         }
+
+        let loadedImages = 0;
+        const totalImages = allImages.length;
+
+        const updateProgress = () => {
+            loadedImages += 1;
+            const progress = (loadedImages / totalImages) * 100;
+            setPreloadProgress(Math.min(progress, 100));
+            if (loadedImages >= totalImages) {
+                setTimeout(() => {
+                    setPreloadProgress(100);
+                    setIsPreLoading(false);
+                    sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
+                }, 1000);
+            }
+        };
+
+        allImages.forEach(url => {
+            const img = new window.Image();
+            img.src = url;
+            img.onload = updateProgress;
+            img.onerror = updateProgress;
+        });
+
+        const fallbackTimeout = setTimeout(() => {
+            if (loadedImages < totalImages) {
+                setPreloadProgress(100);
+                setIsPreLoading(false);
+                sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
+            }
+        }, 10000);
+
+        return () => clearTimeout(fallbackTimeout);
     };
 
-    allImages.forEach(url => {
-        const img = new window.Image();
-        img.src = url;
-        img.onload = updateProgress;
-        img.onerror = updateProgress;
-    });
-
-    const fallbackTimeout = setTimeout(() => {
-        if (loadedImages < totalImages) {
-            setPreloadProgress(100);
-            setIsPreLoading(false);
-            sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
-        }
-    }, 10000);
-
-    return () => clearTimeout(fallbackTimeout);
-}, [carouselImages, galleryImages]);
+    // Wait for carousel and gallery images to be fetched
+    if (!isLoadingCarousel && !isLoadingGallery) {
+        checkImagesLoaded();
+    } else {
+        const timer = setInterval(() => {
+            if (!isLoadingCarousel && !isLoadingGallery) {
+                clearInterval(timer);
+                checkImagesLoaded();
+            }
+        }, 100);
+        return () => clearInterval(timer);
+    }
+}, [isLoadingCarousel, isLoadingGallery, carouselImages, galleryImages]);
 
     useEffect(() => {
         const checkExistingUser = () => {
