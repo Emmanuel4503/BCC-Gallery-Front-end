@@ -451,7 +451,7 @@ const fetchGalleryImages = async (silent = false) => {
             
             const preloadTimeout = setTimeout(() => {
                 setIsPreLoading(false);
-            }, 3000); 
+            }, 10000); 
             
             Promise.all([
                 ...carouselImages.map(image => new Promise((resolve) => {
