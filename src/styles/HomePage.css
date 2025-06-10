@@ -2817,3 +2817,151 @@ html, body {
     height: 1rem;
   }
 }
+
+
+/* Preloader Styles */
+.preloader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(254, 154, 101, 0.9), rgba(253, 131, 50, 0.7));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.preloader-container {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  animation: modalSlideIn 0.5s ease-out;
+}
+
+.preloader-spinner {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #fe9a65, #fd8332);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 10px 25px rgba(254, 154, 101, 0.4);
+}
+
+.spinner-icon {
+  width: 32px;
+  height: 32px;
+  color: white;
+  animation: spin 1s linear infinite;
+}
+
+.preloader-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.preloader-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.preloader-progress {
+  height: 10px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.preloader-progress-fill {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #fe9a65, #fd8332);
+  animation: progressAnimation 3s ease-in-out forwards;
+  position: relative;
+}
+
+.preloader-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: progressShimmer 2s infinite;
+}
+
+@keyframes progressAnimation {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+@keyframes progressShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Responsive Adjustments for Preloader */
+@media (max-width: 768px) {
+  .preloader-container {
+    padding: 30px;
+    max-width: 350px;
+  }
+
+  .preloader-title {
+    font-size: 20px;
+  }
+
+  .preloader-subtitle {
+    font-size: 14px;
+  }
+
+  .preloader-spinner {
+    width: 50px;
+    height: 50px;
+  }
+
+  .spinner-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .preloader-container {
+    padding: 20px;
+    max-width: 300px;
+  }
+
+  .preloader-title {
+    font-size: 18px;
+  }
+
+  .preloader-subtitle {
+    font-size: 13px;
+  }
+
+  .preloader-spinner {
+    width: 40px;
+    height: 40px;
+  }
+
+  .spinner-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
