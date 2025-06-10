@@ -468,33 +468,32 @@ const fetchGalleryImages = async (silent = false) => {
             const updateProgress = () => {
                 loadedImages += 1;
                 const progress = (loadedImages / totalImages) * 100;
-                setPreloadProgress(Math.min(progress, 100)); // Cap at 100%
+                setPreloadProgress(Math.min(progress, 100));
                 if (loadedImages >= totalImages) {
                     setTimeout(() => {
-                        setPreloadProgress(100); // Ensure it hits 100%
-                        setIsPreLoading(false); // Hide pre-loader after progress completes
-                    }, 1000); // Delay to ensure progress bar animation completes
+                        setPreloadProgress(100);
+                        setIsPreLoading(false);
+                    }, 1000); // Delay for smooth transition
                 }
             };
         
             allImages.forEach(url => {
-                const img = new Image();
+                const img = new window.Image(); // Use window.Image to avoid conflicts
                 img.src = url;
                 img.onload = updateProgress;
-                img.onerror = updateProgress; 
+                img.onerror = updateProgress; // Count failed images as loaded
             });
         
-          
             const fallbackTimeout = setTimeout(() => {
                 if (loadedImages < totalImages) {
                     setPreloadProgress(100);
                     setIsPreLoading(false);
                 }
-            }, 10000); 
+            }, 10000); // 10s fallback
         
             return () => clearTimeout(fallbackTimeout);
         }, [carouselImages, galleryImages]);
-    
+        
             useEffect(() => {
                 const checkExistingUser = () => {
                 try {
