@@ -35,82 +35,95 @@ const [albumError, setAlbumError] = useState(null);
 const [isTransitioning, setIsTransitioning] = useState(false)
 const [isPreLoading, setIsPreLoading] = useState(true);
 
-// Fetch carousel images
 const fetchCarouselImages = async () => {
     try {
-    setIsLoadingCarousel(true)
-    setCarouselError(null)
-    
-    const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/selected')
-    
-    if (!response.ok) {
-        throw new Error(`Failed to fetch carousel images: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    console.log('Carousel images fetched:', data)
-    
-
-    setCarouselImages(data)
+        setIsLoadingCarousel(true)
+        setCarouselError(null)
+        
+        console.log('Fetching carousel images...')
+        
+        const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/selected', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            // Add timeout
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+        })
+        
+        console.log('Carousel response status:', response.status)
+        
+        if (!response.ok) {
+            const errorText = await response.text()
+            throw new Error(`Failed to fetch carousel images: ${response.status} - ${errorText}`)
+        }
+        
+        const data = await response.json()
+        console.log('Carousel images fetched successfully:', data.length, 'images')
+        
+        // Validate data structure
+        if (!Array.isArray(data)) {
+            throw new Error('Invalid data format: expected array')
+        }
+        
+        setCarouselImages(data)
     } catch (error) {
-    console.error('Error fetching carousel images:', error)
-    setCarouselError(error.message)
-    
-    setCarouselImages([])
+        console.error('Error fetching carousel images:', error)
+        setCarouselError(error.message)
+        setCarouselImages([])
     } finally {
-    setIsLoadingCarousel(false)
+        setIsLoadingCarousel(false)
     }
 }
+
 
 // Fetch gallery images 
 const fetchGalleryImages = async (silent = false) => {
-try {
-if (!silent) {
-    setIsLoadingGallery(true)
-}
-setGalleryError(null)
-
-const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest')
-
-if (!response.ok) {
-    throw new Error(`Failed to fetch gallery images: ${response.status}`)
-}
-
-const data = await response.json()
-console.log('Gallery images fetched:', data)
-
-
-setGalleryImages(data)
-} catch (error) {
-console.error('Error fetching gallery images:', error)
-setGalleryError(error.message)
-
-setGalleryImages([])
-} finally {
-if (!silent) {
-    setIsLoadingGallery(false)
-}
-}
-}
-
-    // Fetch user reactions from backend
-const fetchUserReactions = async (userId) => {
     try {
-    const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch user reactions: ${response.status}`);
-    }
-    const data = await response.json();
-    console.log('User reactions fetched:', data);
-    const reactions = Object.entries(data).reduce((acc, [imageId, reactionType]) => {
-        acc[`${imageId}_${userId}`] = reactionType;
-        return acc;
-    }, {});
-    setUserReactions(reactions);
+        if (!silent) {
+            setIsLoadingGallery(true)
+        }
+        setGalleryError(null)
+        
+        console.log('Fetching gallery images...')
+        
+        const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            // Add timeout
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+        })
+        
+        console.log('Gallery response status:', response.status)
+        
+        if (!response.ok) {
+            const errorText = await response.text()
+            throw new Error(`Failed to fetch gallery images: ${response.status} - ${errorText}`)
+        }
+        
+        const data = await response.json()
+        console.log('Gallery images fetched successfully:', data.length, 'images')
+        
+        // Validate data structure
+        if (!Array.isArray(data)) {
+            throw new Error('Invalid data format: expected array')
+        }
+        
+        setGalleryImages(data)
     } catch (error) {
-    console.error('Error fetching user reactions:', error);
+        console.error('Error fetching gallery images:', error)
+        setGalleryError(error.message)
+        setGalleryImages([])
+    } finally {
+        if (!silent) {
+            setIsLoadingGallery(false)
+        }
     }
-};
+}
 
 const fetchLatestAlbum = async () => {
     try {
@@ -438,43 +451,146 @@ const downloadImage = async (imageUrl, filename, format) => {
     }
   };
 
-useEffect(() => {
-    fetchCarouselImages();
-    fetchGalleryImages();
-    fetchLatestAlbum();
-    if (currentUser?.id) {
-    fetchUserReactions(currentUser.id);
-    }
+  useEffect(() => {
+    console.log('Component mounted, starting data fetch...')
+    
+    const initializeData = async () => {
+        try {
+            // Fetch data in parallel but handle errors independently
+            const promises = [
+                fetchCarouselImages().catch(err => console.error('Carousel fetch failed:', err)),
+                fetchGalleryImages().catch(err => console.error('Gallery fetch failed:', err)),
+                fetchLatestAlbum().catch(err => console.error('Album fetch failed:', err))
+            ];
+            
+            await Promise.allSettled(promises);
+            
+            // Fetch user reactions if user exists
+            if (currentUser?.id) {
+                await fetchUserReactions(currentUser.id).catch(err => 
+                    console.error('User reactions fetch failed:', err)
+                );
+            }
+        } catch (error) {
+            console.error('Failed to initialize data:', error);
+        }
+    };
+    
+    initializeData();
 }, [currentUser?.id]);
 
-useEffect(() => {
-    
-    const preloadTimeout = setTimeout(() => {
-        setIsPreLoading(false);
-    }, 3000); 
-    
-    Promise.all([
-        ...carouselImages.map(image => new Promise((resolve) => {
-            const img = new Image();
-            img.src = image.imageUrl;
-            img.onload = resolve;
-            img.onerror = resolve; // Resolve even if image fails to load
-        })),
-        ...galleryImages.map(image => new Promise((resolve) => {
-            const img = new Image();
-            img.src = image.thumbnailUrl || image.imageUrl;
-            img.onload = resolve;
-            img.onerror = resolve;
-        }))
-    ]).then(() => {
-        
-        setTimeout(() => setIsPreLoading(false), 1000);
-    }).catch(() => {
-        setIsPreLoading(false); 
-    });
+/ Add this function to help debug network issues:
+const testNetworkConnection = async () => {
+    try {
+        console.log('Testing network connection...')
+        const response = await fetch('https://bcc-gallery-back-end.onrender.com/health', {
+            method: 'GET',
+            signal: AbortSignal.timeout(5000)
+        })
+        console.log('Network test result:', response.status)
+        return response.ok
+    } catch (error) {
+        console.error('Network test failed:', error)
+        return false
+    }
+}
 
-    return () => clearTimeout(preloadTimeout);
-}, [carouselImages, galleryImages]);
+// Add this useEffect to test connection on mount:
+useEffect(() => {
+    testNetworkConnection().then(isConnected => {
+        if (!isConnected) {
+            console.warn('Network connection issues detected')
+            setCarouselError('Network connection failed')
+            setGalleryError('Network connection failed')
+        }
+    })
+}, [])
+
+// Add this debug useEffect to monitor loading states:
+useEffect(() => {
+    console.log('Loading states:', {
+        isLoadingCarousel,
+        isLoadingGallery,
+        isPreLoading,
+        carouselImagesCount: carouselImages.length,
+        galleryImagesCount: galleryImages.length,
+        carouselError,
+        galleryError
+    })
+}, [isLoadingCarousel, isLoadingGallery, isPreLoading, carouselImages.length, galleryImages.length, carouselError, galleryError])
+
+useEffect(() => {
+    // Set a maximum timeout for preloading
+    const preloadTimeout = setTimeout(() => {
+        console.log('Preload timeout reached, showing content')
+        setIsPreLoading(false);
+    }, 2000); // Reduced from 3000 to 2000ms
+    
+    // Only preload if we have images
+    if (carouselImages.length > 0 || galleryImages.length > 0) {
+        console.log('Starting image preload...')
+        
+        const preloadPromises = [
+            // Preload carousel images
+            ...carouselImages.slice(0, 3).map(image => new Promise((resolve) => {
+                if (!image?.imageUrl) {
+                    resolve();
+                    return;
+                }
+                const img = new Image();
+                img.src = image.imageUrl;
+                img.onload = () => {
+                    console.log('Carousel image preloaded:', image.imageUrl);
+                    resolve();
+                };
+                img.onerror = () => {
+                    console.log('Failed to preload carousel image:', image.imageUrl);
+                    resolve(); // Resolve even on error
+                };
+                // Timeout for individual image loading
+                setTimeout(resolve, 1000);
+            })),
+            // Preload first few gallery images
+            ...galleryImages.slice(0, 6).map(image => new Promise((resolve) => {
+                if (!image?.thumbnailUrl && !image?.imageUrl) {
+                    resolve();
+                    return;
+                }
+                const img = new Image();
+                img.src = image.thumbnailUrl || image.imageUrl;
+                img.onload = () => {
+                    console.log('Gallery image preloaded:', img.src);
+                    resolve();
+                };
+                img.onerror = () => {
+                    console.log('Failed to preload gallery image:', img.src);
+                    resolve(); // Resolve even on error
+                };
+                // Timeout for individual image loading
+                setTimeout(resolve, 1000);
+            }))
+        ];
+        
+        if (preloadPromises.length > 0) {
+            Promise.allSettled(preloadPromises).then((results) => {
+                console.log('Preload completed:', results.length, 'promises settled');
+                clearTimeout(preloadTimeout);
+                setTimeout(() => setIsPreLoading(false), 500);
+            });
+        } else {
+            clearTimeout(preloadTimeout);
+            setIsPreLoading(false);
+        }
+    } else {
+        // If no images, stop preloading immediately
+        clearTimeout(preloadTimeout);
+        setIsPreLoading(false);
+    }
+
+    return () => {
+        clearTimeout(preloadTimeout);
+    };
+}, [carouselImages, galleryImages])
 
     useEffect(() => {
         const checkExistingUser = () => {
