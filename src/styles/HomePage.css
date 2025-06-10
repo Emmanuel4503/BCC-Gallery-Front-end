@@ -338,105 +338,84 @@ html, body {
 
 
  
-.carousel-container {
-  position: relative;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 1rem;
-  perspective: 1200px;
-}
-
-.carousel {
-  position: relative;
-  height: 20rem;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-}
-
-.carousel-slide {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform: translateX(100%) rotateY(90deg);
-  opacity: 0;
-  transition: transform 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55),
-              opacity 0.8s ease-in-out;
-  transform-origin: left center;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-}
-
-.carousel-slide.slide-active {
-  transform: translateX(0) rotateY(0deg);
-  opacity: 1;
-  z-index: 2;
-}
-
-.carousel-slide.slide-active::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 70%);
-  pointer-events: none;
-  z-index: 2;
-  animation: glow 1.2s ease-in-out;
-}
-
-@keyframes glow {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.carousel-slide.slide-entering {
-  transform: translateX(100%) rotateY(60deg) scale(0.95);
-  opacity: 0;
-  transform-origin: left center;
-  z-index: 1;
-}
-
-.carousel-slide.slide-exiting {
-  transform: translateX(-100%) rotateY(-60deg) scale(1.05);
-  opacity: 0;
-  transform-origin: right center;
-  z-index: 1;
-}
-
-.carousel-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  cursor: pointer;
-  transition: transform 0.2s;
-  display: block;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  image-rendering: pixelated;
-}
-
-.carousel-image:hover {
-  transform: scale(1.03);
-}
-
-.carousel-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2), transparent);
-  pointer-events: none;
-  z-index: 3;
-}
-
-.carousel-content {
-  position: absolute;
-  bottom: 1rem;
-  left: 1rem;
-  color: white;
-  z-index: 4;
-  pointer-events: none;
-}
-
+  .carousel-container {
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 1rem; 
+  }
+  
+  .carousel {
+    position: relative;
+    height: 20rem;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  }
+  
+  .carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+  
+  .carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(100%) rotateY(90deg);
+    opacity: 0;
+    transition: all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform-origin: left center;
+    will-change: transform, opacity; 
+    backface-visibility: hidden; 
+  }
+  
+  .carousel-slide.slide-active {
+    transform: translateX(0) rotateY(0deg);
+    opacity: 1;
+  }
+  
+  .carousel-slide.slide-entering {
+    transform: translateX(100%) rotateY(90deg) scale(0.8);
+    opacity: 0;
+  }
+  
+  .carousel-slide.slide-exiting {
+    transform: translateX(-100%) rotateY(-90deg) scale(1.2);
+    opacity: 0;
+  }
+  
+  .carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.2s;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated; 
+  }
+  
+  .carousel-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2), transparent);
+    pointer-events: none;
+    z-index: 3;
+  }
+  
+  .carousel-content {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    color: white;
+    z-index: 4;
+    pointer-events: none;
+  }
   
   
   /* Service Section */
