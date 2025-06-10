@@ -707,10 +707,20 @@ const fetchGalleryImages = async (silent = false) => {
           }, []);
           
           const scrollToTop = () => {
-            window.scrollTo({
-              top: 0,
-              behavior: 'smooth',
-            });
+            const header = document.querySelector('.header');
+            const headerHeight = header ? header.offsetHeight : 0;
+            const gallery = document.querySelector('.image-gallery');
+            if (gallery) {
+              window.scrollTo({
+                top: gallery.offsetTop - headerHeight, // Stop at the first row of images, below the header
+                behavior: 'smooth',
+              });
+            } else {
+              window.scrollTo({
+                top: headerHeight, // Fallback to below header if gallery not found
+                behavior: 'smooth',
+              });
+            }
           };
           
           useEffect(() => {
