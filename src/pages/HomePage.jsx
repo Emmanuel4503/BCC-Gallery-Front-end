@@ -448,116 +448,51 @@ useEffect(() => {
     }
 }, [currentUser?.id]);
 
-// Add this useEffect to track navigation and control preloader
 useEffect(() => {
-    // Check if user is coming from internal navigation
-    const hasShownPreloader = sessionStorage.getItem('hasShownPreloader');
-    const isInternalNavigation = sessionStorage.getItem('isInternalNavigation');
-    
-    // If coming from internal navigation (albums, notification, saved) and preloader was already shown, skip it
-    if (isInternalNavigation === 'true' && hasShownPreloader === 'true') {
-        setIsPreLoading(false);
+    if (!carouselImages.length && !galleryImages.length) return;
+
+    const allImages = [
+        ...carouselImages.map(image => image.imageUrl),
+        ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
+    ].filter(url => url && typeof url === 'string');
+
+    if (!allImages.length) {
         setPreloadProgress(100);
-        // Clear the internal navigation flag
-        sessionStorage.removeItem('isInternalNavigation');
+        setTimeout(() => setIsPreLoading(false), 1000); 
         return;
     }
 
-    // Reset navigation flag for fresh page loads
-    sessionStorage.removeItem('isInternalNavigation');
+    let loadedImages = 0;
+    const totalImages = allImages.length;
 
-    // Initialize preloader for fresh loads or first visit
-    setIsPreLoading(true);
-    setPreloadProgress(0);
-
-    const checkImagesLoaded = () => {
-        const allImages = [
-            ...carouselImages.map(image => image.imageUrl),
-            ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
-        ].filter(url => url && typeof url === 'string');
-
-        if (!allImages.length) {
-            setPreloadProgress(100);
+    const updateProgress = () => {
+        loadedImages += 1;
+        const progress = (loadedImages / totalImages) * 100;
+        setPreloadProgress(Math.min(progress, 100));
+        if (loadedImages >= totalImages) {
             setTimeout(() => {
-                setIsPreLoading(false);
-                sessionStorage.setItem('hasShownPreloader', 'true');
-            }, 1000);
-            return;
-        }
-
-        let loadedImages = 0;
-        const totalImages = allImages.length;
-
-        const updateProgress = () => {
-            loadedImages += 1;
-            const progress = (loadedImages / totalImages) * 100;
-            setPreloadProgress(Math.min(progress, 100));
-            if (loadedImages >= totalImages) {
-                setTimeout(() => {
-                    setPreloadProgress(100);
-                    setIsPreLoading(false);
-                    sessionStorage.setItem('hasShownPreloader', 'true');
-                }, 1000);
-            }
-        };
-
-        allImages.forEach(url => {
-            const img = new window.Image();
-            img.src = url;
-            img.onload = updateProgress;
-            img.onerror = updateProgress;
-        });
-
-        const fallbackTimeout = setTimeout(() => {
-            if (loadedImages < totalImages) {
                 setPreloadProgress(100);
                 setIsPreLoading(false);
-                sessionStorage.setItem('hasShownPreloader', 'true');
-            }
-        }, 10000);
-
-        return () => clearTimeout(fallbackTimeout);
+            }, 1000); 
+        }
     };
 
-    // Wait for carousel and gallery images to be fetched
-    if (!isLoadingCarousel && !isLoadingGallery) {
-        checkImagesLoaded();
-    } else {
-        const timer = setInterval(() => {
-            if (!isLoadingCarousel && !isLoadingGallery) {
-                clearInterval(timer);
-                checkImagesLoaded();
-            }
-        }, 100);
-        return () => clearInterval(timer);
-    }
-}, [isLoadingCarousel, isLoadingGallery, carouselImages, galleryImages]);
+    allImages.forEach(url => {
+        const img = new window.Image(); 
+        img.src = url;
+        img.onload = updateProgress;
+        img.onerror = updateProgress; 
+    });
 
-// Modified menu navigation to set internal navigation flag
-const handleMenuNavigation = (path) => {
-    // Set flag to indicate internal navigation
-    sessionStorage.setItem('isInternalNavigation', 'true');
-    toggleMenu();
-    // Navigation will be handled by React Router Link
-};
+    const fallbackTimeout = setTimeout(() => {
+        if (loadedImages < totalImages) {
+            setPreloadProgress(100);
+            setIsPreLoading(false);
+        }
+    }, 10000); 
 
-// Update your menu navigation JSX to use the handler
-<nav className="menu-nav">
-    <Link to="/albums" className="menu-item" onClick={() => handleMenuNavigation('/albums')}>
-        <Image className="menu-item-icon" />
-        <span className="menu-item-text">Albums</span>
-    </Link>
-
-    <Link to="/saved" className="menu-item" onClick={() => handleMenuNavigation('/saved')}>
-        <Heart className="menu-item-icon" />
-        <span className="menu-item-text">Saved</span>
-    </Link>
-
-    <Link to="/notification" className="menu-item" onClick={() => handleMenuNavigation('/notification')}>
-        <Bell className="menu-item-icon" />
-        <span className="menu-item-text">Notification</span>
-    </Link>
-</nav>
+    return () => clearTimeout(fallbackTimeout);
+}, [carouselImages, galleryImages]);
 
     useEffect(() => {
         const checkExistingUser = () => {
