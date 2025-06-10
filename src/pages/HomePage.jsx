@@ -813,6 +813,7 @@ return (
     <div className="preloader-progress">
         <div className="preloader-progress-fill" style={{ width: `${preloadProgress}%` }}></div>
     </div>
+    <p className="preloader-subtitle">Please wait...</p>
 </div>
 </div>
 ) : (
