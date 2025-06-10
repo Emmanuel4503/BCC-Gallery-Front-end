@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
-import { Link, useLocation } from "react-router-dom"
+import { Link } from "react-router-dom"
 import "../styles/HomePage.css"
 import bcclogo from './bcclogo.png';
 
@@ -35,7 +35,6 @@ const [albumError, setAlbumError] = useState(null);
 const [isTransitioning, setIsTransitioning] = useState(false)
 const [isPreLoading, setIsPreLoading] = useState(true);
 const [preloadProgress, setPreloadProgress] = useState(0);
-const location = useLocation();
 
 // Fetch carousel images
 const fetchCarouselImages = async () => {
@@ -449,12 +448,13 @@ useEffect(() => {
     }
 }, [currentUser?.id]);
 
+// Add this useEffect to track navigation and control preloader
 useEffect(() => {
     // Check if user is coming from internal navigation
     const hasShownPreloader = sessionStorage.getItem('hasShownPreloader');
     const isInternalNavigation = sessionStorage.getItem('isInternalNavigation');
     
-    // If coming from internal navigation and preloader was already shown, skip it
+    // If coming from internal navigation (albums, notification, saved) and preloader was already shown, skip it
     if (isInternalNavigation === 'true' && hasShownPreloader === 'true') {
         setIsPreLoading(false);
         setPreloadProgress(100);
@@ -533,14 +533,15 @@ useEffect(() => {
     }
 }, [isLoadingCarousel, isLoadingGallery, carouselImages, galleryImages]);
 
-// Add this new function after your existing functions:
+// Modified menu navigation to set internal navigation flag
 const handleMenuNavigation = (path) => {
     // Set flag to indicate internal navigation
     sessionStorage.setItem('isInternalNavigation', 'true');
     toggleMenu();
+    // Navigation will be handled by React Router Link
 };
 
-// Update your menu navigation JSX (replace the existing nav section):
+// Update your menu navigation JSX to use the handler
 <nav className="menu-nav">
     <Link to="/albums" className="menu-item" onClick={() => handleMenuNavigation('/albums')}>
         <Image className="menu-item-icon" />
