@@ -455,13 +455,13 @@ const fetchGalleryImages = async (silent = false) => {
                 ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
             ].filter(url => url && typeof url === 'string');
         
-            const minDuration = 8000; // 8 seconds for progress bar to reach 100%
-            const progressInterval = 50; // Update every 50ms
-            const finalDelay = 2000; // 2 seconds delay at 100%
+            const minDuration = 6000; 
+            const progressInterval = 50; 
+            const finalDelay = 2000; 
             let loadedImages = 0;
             const totalImages = allImages.length;
-            let targetProgress = 0; // Tracks image loading progress
-            let currentProgress = 0; // Tracks displayed progress for animation
+            let targetProgress = 0; 
+            let currentProgress = 0; 
         
             const updateProgress = () => {
                 loadedImages += 1;
@@ -477,13 +477,13 @@ const fetchGalleryImages = async (silent = false) => {
                     img.onerror = updateProgress;
                 });
             } else {
-                targetProgress = 100; // No images to load
+                targetProgress = 100; 
             }
         
-            // Smoothly increment progress bar
+           
             const interval = setInterval(() => {
                 if (currentProgress < 100) {
-                    currentProgress += (100 / (minDuration / progressInterval)); // Reach 100 over 8 seconds
+                    currentProgress += (100 / (minDuration / progressInterval)); 
                     if (currentProgress > targetProgress) currentProgress = targetProgress;
                     setPreloadProgress(Math.min(currentProgress, 100));
                 }
@@ -499,7 +499,7 @@ const fetchGalleryImages = async (silent = false) => {
                 clearInterval(interval);
                 setPreloadProgress(100);
                 setIsPreLoading(false);
-            }, 12000);
+            }, 10000);
         
             return () => {
                 clearInterval(interval);
