@@ -34,6 +34,7 @@
 
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [isPreLoading, setIsPreLoading] = useState(true);
+    const [preloadProgress, setPreloadProgress] = useState(0);
 
         // Fetch carousel images
         const fetchCarouselImages = async () => {
