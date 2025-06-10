@@ -479,7 +479,7 @@ const downloadImage = async (imageUrl, filename, format) => {
     initializeData();
 }, [currentUser?.id]);
 
-/ Add this function to help debug network issues:
+
 const testNetworkConnection = async () => {
     try {
         console.log('Testing network connection...')
