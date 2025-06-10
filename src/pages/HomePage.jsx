@@ -1,5 +1,5 @@
         import { useState, useEffect, useCallback } from "react"
-        import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2 } from "lucide-react"
+        import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
         import { Link } from "react-router-dom"
         import "../styles/HomePage.css"
         import bcclogo from './bcclogo.png';
@@ -695,6 +695,28 @@ const fetchGalleryImages = async (silent = false) => {
             }
         }
 
+        const [showScrollTop, setShowScrollTop] = useState(false);
+
+const handleScroll = useCallback(() => {
+  const fourRowsHeight = 4 * 200; 
+  if (window.scrollY > fourRowsHeight) {
+    setShowScrollTop(true);
+  } else {
+    setShowScrollTop(false);
+  }
+}, []);
+
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  });
+};
+
+useEffect(() => {
+  window.addEventListener('scroll', handleScroll);
+  return () => window.removeEventListener('scroll', handleScroll);
+}, [handleScroll]);
         
         useEffect(() => {
             const handleEscape = (e) => {
@@ -947,6 +969,16 @@ const fetchGalleryImages = async (silent = false) => {
 
             {/* Scrollable Content */}
             <div className="scrollable-content">
+
+            {showScrollTop && (
+  <button
+    onClick={scrollToTop}
+    className="scroll-top-btn"
+    aria-label="Scroll to top"
+  >
+    <ArrowUp className="scroll-top-icon" />
+  </button>
+)}
                 {/* Auto-sliding Carousel */}
                 <div className="carousel-container">
                 {isLoadingCarousel ? (
@@ -982,10 +1014,10 @@ const fetchGalleryImages = async (silent = false) => {
     return (
       <div key={image._id || index} className={slideClass}>
         <img
-          src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} // Use thumbnail for display
+          src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
           alt={`Church gallery image ${index + 1}`}
           className="carousel-image"
-          onClick={() => openFullscreen(image.imageUrl)} // Use original for fullscreen
+          onClick={() => openFullscreen(image.imageUrl)} 
         />
         <div className="carousel-overlay" />
       </div>
