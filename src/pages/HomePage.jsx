@@ -1,6 +1,6 @@
         import { useState, useEffect, useCallback } from "react"
         import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
-        import { Link } from "react-router-dom"
+        import { Link, useLocation } from "react-router-dom"
         import "../styles/HomePage.css"
         import bcclogo from './bcclogo.png';
 
@@ -35,6 +35,7 @@
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [isPreLoading, setIsPreLoading] = useState(true);
     const [preloadProgress, setPreloadProgress] = useState(0);
+    const [isBackNavigation, setIsBackNavigation] = useState(false);
 
         // Fetch carousel images
         const fetchCarouselImages = async () => {
@@ -439,18 +440,93 @@ const fetchGalleryImages = async (silent = false) => {
             }
           };
 
-        useEffect(() => {
-            fetchCarouselImages();
-            fetchGalleryImages();
-            fetchLatestAlbum();
-            if (currentUser?.id) {
-            fetchUserReactions(currentUser.id);
-            }
-        }, [currentUser?.id]);
+          useEffect(() => {
+            const handlePopstate = () => {
+                console.log('popstate fired, setting isBackNavigation: true');
+                setIsBackNavigation(true);
+                setIsPreLoading(false); // Skip preloader for back navigation
+            };
+        
+            console.log('Adding popstate listener');
+            window.addEventListener('popstate', handlePopstate);
+        
+            return () => {
+                console.log('Removing popstate listener');
+                window.removeEventListener('popstate', handlePopstate);
+            };
+        }, []);
 
         useEffect(() => {
-            if (!carouselImages.length && !galleryImages.length) return;
+            console.log('Data fetching useEffect triggered, isBackNavigation:', isBackNavigation, 'isPreLoading:', isPreLoading);
         
+            if (isBackNavigation) {
+                console.log('Skipping preloader due to back navigation');
+                setIsPreLoading(false);
+                fetchCarouselImages();
+                fetchGalleryImages();
+                fetchLatestAlbum();
+                if (currentUser?.id) {
+                    fetchUserReactions(currentUser.id);
+                }
+                return;
+            }
+        
+            console.log('Starting preloader');
+            setIsPreLoading(true);
+            setPreloadProgress(0);
+        
+            const minDuration = 6000; // 6 seconds for progress bar
+            const progressInterval = 50; // Update every 50ms
+            const finalDelay = 2000; // 2 seconds delay at 100%
+            let currentProgress = 0;
+        
+            // Start data fetching
+            Promise.all([
+                fetchCarouselImages(),
+                fetchGalleryImages(),
+                fetchLatestAlbum(),
+                currentUser?.id ? fetchUserReactions(currentUser.id) : Promise.resolve()
+            ]).catch((error) => {
+                console.error('Error during data fetching:', error);
+            });
+        
+            // Preloader animation
+            const interval = setInterval(() => {
+                currentProgress += (100 / (minDuration / progressInterval));
+                setPreloadProgress(Math.min(currentProgress, 100));
+                console.log('Preloader progress:', currentProgress);
+        
+                if (currentProgress >= 100) {
+                    console.log('Preloader reached 100%, waiting for final delay');
+                    clearInterval(interval);
+                    setPreloadProgress(100);
+                    setTimeout(() => {
+                        console.log('Hiding preloader after final delay');
+                        setIsPreLoading(false);
+                    }, finalDelay);
+                }
+            }, progressInterval);
+        
+            const fallbackTimeout = setTimeout(() => {
+                console.log('Fallback timeout triggered, hiding preloader');
+                clearInterval(interval);
+                setPreloadProgress(100);
+                setIsPreLoading(false);
+            }, 10000);
+        
+            return () => {
+                console.log('Cleaning up data fetching useEffect');
+                clearInterval(interval);
+                clearTimeout(fallbackTimeout);
+            };
+        }, [isBackNavigation, currentUser?.id, fetchCarouselImages, fetchGalleryImages, fetchLatestAlbum, fetchUserReactions]);
+
+
+        useEffect(() => {
+            if (isBackNavigation || (!carouselImages.length && !galleryImages.length)) {
+                setIsPreLoading(false);
+                return;
+            }
             const allImages = [
                 ...carouselImages.map(image => image.imageUrl),
                 ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
@@ -492,7 +568,7 @@ const fetchGalleryImages = async (silent = false) => {
             }, 10000); 
         
             return () => clearTimeout(fallbackTimeout);
-        }, [carouselImages, galleryImages]);
+        }, [isBackNavigation, carouselImages, galleryImages]);
         
             useEffect(() => {
                 const checkExistingUser = () => {
@@ -802,7 +878,7 @@ const fetchGalleryImages = async (silent = false) => {
 
 return (
     <div className="page-container">
-       {isPreLoading ? (
+   {isPreLoading ? (
     <div className="preloader-overlay">
         <div className="preloader-container">
             <div className="preloader-spinner">
