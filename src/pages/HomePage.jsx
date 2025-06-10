@@ -33,8 +33,8 @@ const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
 
 const [isTransitioning, setIsTransitioning] = useState(false)
-const [isPreLoading, setIsPreLoading] = useState(true);
-const [preloadProgress, setPreloadProgress] = useState(0);
+// const [isPreLoading, setIsPreLoading] = useState(true);
+// const [preloadProgress, setPreloadProgress] = useState(0);
 
 // Fetch carousel images
 const fetchCarouselImages = async () => {
@@ -448,49 +448,49 @@ useEffect(() => {
     }
 }, [currentUser?.id]);
 
-useEffect(() => {
-    if (!carouselImages.length && !galleryImages.length) return;
+// useEffect(() => {
+//     if (!carouselImages.length && !galleryImages.length) return;
 
-    const allImages = [
-        ...carouselImages.map(image => image.imageUrl),
-        ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
-    ].filter(url => url && typeof url === 'string');
+//     const allImages = [
+//         ...carouselImages.map(image => image.imageUrl),
+//         ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
+//     ].filter(url => url && typeof url === 'string');
 
-    if (!allImages.length) {
-        setPreloadProgress(100);
-        setTimeout(() => setIsPreLoading(false), 1000); 
-        return;
-    }
+//     if (!allImages.length) {
+//         setPreloadProgress(100);
+//         setTimeout(() => setIsPreLoading(false), 1000); 
+//         return;
+//     }
 
-    let loadedImages = 0;
-    const totalImages = allImages.length;
+//     let loadedImages = 0;
+//     const totalImages = allImages.length;
 
-    const updateProgress = () => {
-        loadedImages += 1;
-        const progress = (loadedImages / totalImages) * 100;
-        setPreloadProgress(Math.min(progress, 100));
-        if (loadedImages >= totalImages) {
-            setTimeout(() => {
-                setPreloadProgress(100);
-                setIsPreLoading(false);
-            }, 1000); 
-        }
-    };
+//     const updateProgress = () => {
+//         loadedImages += 1;
+//         const progress = (loadedImages / totalImages) * 100;
+//         setPreloadProgress(Math.min(progress, 100));
+//         if (loadedImages >= totalImages) {
+//             setTimeout(() => {
+//                 setPreloadProgress(100);
+//                 setIsPreLoading(false);
+//             }, 1000); 
+//         }
+//     };
 
-    allImages.forEach(url => {
-        const img = new window.Image(); 
-        img.src = url;
-        img.onload = updateProgress;
-        img.onerror = updateProgress; 
-    });
+//     allImages.forEach(url => {
+//         const img = new window.Image(); 
+//         img.src = url;
+//         img.onload = updateProgress;
+//         img.onerror = updateProgress; 
+//     });
 
-    const fallbackTimeout = setTimeout(() => {
-        setPreloadProgress(100);
-        setIsPreLoading(false);
-    }, 5000); // Changed from 10000 to 5000 for 5 seconds
+//     const fallbackTimeout = setTimeout(() => {
+//         setPreloadProgress(100);
+//         setIsPreLoading(false);
+//     }, 5000); // Changed from 10000 to 5000 for 5 seconds
 
-    return () => clearTimeout(fallbackTimeout);
-}, [carouselImages, galleryImages]);
+//     return () => clearTimeout(fallbackTimeout);
+// }, [carouselImages, galleryImages]);
 
     useEffect(() => {
         const checkExistingUser = () => {
@@ -799,233 +799,219 @@ useEffect(() => {
 
 
 return (
+
 <div className="page-container">
-{isPreLoading ? (
-<div className="preloader-overlay">
-<div className="preloader-container">
-    <div className="preloader-spinner">
-        <Loader2 className="spinner-icon" />
-    </div>
-    <h2 className="preloader-title">Loading BCC Gallery</h2>
-    <p className="preloader-subtitle">Preparing your beautiful moments...</p>
-    <div className="preloader-progress">
-        <div className="preloader-progress-fill" style={{ width: `${preloadProgress}%` }}></div>
-    </div>
-    <br />
-    <p className="preloader-subtitle">Please wait...</p>
-</div>
-</div>
-) : (
-    <>
-        {/* User Signup Modal */}
-        {showUserModal && (
-            <div className="user-modal-overlay">
+            {/* User Signup Modal */}
+            {showUserModal && (
+                <div className="user-modal-overlay">
                 <div className="user-modal">
                     <div className="user-modal-header">
-                        <div className="user-modal-icon">
-                            <User className="modal-user-icon" />
-                        </div>
-                        <h2 className="user-modal-title">Welcome to BCC Gallery</h2>
-                        <p className="user-modal-subtitle">Please enter your full name to continue</p>
+                    <div className="user-modal-icon">
+                        <User className="modal-user-icon" />
+                    </div>
+                    <h2 className="user-modal-title">Welcome to BCC Gallery</h2>
+                    <p className="user-modal-subtitle">Please enter your full name to continue</p>
                     </div>
                     
                     <div onSubmit={handleUserSignup} className="user-modal-form">
-                        <div className="form-group">
-                            <label htmlFor="userName" className="form-label">Full Name</label>
-                            <input
-                                type="text"
-                                id="userName"
-                                value={userName}
-                                onChange={(e) => setUserName(e.target.value)}
-                                placeholder="Enter your full name"
-                                className="form-input"
-                                disabled={isSubmitting}
-                                required
-                            />
-                        </div>
-                        
-                        <button
-                            type="button"
-                            onClick={handleUserSignup}
-                            className="form-submit-btn"
-                            disabled={isSubmitting || !userName.trim()}
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="submit-loader" />
-                                    Creating Account...
-                                </>
-                            ) : (
-                                'Continue'
-                            )}
-                        </button>
+                    <div className="form-group">
+                        <label htmlFor="userName" className="form-label">Full Name</label>
+                        <input
+                        type="text"
+                        id="userName"
+                        value={userName}
+                        onChange={(e) => setUserName(e.target.value)}
+                        placeholder="Enter your full name"
+                        className="form-input"
+                        disabled={isSubmitting}
+                        required
+                        />
+                    </div>
+                    
+                    <button
+                        type="button"
+                        onClick={handleUserSignup}
+                        className="form-submit-btn"
+                        disabled={isSubmitting || !userName.trim()}
+                    >
+                        {isSubmitting ? (
+                        <>
+                            <Loader2 className="submit-loader" />
+                            Creating Account...
+                        </>
+                        ) : (
+                        'Continue'
+                        )}
+                    </button>
                     </div>
                 </div>
+                </div>
+            )}
+
+            {/* Download Modal */}
+            {showDownloadModal && (
+    <div className="download-modal-overlay">
+        <div className="download-modal">
+            <div className="download-modal-header">
+                <div className="download-modal-icon">
+                    <Download className="modal-download-icon" />
+                </div>
+                <h2 className="download-modal-title">
+                    {downloadType === 'single' ? 'Download Image' : `Download ${selectedImages.length} Images`}
+                </h2>
+                <p className="download-modal-subtitle">Choose your preferred format</p>
+                {!isDownloading && (
+                    <button onClick={closeDownloadModal} className="download-modal-close">
+                        <X className="close-icon" />
+                    </button>
+                )}
             </div>
-        )}
 
-        {/* Download Modal */}
-        {showDownloadModal && (
-            <div className="download-modal-overlay">
-                <div className="download-modal">
-                    <div className="download-modal-header">
-                        <div className="download-modal-icon">
-                            <Download className="modal-download-icon" />
-                        </div>
-                        <h2 className="download-modal-title">
-                            {downloadType === 'single' ? 'Download Image' : `Download ${selectedImages.length} Images`}
-                        </h2>
-                        <p className="download-modal-subtitle">Choose your preferred format</p>
-                        {!isDownloading && (
-                            <button onClick={closeDownloadModal} className="download-modal-close">
-                                <X className="close-icon" />
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="download-modal-content">
-                        {!isDownloading ? (
-                            <>
-                                {downloadType === 'multiple' && (
-                                    <div className="download-warning">
-                                        <p className="warning-text">
-                                            <strong>Note:</strong> To download multiple images, please ensure your browser allows multiple download from this site. You may see a prompt in your browser’s address bar to allow multiple downloads. Click "Allow" to proceed.
-                                        </p>
-                                    </div>
-                                )}
-                                <div className="format-selection">
-                                    <h3 className="format-title">Select Format:</h3>
-                                    <div className="format-options">
-                                        <button
-                                            className={`format-btn ${selectedFormat === 'jpeg' ? 'format-active' : ''}`}
-                                            onClick={() => setSelectedFormat('jpeg')}
-                                        >
-                                            <span className="format-name">JPEG</span>
-                                            <span className="format-desc">Good, smaller size</span>
-                                        </button>
-                                        <button
-                                            className={`format-btn ${selectedFormat === 'png' ? 'format-active' : ''}`}
-                                            onClick={() => setSelectedFormat('png')}
-                                        >
-                                            <span className="format-name">PNG</span>
-                                            <span className="format-desc">High quality, larger size</span>
-                                        </button>
-                                        <button
-                                            className={`format-btn ${selectedFormat === 'webp' ? 'format-active' : ''}`}
-                                            onClick={() => setSelectedFormat('webp')}
-                                        >
-                                            <span className="format-name">WebP</span>
-                                            <span className="format-desc">Modern format, good compression</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="download-actions">
-                                    <button
-                                        onClick={downloadType === 'single' ? handleSingleDownload : handleMultipleDownload}
-                                        className="download-start-btn"
-                                        disabled={isDownloading}
-                                    >
-                                        <Download className="btn-icon" />
-                                        Start Download
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="download-progress-section">
-                                <div className="progress-info">
-                                    <h3 className="progress-title">
-                                        {downloadType === 'single' ? 'Downloading Image...' : `Downloading Images...`}
-                                    </h3>
-                                    <p className="progress-subtitle">
-                                        {downloadType === 'multiple' && `${Math.ceil((downloadProgress / 100) * selectedImages.length)} of ${selectedImages.length} images`}
-                                    </p>
-                                </div>
-
-                                <div className="progress-container">
-                                    <div className="progress-bar">
-                                        <div
-                                            className="progress-fill"
-                                            style={{ width: `${downloadProgress}%` }}
-                                        ></div>
-                                    </div>
-                                    <span className="progress-percentage">{Math.round(downloadProgress)}%</span>
-                                </div>
-
-                                <div className="progress-status">
-                                    <Loader2 className="progress-spinner" />
-                                    <span>Please wait while we prepare your {downloadType === 'single' ? 'image' : 'images'}...</span>
-                                </div>
+            <div className="download-modal-content">
+                {!isDownloading ? (
+                    <>
+                        {downloadType === 'multiple' && (
+                            <div className="download-warning">
+                                <p className="warning-text">
+                                    <strong>Note:</strong> To download multiple images, please ensure your browser allows multiple download from this site. You may see a prompt in your browser’s address bar to allow multiple downloads. Click "Allow" to proceed.
+                                </p>
                             </div>
                         )}
-                    </div>
-                </div>
-            </div>
-        )}
+                        <div className="format-selection">
+                            <h3 className="format-title">Select Format:</h3>
+                            <div className="format-options">
+                                <button
+                                    className={`format-btn ${selectedFormat === 'jpeg' ? 'format-active' : ''}`}
+                                    onClick={() => setSelectedFormat('jpeg')}
+                                >
+                                    <span className="format-name">JPEG</span>
+                                    <span className="format-desc">Good, smaller size</span>
+                                </button>
+                                <button
+                                    className={`format-btn ${selectedFormat === 'png' ? 'format-active' : ''}`}
+                                    onClick={() => setSelectedFormat('png')}
+                                >
+                                    <span className="format-name">PNG</span>
+                                    <span className="format-desc">High quality, larger size</span>
+                                </button>
+                                <button
+                                    className={`format-btn ${selectedFormat === 'webp' ? 'format-active' : ''}`}
+                                    onClick={() => setSelectedFormat('webp')}
+                                >
+                                    <span className="format-name">WebP</span>
+                                    <span className="format-desc">Modern format, good compression</span>
+                                </button>
+                            </div>
+                        </div>
 
-        {/* Fixed Header */}
-        <header className="header">
-            <div className="header-content">
+                        <div className="download-actions">
+                            <button
+                                onClick={downloadType === 'single' ? handleSingleDownload : handleMultipleDownload}
+                                className="download-start-btn"
+                                disabled={isDownloading}
+                            >
+                                <Download className="btn-icon" />
+                                Start Download
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="download-progress-section">
+                        <div className="progress-info">
+                            <h3 className="progress-title">
+                                {downloadType === 'single' ? 'Downloading Image...' : `Downloading Images...`}
+                            </h3>
+                            <p className="progress-subtitle">
+                                {downloadType === 'multiple' && `${Math.ceil((downloadProgress / 100) * selectedImages.length)} of ${selectedImages.length} images`}
+                            </p>
+                        </div>
+
+                        <div className="progress-container">
+                            <div className="progress-bar">
+                                <div
+                                    className="progress-fill"
+                                    style={{ width: `${downloadProgress}%` }}
+                                ></div>
+                            </div>
+                            <span className="progress-percentage">{Math.round(downloadProgress)}%</span>
+                        </div>
+
+                        <div className="progress-status">
+                            <Loader2 className="progress-spinner" />
+                            <span>Please wait while we prepare your {downloadType === 'single' ? 'image' : 'images'}...</span>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    </div>
+)}
+
+            {/* Fixed Header */}
+            <header className="header">
+                <div className="header-content">
                 <div className="header-left">
                     <div className="logo-container">
-                        <img src={bcclogo} alt="Logo" className="logos" />
-                    </div>
+                    <img src={bcclogo} alt="Logo" className="logos" />
+        </div>
                     <h1 className="header-title">
-                        BCC Gallery 1.0
-                        <div className="header-underline"></div>
+                    BCC Gallery 1.0
+                    <div className="header-underline"></div>
                     </h1>
                 </div>
                 <button onClick={toggleMenu} className="menu-button" aria-label="Toggle menu">
                     <Menu className="menu-icon" />
                 </button>
-            </div>
-        </header>
+                </div>
+            </header>
 
-        {/* Sliding Menu Overlay */}
-        {isMenuOpen && <div className="menu-overlay" onClick={toggleMenu} />}
+            {/* Sliding Menu Overlay */}
+            {isMenuOpen && <div className="menu-overlay" onClick={toggleMenu} />}
 
-        <div className={`sliding-menu ${isMenuOpen ? "menu-open" : ""}`}>
-            <div className="menu-content">
+
+            <div className={`sliding-menu ${isMenuOpen ? "menu-open" : ""}`}>
+                <div className="menu-content">
                 <div className="menu-header">
                     <h2 className="menu-title">Menu</h2>
                     <button onClick={toggleMenu} className="close-button">
-                        <X className="close-icon" />
+                    <X className="close-icon" />
                     </button>
                 </div>
 
                 <nav className="menu-nav">
                     <Link to="/albums" className="menu-item" onClick={toggleMenu}>
-                        <Image className="menu-item-icon" />
-                        <span className="menu-item-text">Albums</span>
+                    <Image className="menu-item-icon" />
+                    <span className="menu-item-text">Albums</span>
                     </Link>
 
                     <Link to="/saved" className="menu-item" onClick={toggleMenu}>
-                        <Heart className="menu-item-icon" />
-                        <span className="menu-item-text">Saved</span>
+                    <Heart className="menu-item-icon" />
+                    <span className="menu-item-text">Saved</span>
                     </Link>
 
                     <Link to="/notification" className="menu-item" onClick={toggleMenu}>
-                        <Bell className="menu-item-icon" />
-                        <span className="menu-item-text">Notification</span>
+                    <Bell className="menu-item-icon" />
+                    <span className="menu-item-text">Notification</span>
                     </Link>
                 </nav>
 
                 <div className="menu-user">
+                    
                     <div className="user-name">{currentUser?.name || "Pastor David Johnson"}</div>
                 </div>
+                </div>
             </div>
-        </div>
 
-        {/* Hero Section */}
-        <div className="hero-section">
-            <div className="decoration-top"></div>
-            <div className="decoration-bottom"></div>
-            <div className="hero-content">
+            {/* Hero Section */}
+            <div className="hero-section">
+                <div className="decoration-top"></div>
+                <div className="decoration-bottom"></div>
+                <div className="hero-content">
                 <h2 className="welcome-title">
                     Welcome to{" "}
                     <span className="welcome-highlight">
-                        BCC Gallery
-                        <div className="welcome-underline"></div>
+                    BCC Gallery
+                    <div className="welcome-underline"></div>
                     </span>
                 </h2>
                 <p className="welcome-description">
@@ -1036,92 +1022,98 @@ return (
                 <div className="welcome-line-container">
                     <div className="welcome-line"></div>
                 </div>
+                </div>
             </div>
-        </div>
 
-        {/* Scrollable Content */}
-        <div className="scrollable-content">
+            {/* Scrollable Content */}
+            <div className="scrollable-content">
+
             {showScrollTop && (
-                <button
-                    onClick={scrollToTop}
-                    className={`scroll-top-btn ${showScrollTop ? 'visible' : ''}`}
-                    aria-label="Scroll to top"
-                >
-                    <ArrowUp className="scroll-top-icon" />
-                </button>
-            )}
-            {/* Auto-sliding Carousel */}
-            <div className="carousel-container">
+    <button
+      onClick={scrollToTop}
+      className={`scroll-top-btn ${showScrollTop ? 'visible' : ''}`}
+      aria-label="Scroll to top"
+    >
+      <ArrowUp className="scroll-top-icon" />
+    </button>
+  )}
+                {/* Auto-sliding Carousel */}
+                <div className="carousel-container">
                 {isLoadingCarousel ? (
                     <div className="loading-container">
-                        <Loader2 className="loading-spinner" />
-                        <p>Loading carousel images...</p>
+                    <Loader2 className="loading-spinner" />
+                    <p>Loading carousel images...</p>
                     </div>
                 ) : carouselError ? (
                     <div className="error-container">
-                        <p>Error loading carousel: {carouselError}</p>
-                        <button onClick={fetchCarouselImages} className="retry-btn">Retry</button>
+                    <p>Error loading carousel: {carouselError}</p>
+                    <button onClick={fetchCarouselImages} className="retry-btn">Retry</button>
                     </div>
                 ) : carouselImages.length === 0 ? (
                     <div className="no-images-container">
-                        <p>No carousel images available</p>
+                    <p>No carousel images available</p>
                     </div>
                 ) : (
                     <>
-                        <div className="carousel">
-                            {carouselImages.map((image, index) => {
-                                let slideClass = "carousel-slide";
-                                if (index === currentSlide && !isTransitioning) {
-                                    slideClass += " slide-active";
-                                } else if (index === currentSlide && isTransitioning) {
-                                    slideClass += " slide-exiting";
-                                } else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
-                                    slideClass += " slide-entering";
-                                }
-                                
-                                return (
-                                    <div key={image._id || index} className={slideClass}>
-                                        <img
-                                            src={image.imageUrl || "/placeholder.svg"} 
-                                            alt={`Church gallery image ${index + 1}`}
-                                            className="carousel-image"
-                                           
-                                        />
-                                        <div className="carousel-overlay" />
-                                    </div>
-                                );
-                            })}
-                            <div className="carousel-content">
-                                <center></center>
-                            </div>
-                        </div>
+{/* hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjj */}
+                    {/* vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */}
+                  
+                    <div className="carousel">
+  {carouselImages.map((image, index) => {
+    let slideClass = "carousel-slide";
+    if (index === currentSlide && !isTransitioning) {
+      slideClass += " slide-active";
+    } else if (index === currentSlide && isTransitioning) {
+      slideClass += " slide-exiting";
+    } else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
+      slideClass += " slide-entering";
+    }
+    
+    return (
+      <div key={image._id || index} className={slideClass}>
+        <img
+          src={image.imageUrl || "/placeholder.svg"} 
+          alt={`Church gallery image ${index + 1}`}
+          className="carousel-image"
+          onClick={() => openFullscreen(image.imageUrl)} 
+        />
+        <div className="carousel-overlay" />
+      </div>
+    );
+  })}
+  <div className="carousel-content">
+    <center></center>
+  </div>
+</div>
+
                     </>
                 )}
-            </div>
+                </div>
 
-            {/* Sunday Service Section */}
-            <div className="service-section">
+                {/* Sunday Service Section */}
+                <div className="service-section">
                 <h3 className="service-title">
-                    {isLoadingAlbum ? (
-                        <span>Loading album title...</span>
-                    ) : albumError || !latestAlbumTitle ? (
-                        <span>No album available</span>
-                    ) : (
-                        latestAlbumTitle
-                    )}
-                    <b className="welcome-underline"></b>
-                </h3>
+    {isLoadingAlbum ? (
+        <span>Loading album title...</span>
+    ) : albumError || !latestAlbumTitle ? (
+        <span>No album available</span>
+    ) : (
+        latestAlbumTitle
+    )}
+    <b className="welcome-underline"></b>
+</h3>
+                
 
                 {/* Action Buttons */}
                 <div className="action-buttons">
                     <button onClick={handleDownloadAll} className="action-btn download-all">
-                        <Download className="btn-icon" />
-                        Download All ({selectedImages.length} selected)
+                    <Download className="btn-icon" />
+                    Download All ({selectedImages.length} selected)
                     </button>
                     <button onClick={handleSaveAll} className="action-btn save-all">
-                        <Save className="btn-icon" />
-                        Save All ({selectedImages.length} selected)
-                    </button>
+    <Save className="btn-icon" />
+    Save All ({selectedImages.length} selected)
+</button>
                 </div>
 
                 <hr />
@@ -1129,133 +1121,132 @@ return (
                 {/* Image Gallery */}
                 {isLoadingGallery ? (
                     <div className="loading-container">
-                        <Loader2 className="loading-spinner" />
-                        <p>Loading gallery images...</p>
+                    <Loader2 className="loading-spinner" />
+                    <p>Loading gallery images...</p>
                     </div>
                 ) : galleryError ? (
                     <div className="error-container">
-                        <p>Error loading gallery: {galleryError}</p>
-                        <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
+                    <p>Error loading gallery: {galleryError}</p>
+                    <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
                     </div>
                 ) : galleryImages.length === 0 ? (
                     <div className="no-images-container">
-                        <p>No gallery images available</p>
+                    <p>No gallery images available</p>
                     </div>
                 ) : (
                     <div className="image-gallery">
-                        {galleryImages.map((image, index) => (
-                            <div key={image._id || index} className="image-card">
-                                <div className="image-container">
-                                    <img
-                                        src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"}
-                                        alt={`Service ${index + 1}`}
-                                        className="gallery-image"
-                                        onClick={() => openFullscreen(image.imageUrl)}
-                                    />
-                                    <div className="image-overlay">
-                                        <input
-                                            type="checkbox"
-                                            className="image-checkbox"
-                                            checked={selectedImages.includes(index)}
-                                            onChange={() => handleImageSelect(index)}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
-                                    </div>
-                                </div>
-                                
-                                {/* Reaction Section */}
-                                <div className="reaction-section">
-                                    <button
-                                        className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
-                                        onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
-                                        title="Party Popper"
-                                        disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
-                                    >
-                                        🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
-                                    </button>
-                                    <button
-                                        className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
-                                        onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
-                                        title="Thumbs Up"
-                                        disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
-                                    >
-                                        👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
-                                    </button>
-                                    <button
-                                        className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
-                                        onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
-                                        title="Red Heart"
-                                        disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
-                                    >
-                                        ❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
-                                    </button>
-                                    <button
-                                        className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
-                                        onClick={() => debouncedHandleReaction(image._id, 'fire')}
-                                        title="Fire"
-                                        disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
-                                    >
-                                        🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
-                                    </button>
-                                </div>
-                                
-                                <div className="image-actions">
-                                    <button
-                                        onClick={() => handleDownloadSelected(index)}
-                                        className="image-btn download-btn"
-                                        title="Download"
-                                    >
-                                        <Download className="image-btn-icon" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleSaveSelected(index)}
-                                        className="image-btn save-btn"
-                                        title="Save"
-                                        disabled={isSubmitting}
-                                    >
-                                        <Save className="image-btn-icon" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+  {galleryImages.map((image, index) => (
+    <div key={image._id || index} className="image-card">
+      <div className="image-container">
+        <img
+          src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} // Use thumbnail for display
+          alt={`Service ${index + 1}`}
+          className="gallery-image"
+          onClick={() => openFullscreen(image.imageUrl)} // Use original for fullscreen
+        />
+        <div className="image-overlay">
+          <input
+            type="checkbox"
+            className="image-checkbox"
+            checked={selectedImages.includes(index)}
+            onChange={() => handleImageSelect(index)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      </div>
+                        
+                {/* Reaction Section */}
+                <div className="reaction-section">
+    <button
+      className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
+      onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
+      title="Party Popper"
+      disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
+    >
+      🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
+    </button>
+    <button
+      className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
+      onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
+      title="Thumbs Up"
+      disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
+    >
+      👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
+    </button>
+    <button
+      className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
+      onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
+      title="Red Heart"
+      disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
+    >
+      ❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
+    </button>
+    <button
+      className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
+      onClick={() => debouncedHandleReaction(image._id, 'fire')}
+      title="Fire"
+      disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
+    >
+      🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
+    </button>
+  </div>
+                        
+                        <div className="image-actions">
+                        <button
+          onClick={() => handleDownloadSelected(index)}
+          className="image-btn download-btn"
+          title="Download"
+        >
+          <Download className="image-btn-icon" />
+        </button>
+        <button
+          onClick={() => handleSaveSelected(index)}
+          className="image-btn save-btn"
+          title="Save"
+          disabled={isSubmitting}
+        >
+          <Save className="image-btn-icon" />
+        </button>
+                        </div>
+                        </div>
+                    ))}
                     </div>
                 )}
-            </div>
+                </div>
 
-            {/* Footer */}
-            <footer className="footer">
+                {/* Footer */}
+                <footer className="footer">
                 <div className="footer-content">
                     <div className="footer-info">
-                        <h3 className="footer-title">Believers Community Church</h3>
-                        <p className="footer-subtitle">God's platfrom for building men</p>
+                    <h3 className="footer-title">Believers Community Church</h3>
+                    <p className="footer-subtitle">God's platfrom for building men</p>
                     </div>
                     <div className="footer-copyright">
-                        <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
+                    <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
                     </div>
                 </div>
-            </footer>
-        </div>
+                </footer>
+            </div>
 
-        {fullscreenImage && (
-            <div className="fullscreen-modal" onClick={closeFullscreen}>
+            {fullscreenImage && (
+                <div className="fullscreen-modal" onClick={closeFullscreen}>
+
                 <button className="fullscreen-close" onClick={closeFullscreen}>
                     <X className="close-icon-large" />
                 </button>
+
                 <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
                     <img
-                        src={fullscreenImage || "/placeholder.svg"}
-                        alt="Fullscreen view"
-                        className="fullscreen-image"
+                    src={fullscreenImage || "/placeholder.svg"}
+                    alt="Fullscreen view"
+                    className="fullscreen-image"
                     />
                 </div>
+                </div>
+            )}
             </div>
-        )}
-    </>
-)}
-</div>
-);
-
-}
+        )
+        }
 
 export default HomePage
 
