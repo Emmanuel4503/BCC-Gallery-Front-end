@@ -447,7 +447,6 @@ const fetchGalleryImages = async (silent = false) => {
             fetchUserReactions(currentUser.id);
             }
         }, [currentUser?.id]);
-
         useEffect(() => {
             if (!carouselImages.length && !galleryImages.length) return;
         
@@ -456,42 +455,56 @@ const fetchGalleryImages = async (silent = false) => {
                 ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
             ].filter(url => url && typeof url === 'string');
         
-            if (!allImages.length) {
-                setPreloadProgress(100);
-                setTimeout(() => setIsPreLoading(false), 1000); // Minimum display time
-                return;
-            }
-        
+            const minDuration = 8000; // 8 seconds for progress bar to reach 100%
+            const progressInterval = 50; // Update every 50ms
+            const finalDelay = 2000; // 2 seconds delay at 100%
             let loadedImages = 0;
             const totalImages = allImages.length;
+            let targetProgress = 0; // Tracks image loading progress
+            let currentProgress = 0; // Tracks displayed progress for animation
         
             const updateProgress = () => {
                 loadedImages += 1;
-                const progress = (loadedImages / totalImages) * 100;
-                setPreloadProgress(Math.min(progress, 100));
-                if (loadedImages >= totalImages) {
-                    setTimeout(() => {
-                        setPreloadProgress(100);
-                        setIsPreLoading(false);
-                    }, 1000); // Delay for smooth transition
-                }
+                targetProgress = Math.min((loadedImages / totalImages) * 100, 100);
             };
         
-            allImages.forEach(url => {
-                const img = new window.Image(); // Use window.Image to avoid conflicts
-                img.src = url;
-                img.onload = updateProgress;
-                img.onerror = updateProgress; // Count failed images as loaded
-            });
+            // Preload images
+            if (allImages.length) {
+                allImages.forEach(url => {
+                    const img = new window.Image();
+                    img.src = url;
+                    img.onload = updateProgress;
+                    img.onerror = updateProgress;
+                });
+            } else {
+                targetProgress = 100; // No images to load
+            }
         
-            const fallbackTimeout = setTimeout(() => {
-                if (loadedImages < totalImages) {
-                    setPreloadProgress(100);
-                    setIsPreLoading(false);
+            // Smoothly increment progress bar
+            const interval = setInterval(() => {
+                if (currentProgress < 100) {
+                    currentProgress += (100 / (minDuration / progressInterval)); // Reach 100 over 8 seconds
+                    if (currentProgress > targetProgress) currentProgress = targetProgress;
+                    setPreloadProgress(Math.min(currentProgress, 100));
                 }
-            }, 10000); // 10s fallback
+                if (currentProgress >= 100 || (loadedImages >= totalImages && currentProgress >= targetProgress)) {
+                    clearInterval(interval);
+                    setPreloadProgress(100);
+                    setTimeout(() => setIsPreLoading(false), finalDelay);
+                }
+            }, progressInterval);
         
-            return () => clearTimeout(fallbackTimeout);
+            // Fallback timeout (12 seconds max)
+            const fallbackTimeout = setTimeout(() => {
+                clearInterval(interval);
+                setPreloadProgress(100);
+                setIsPreLoading(false);
+            }, 12000);
+        
+            return () => {
+                clearInterval(interval);
+                clearTimeout(fallbackTimeout);
+            };
         }, [carouselImages, galleryImages]);
         
             useEffect(() => {
