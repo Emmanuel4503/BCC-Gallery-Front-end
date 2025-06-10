@@ -455,7 +455,7 @@ const fetchGalleryImages = async (silent = false) => {
                 ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
             ].filter(url => url && typeof url === 'string');
         
-            const minDuration = 6000; 
+            const minDuration = 4000; 
             const progressInterval = 50; 
             const finalDelay = 2000; 
             let loadedImages = 0;
@@ -499,7 +499,7 @@ const fetchGalleryImages = async (silent = false) => {
                 clearInterval(interval);
                 setPreloadProgress(100);
                 setIsPreLoading(false);
-            }, 10000);
+            }, 8000);
         
             return () => {
                 clearInterval(interval);
