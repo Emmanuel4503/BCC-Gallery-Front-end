@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import "../styles/HomePage.css"
 import bcclogo from './bcclogo.png';
 
@@ -35,6 +35,7 @@ const [albumError, setAlbumError] = useState(null);
 const [isTransitioning, setIsTransitioning] = useState(false)
 const [isPreLoading, setIsPreLoading] = useState(true);
 const [preloadProgress, setPreloadProgress] = useState(0);
+const location = useLocation();
 
 // Fetch carousel images
 const fetchCarouselImages = async () => {
@@ -449,10 +450,23 @@ useEffect(() => {
 }, [currentUser?.id]);
 
 useEffect(() => {
-    // Reset hasShownPreloader on initial mount (e.g., page refresh)
-    sessionStorage.removeItem('hasShownPreloader');
+    // Check if user is coming from internal navigation
+    const hasShownPreloader = sessionStorage.getItem('hasShownPreloader');
+    const isInternalNavigation = sessionStorage.getItem('isInternalNavigation');
+    
+    // If coming from internal navigation and preloader was already shown, skip it
+    if (isInternalNavigation === 'true' && hasShownPreloader === 'true') {
+        setIsPreLoading(false);
+        setPreloadProgress(100);
+        // Clear the internal navigation flag
+        sessionStorage.removeItem('isInternalNavigation');
+        return;
+    }
 
-    // Initialize preloader
+    // Reset navigation flag for fresh page loads
+    sessionStorage.removeItem('isInternalNavigation');
+
+    // Initialize preloader for fresh loads or first visit
     setIsPreLoading(true);
     setPreloadProgress(0);
 
@@ -466,7 +480,7 @@ useEffect(() => {
             setPreloadProgress(100);
             setTimeout(() => {
                 setIsPreLoading(false);
-                sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
+                sessionStorage.setItem('hasShownPreloader', 'true');
             }, 1000);
             return;
         }
@@ -482,7 +496,7 @@ useEffect(() => {
                 setTimeout(() => {
                     setPreloadProgress(100);
                     setIsPreLoading(false);
-                    sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
+                    sessionStorage.setItem('hasShownPreloader', 'true');
                 }, 1000);
             }
         };
@@ -498,7 +512,7 @@ useEffect(() => {
             if (loadedImages < totalImages) {
                 setPreloadProgress(100);
                 setIsPreLoading(false);
-                sessionStorage.setItem('hasShownPreloader', 'true'); // Set flag when preloader completes
+                sessionStorage.setItem('hasShownPreloader', 'true');
             }
         }, 10000);
 
@@ -518,6 +532,31 @@ useEffect(() => {
         return () => clearInterval(timer);
     }
 }, [isLoadingCarousel, isLoadingGallery, carouselImages, galleryImages]);
+
+// Add this new function after your existing functions:
+const handleMenuNavigation = (path) => {
+    // Set flag to indicate internal navigation
+    sessionStorage.setItem('isInternalNavigation', 'true');
+    toggleMenu();
+};
+
+// Update your menu navigation JSX (replace the existing nav section):
+<nav className="menu-nav">
+    <Link to="/albums" className="menu-item" onClick={() => handleMenuNavigation('/albums')}>
+        <Image className="menu-item-icon" />
+        <span className="menu-item-text">Albums</span>
+    </Link>
+
+    <Link to="/saved" className="menu-item" onClick={() => handleMenuNavigation('/saved')}>
+        <Heart className="menu-item-icon" />
+        <span className="menu-item-text">Saved</span>
+    </Link>
+
+    <Link to="/notification" className="menu-item" onClick={() => handleMenuNavigation('/notification')}>
+        <Bell className="menu-item-icon" />
+        <span className="menu-item-text">Notification</span>
+    </Link>
+</nav>
 
     useEffect(() => {
         const checkExistingUser = () => {
