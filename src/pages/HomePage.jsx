@@ -485,11 +485,9 @@ useEffect(() => {
     });
 
     const fallbackTimeout = setTimeout(() => {
-        if (loadedImages < totalImages) {
-            setPreloadProgress(100);
-            setIsPreLoading(false);
-        }
-    }, 10000); 
+        setPreloadProgress(100);
+        setIsPreLoading(false);
+    }, 5000); // Changed from 10000 to 5000 for 5 seconds
 
     return () => clearTimeout(fallbackTimeout);
 }, [carouselImages, galleryImages]);
