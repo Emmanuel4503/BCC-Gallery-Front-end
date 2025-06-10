@@ -367,7 +367,8 @@ html, body {
     height: 100%;
     transform: translateX(100%) rotateY(90deg);
     opacity: 0;
-    transition: all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition: transform 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55), 
+    opacity 0.8s ease-in-out;
     transform-origin: left center;
     will-change: transform, opacity; 
     backface-visibility: hidden; 
@@ -377,14 +378,29 @@ html, body {
     transform: translateX(0) rotateY(0deg);
     opacity: 1;
   }
+  .carousel-slide.slide-active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 70%);
+    pointer-events: none;
+    z-index: 2;
+    animation: glow 1.2s ease-in-out;
+  }
+  
+  @keyframes glow {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
   
   .carousel-slide.slide-entering {
-    transform: translateX(100%) rotateY(90deg) scale(0.8);
+    transform: translateX(100%) rotateY(60deg) scale(0.95);
     opacity: 0;
   }
   
   .carousel-slide.slide-exiting {
-    transform: translateX(-100%) rotateY(-90deg) scale(1.2);
+    transform: translateX(-100%) rotateY(-60deg) scale(1.05);
     opacity: 0;
   }
   
