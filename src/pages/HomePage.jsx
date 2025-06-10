@@ -1,6 +1,6 @@
         import { useState, useEffect, useCallback } from "react"
         import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
-        import { Link } from "react-router-dom"
+        import { Link, useLocation } from "react-router-dom"
         import "../styles/HomePage.css"
         import bcclogo from './bcclogo.png';
 
@@ -35,7 +35,7 @@
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [isPreLoading, setIsPreLoading] = useState(true);
     const [preloadProgress, setPreloadProgress] = useState(0);
-    const [isDirectVisit, setIsDirectVisit] = useState(false);
+    const [isBackNavigation, setIsBackNavigation] = useState(false);
 
         // Fetch carousel images
         const fetchCarouselImages = async () => {
@@ -439,19 +439,17 @@ const fetchGalleryImages = async (silent = false) => {
               setDownloadProgress(0);
             }
           };
+
           useEffect(() => {
-            const hasShownPreloader = sessionStorage.getItem('hasShownPreloader');
-            const isNavigated = performance.getEntriesByType('navigation')[0]?.type === 'navigate';
-        
-            if (!hasShownPreloader && isNavigated) {
-                setIsDirectVisit(true);
-                sessionStorage.setItem('hasShownPreloader', 'true');
+            const navEntry = performance.getEntriesByType('navigation')[0];
+            if (navEntry?.type === 'back_forward') {
+                setIsBackNavigation(true);
+                setIsPreLoading(false); // Skip preloader for back navigation
             } else {
-                setIsDirectVisit(false);
-                setIsPreLoading(false); // Skip pre-loader for non-direct visits
+                setIsBackNavigation(false);
             }
         }, []);
-
+        
         useEffect(() => {
             fetchCarouselImages();
             fetchGalleryImages();
@@ -461,8 +459,9 @@ const fetchGalleryImages = async (silent = false) => {
             }
         }, [currentUser?.id]);
 
+
         useEffect(() => {
-            if (!isDirectVisit || (!carouselImages.length && !galleryImages.length)) {
+            if (isBackNavigation || (!carouselImages.length && !galleryImages.length)) {
                 setIsPreLoading(false);
                 return;
             }
@@ -519,7 +518,7 @@ const fetchGalleryImages = async (silent = false) => {
                 clearInterval(interval);
                 clearTimeout(fallbackTimeout);
             };
-        }, [isDirectVisit, carouselImages, galleryImages]);
+        }, [isBackNavigation, carouselImages, galleryImages]);
         
             useEffect(() => {
                 const checkExistingUser = () => {
@@ -829,7 +828,7 @@ const fetchGalleryImages = async (silent = false) => {
 
 return (
     <div className="page-container">
-       {isPreLoading && isDirectVisit ? (
+       {isPreLoading ? (
     <div className="preloader-overlay">
         <div className="preloader-container">
             <div className="preloader-spinner">
@@ -842,9 +841,7 @@ return (
             </div>
         </div>
     </div>
-) : (
-        
-            <>
+) : (       <>
                 {/* User Signup Modal */}
                 {showUserModal && (
                     <div className="user-modal-overlay">
