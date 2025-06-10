@@ -1010,7 +1010,7 @@ const fetchGalleryImages = async (silent = false) => {
 {/* hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjj */}
                     {/* vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */}
                   
-<div className="carousel">
+                    <div className="carousel">
   {carouselImages.map((image, index) => {
     let slideClass = "carousel-slide";
     if (index === currentSlide && !isTransitioning) {
@@ -1024,7 +1024,7 @@ const fetchGalleryImages = async (silent = false) => {
     return (
       <div key={image._id || index} className={slideClass}>
         <img
-          src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
+          src={image.imageUrl || "/placeholder.svg"} 
           alt={`Church gallery image ${index + 1}`}
           className="carousel-image"
           onClick={() => openFullscreen(image.imageUrl)} 
