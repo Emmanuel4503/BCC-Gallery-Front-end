@@ -1085,7 +1085,7 @@ return (
                                             src={image.imageUrl || "/placeholder.svg"} 
                                             alt={`Church gallery image ${index + 1}`}
                                             className="carousel-image"
-                                            // onClick={() => openFullscreen(image.imageUrl)} 
+                                           
                                         />
                                         <div className="carousel-overlay" />
                                     </div>
