@@ -80,9 +80,9 @@ function AlbumsPage() {
         throw new Error('Invalid response: Expected an array of images');
       }
 
-      const processedData = data.slice(0, 20).map((image) => {
+      const processedData = data.map((image) => {
         let imageUrl = image.imageUrl;
-        let thumbnailUrl = image.thumbnailUrl || image.imageUrl; // Fallback to imageUrl if no thumbnail
+        let thumbnailUrl = image.thumbnailUrl || image.imageUrl;
         if (imageUrl && !imageUrl.startsWith('http')) {
           imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
         }
@@ -91,7 +91,7 @@ function AlbumsPage() {
         }
         return { ...image, imageUrl, thumbnailUrl };
       });
-
+      
       setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
       setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
     } catch (error) {
