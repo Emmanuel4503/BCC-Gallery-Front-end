@@ -1542,7 +1542,7 @@ html, body {
   
     .footer {
       padding: 2rem 0;
-      /* margin-top: 3rem; */
+      margin-top: auto;
     }
   
     .footer-title {
@@ -2200,6 +2200,7 @@ html, body {
     padding: 3rem;
     color: #e74c3c;
     text-align: center;
+    min-height: 20rem;
   }
   
   .retry-btn {
