@@ -429,8 +429,8 @@ function SavedPage() {
               <p>Loading saved images...</p>
             </div>
           ) : error ? (
-            <div className="placeholder-text">
-              <p>Error loading saved images: {error}</p>
+            <div className="error-container">
+              <p className="placeholder-text">Error loading saved images: {error}</p>
               <button onClick={fetchSavedImages} className="retry-btn">
                 Retry
               </button>
