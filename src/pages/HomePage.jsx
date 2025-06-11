@@ -804,6 +804,7 @@ return (
 <div className="page-container">
 {isPreLoading ? (
 <div className="preloader-overlay">
+<div class="preloader-background"></div>
 <div className="preloader-container">
     <div className="preloader-spinner">
         <Loader2 className="spinner-icon" />
