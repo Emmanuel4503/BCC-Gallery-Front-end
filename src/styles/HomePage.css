@@ -2981,7 +2981,7 @@ html, body {
 
 .notification-container {
   position: fixed;
-  top: 9%;
+  top: 8%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2000; 

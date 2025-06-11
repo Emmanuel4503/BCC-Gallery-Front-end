@@ -55,7 +55,7 @@ useEffect(() => {
     // Auto-remove after 6 seconds
     const timeoutId = setTimeout(() => {
       removeCurrentNotification();
-    }, 6000);
+    }, 10000);
 
     return () => clearTimeout(timeoutId);
   }
