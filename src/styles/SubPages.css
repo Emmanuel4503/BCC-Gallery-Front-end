@@ -104,22 +104,22 @@
   }
   
   .placeholder-text {
-    display: flex;
-    flex-direction: column;
+    /* display: flex;
+    flex-direction: column; */
     align-items: center;
-    justify-content: center;
+    /* justify-content: center; */
     padding: 3rem;
     color: #e74c3c;
     text-align: center;
     font-style: italic;
-    min-height: 20rem;
+    min-height: 10rem;
     font-size: 1.1rem;
   }
   .placeholder-loading{
-    display: flex;
+    /* display: flex; */
     /* flex-direction: column; */
     align-items: center;
-    justify-content: center;
+    /* justify-content: center; */
     padding: 3rem;
     text-align: center;
     font-style: italic;
