@@ -565,7 +565,7 @@ html, body {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
     margin-top: 1.8rem;
-    margin-bottom: -80%;
+    margin-bottom: -100%;
   }
   
   .image-card {
