@@ -565,6 +565,7 @@ html, body {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
     margin-top: 1.8rem;
+    margin-bottom: -50%;
   }
   
   .image-card {
@@ -834,8 +835,8 @@ html, body {
   background-color: #1f2937;
   color: white;
   padding: 1.5rem 0;
-  margin-top: 10%;
-  margin-bottom: -100%; 
+  margin-top: 100%;
+  /* margin-bottom: 10px;  */
 }
 
 .footer-content {
