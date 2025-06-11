@@ -3,9 +3,6 @@ import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } f
 import { Link } from "react-router-dom"
 import "../styles/HomePage.css"
 import bcclogo from './bcclogo.png';
-// sssssssssssssssssssssssssssss
-// sssssssssssssssssssssssssssssss
-// AAAAAAAAAAAAAAAAAAA
 function HomePage() {
 const [isMenuOpen, setIsMenuOpen] = useState(false)
 const [currentSlide, setCurrentSlide] = useState(0)
@@ -40,22 +37,21 @@ const [isTransitioning, setIsTransitioning] = useState(false)
 
 const [notifications, setNotifications] = useState([]);
 
-// Add a notification
+
 const addNotification = (message) => {
-  const id = Date.now(); // Unique ID for each notification
+  const id = Date.now();
   setNotifications((prev) => [...prev, { id, message }]);
-  // Auto-remove after 6 seconds
+ 
   setTimeout(() => {
     removeNotification(id);
   }, 6000);
 };
 
-// Remove a notification
 const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
-// Fetch carousel images
+
 const fetchCarouselImages = async () => {
     try {
       setIsLoadingCarousel(true);
@@ -71,7 +67,7 @@ const fetchCarouselImages = async () => {
       }
   
       const data = await response.json();
-      console.log('Carousel images fetched:', data);
+    //   console.log('Carousel images fetched:', data);
   
       setCarouselImages(data);
     } catch (error) {
@@ -110,7 +106,7 @@ const fetchGalleryImages = async (silent = false) => {
       }
   
       const data = await response.json();
-      console.log('Gallery images fetched:', data);
+    //   console.log('Gallery images fetched:', data);
   
       setGalleryImages(data);
     } catch (error) {
@@ -132,7 +128,7 @@ const fetchGalleryImages = async (silent = false) => {
       }
     }
   };
-    // Fetch user reactions from backend
+
     const fetchUserReactions = async (userId) => {
         try {
           const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`);
@@ -143,7 +139,7 @@ const fetchGalleryImages = async (silent = false) => {
             throw new Error(`Failed to fetch user reactions: ${response.status}`);
           }
           const data = await response.json();
-          console.log('User reactions fetched:', data);
+        //   console.log('User reactions fetched:', data);
           const reactions = Object.entries(data).reduce((acc, [imageId, reactionType]) => {
             acc[`${imageId}_${userId}`] = reactionType;
             return acc;
@@ -311,12 +307,12 @@ const downloadImage = async (imageUrl, filename, format) => {
     try {
       console.log('Downloading image:', { imageUrl, filename, format });
   
-      // Validate imageUrl
+     
       if (!imageUrl || typeof imageUrl !== 'string') {
         throw new Error('Invalid image URL provided');
       }
   
-      // Use imageUrl directly if it starts with http(s), otherwise construct Cloudinary URL
+    
       let processedUrl = imageUrl;
       if (!imageUrl.startsWith('http')) {
         processedUrl = `https://res.cloudinary.com/dqxhczhxk/image/upload/${imageUrl}`;
@@ -838,8 +834,8 @@ const closeDownloadModal = () => {
 
 const [showScrollTop, setShowScrollTop] = useState(false);
 const handleScroll = useCallback(() => {
-    const fourRowsHeight = 4 * 150 + 3 * 16; // Adjust based on your .image-card height and gap
-    console.log('ScrollY:', window.scrollY, 'Threshold:', fourRowsHeight, 'ShowScrollTop:', showScrollTop);
+    const fourRowsHeight = 4 * 150 + 3 * 16; 
+    // console.log('ScrollY:', window.scrollY, 'Threshold:', fourRowsHeight, 'ShowScrollTop:', showScrollTop);
     if (window.scrollY > fourRowsHeight) {
       setShowScrollTop(true);
     } else {
@@ -1162,9 +1158,7 @@ aria-label="Scroll to top"
             </div>
         ) : (
             <>
-{/* hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjj */}
-            {/* vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */}
-          
+
             <div className="carousel">
 {carouselImages.map((image, index) => {
 let slideClass = "carousel-slide";
@@ -1246,10 +1240,10 @@ Save All ({selectedImages.length} selected)
 <div key={image._id || index} className="image-card">
 <div className="image-container">
 <img
-  src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} // Use thumbnail for display
+  src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
   alt={`Service ${index + 1}`}
   className="gallery-image"
-  onClick={() => openFullscreen(image.imageUrl)} // Use original for fullscreen
+  onClick={() => openFullscreen(image.imageUrl)}
 />
 <div className="image-overlay">
   <input
