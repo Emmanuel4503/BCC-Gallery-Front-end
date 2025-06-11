@@ -2822,37 +2822,24 @@ html, body {
 
 
 /* Preloader Styles */
-
 .preloader-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 3000;
+  background: linear-gradient(135deg, rgba(254, 154, 101, 0.7), rgba(253, 131, 50, 0.5));
+  filter: blur(15px);
   animation: fadeIn 0.5s ease-in-out;
 }
 
-/* Background layer for blur */
-.preloader-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(254, 154, 101, 0.7), rgba(253, 131, 50, 0.5));
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  z-index: 1;
-}
-
-/* Foreground content */
+/* create a container to prevent content from being blurred */
 .preloader-container {
-  position: relative;
-  z-index: 2;
+  position: absolute; /* Important: absolute to avoid inheriting blur */
   background: white;
   border-radius: 20px;
   padding: 40px;
@@ -2861,7 +2848,9 @@ html, body {
   max-width: 400px;
   width: 90%;
   animation: modalSlideIn 0.5s ease-out;
+  z-index: 3001;
 }
+
 
 .preloader-spinner {
   width: 60px;
