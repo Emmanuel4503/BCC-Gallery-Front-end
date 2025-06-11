@@ -565,7 +565,6 @@ html, body {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
     margin-top: 1.8rem;
-    bottom: 0;
   }
   
   .image-card {
@@ -585,7 +584,6 @@ html, body {
     position: relative;
     aspect-ratio: 3 / 2;
     overflow: hidden;
-    bottom: 0;
   }
   
   .gallery-image {
@@ -836,7 +834,7 @@ html, body {
   background-color: #1f2937;
   color: white;
   padding: 1.5rem 0;
-  margin-top: 100vh;
+  margin-top: 50%;
   /* margin-bottom: 10px;  */
 }
 
@@ -2753,7 +2751,7 @@ html, body {
 /* Scroll to Top Button */
 .scroll-top-btn {
   position: fixed;
-  /* bottom: 2rem; */
+  bottom: 2rem;
   right: 2rem;
   width: 3rem;
   height: 3rem;
