@@ -424,18 +424,18 @@ function SavedPage() {
           <hr />
 
           {isLoading ? (
-            <div className="loading-container">
+            <div className="placeholder-text">
               <Loader2 className="loading-spinner" />
               <p>Loading saved images...</p>
             </div>
           ) : error ? (
             <div className="error-container">
-              <p className="placeholder-text">Error loading saved images: {error}
-              <button onClick={fetchSavedImages} className="retry-btn">
+              <p className="placeholder-text">Error loading saved images: {error} 
+                <button onClick={fetchSavedImages} className="retry-btn">
                 Retry
               </button>
               </p>
-             
+            
             </div>
           ) : savedImages.length === 0 ? (
             <div className="page-placeholder">
