@@ -834,8 +834,8 @@ html, body {
   background-color: #1f2937;
   color: white;
   padding: 1.5rem 0;
-  margin-top: auto;
-  margin-bottom: 10px; /* 10px space from bottom */
+  /* margin-top: auto; */
+  margin-bottom: 10px; 
 }
 
 .footer-content {
