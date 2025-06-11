@@ -2822,22 +2822,37 @@ html, body {
 
 
 /* Preloader Styles */
+
 .preloader-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(254, 154, 101, 0.7), rgba(253, 131, 50, 0.5)); /* Reduced opacity for better blur visibility */
+  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000;
-  backdrop-filter: blur(15px); /* Increased blur for stronger effect */
-  -webkit-backdrop-filter: blur(15px); /* Safari compatibility */
   animation: fadeIn 0.5s ease-in-out;
 }
+
+/* Background layer for blur */
+.preloader-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(254, 154, 101, 0.7), rgba(253, 131, 50, 0.5));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  z-index: 1;
+}
+
+/* Foreground content */
 .preloader-container {
+  position: relative;
+  z-index: 2;
   background: white;
   border-radius: 20px;
   padding: 40px;
@@ -2891,7 +2906,7 @@ html, body {
 .preloader-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #fe9a65, #fd8332);
-  transition: width 0.3s ease-in-out; /* Smooth transition for dynamic width */
+  transition: width 0.3s ease-in-out; 
   position: relative;
 }
 
@@ -2921,7 +2936,7 @@ html, body {
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Responsive Adjustments for Preloader */
+
 @media (max-width: 768px) {
   .preloader-container {
     padding: 30px;
