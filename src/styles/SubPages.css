@@ -106,6 +106,7 @@
   .placeholder-text {
     color: #6b7280;
     font-style: italic;
+    min-height: 20rem;
   }
   
 
