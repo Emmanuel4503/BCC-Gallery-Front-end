@@ -3,7 +3,9 @@ import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } f
 import { Link } from "react-router-dom"
 import "../styles/HomePage.css"
 import bcclogo from './bcclogo.png';
-
+// sssssssssssssssssssssssssssss
+// sssssssssssssssssssssssssssssss
+// ssssssssssssssssssssssssss
 function HomePage() {
 const [isMenuOpen, setIsMenuOpen] = useState(false)
 const [currentSlide, setCurrentSlide] = useState(0)
@@ -35,6 +37,7 @@ const [albumError, setAlbumError] = useState(null);
 const [isTransitioning, setIsTransitioning] = useState(false)
 const [isPreLoading, setIsPreLoading] = useState(true);
 const [preloadProgress, setPreloadProgress] = useState(0);
+const [preloaderError, setPreloaderError] = useState(null);
 
 // Fetch carousel images
 const fetchCarouselImages = async () => {
@@ -65,34 +68,43 @@ const fetchCarouselImages = async () => {
 
 // Fetch gallery images 
 const fetchGalleryImages = async (silent = false) => {
-try {
-if (!silent) {
-    setIsLoadingGallery(true)
-}
-setGalleryError(null)
+    try {
+        if (!silent) {
+            setIsLoadingGallery(true);
+        }
+        setGalleryError(null);
+        setPreloaderError(null);
 
-const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest')
+        const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest');
 
-if (!response.ok) {
-    throw new Error(`Failed to fetch gallery images: ${response.status}`)
-}
+        if (!response.ok) {
+            if (response.status >= 500) {
+                throw new Error('Database error: Unable to retrieve gallery images from the server.');
+            }
+            throw new Error(`Failed to fetch gallery images: ${response.status}`);
+        }
 
-const data = await response.json()
-console.log('Gallery images fetched:', data)
+        const data = await response.json();
+        console.log('Gallery images fetched:', data);
 
-
-setGalleryImages(data)
-} catch (error) {
-console.error('Error fetching gallery images:', error)
-setGalleryError(error.message)
-
-setGalleryImages([])
-} finally {
-if (!silent) {
-    setIsLoadingGallery(false)
-}
-}
-}
+        setGalleryImages(data);
+    } catch (error) {
+        console.error('Error fetching gallery images:', error);
+        if (!navigator.onLine) {
+            setPreloaderError('No internet connection. Please check your network and try again.');
+        } else if (error.message.includes('Database error')) {
+            setPreloaderError('Unable to load gallery images due to a server issue. Please try again later.');
+        } else {
+            setPreloaderError('Network error. Failed to connect to the server. Please try again.');
+        }
+        setGalleryError(error.message);
+        setGalleryImages([]);
+    } finally {
+        if (!silent) {
+            setIsLoadingGallery(false);
+        }
+    }
+};
 
     // Fetch user reactions from backend
 const fetchUserReactions = async (userId) => {
@@ -804,7 +816,10 @@ return (
 <div className="page-container">
 {isPreLoading ? (
 <div className="preloader-overlay">
-<div class="preloader-background"></div>
+<div className="preloader-messages">
+    <p className="preloader-subtitle">Please wait...</p>
+    {preloaderError && <p className="preloader-error">{preloaderError}</p>}
+</div>
 <div className="preloader-container">
     <div className="preloader-spinner">
         <Loader2 className="spinner-icon" />
@@ -816,6 +831,7 @@ return (
     </div>
     <br />
     <p className="preloader-subtitle">Please wait...</p>
+    {preloaderError && <p className="preloader-error">{preloaderError}</p>}
 </div>
 </div>
 ) : (
