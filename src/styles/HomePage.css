@@ -5,6 +5,7 @@ html, body {
   padding: 0;
   display: flex;
   flex-direction: column;
+  min-height: 100vh; /* Ensure full viewport height */
 }
 .header {
     background-color: white;
@@ -331,6 +332,7 @@ html, body {
     position: relative;
     z-index: 10;
     margin-top: 70vh;
+    flex: 1;
     background-color: white;
     border-radius: 1.5rem 1.5rem 0 0;
     box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
@@ -565,7 +567,6 @@ html, body {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
     margin-top: 1.8rem;
-    margin-bottom: -100%;
   }
   
   .image-card {
@@ -835,7 +836,8 @@ html, body {
   background-color: #1f2937;
   color: white;
   padding: 1.5rem 0;
-  margin-top: 100%;
+  /* margin-top: 50%; */
+  margin-top: auto; /* Push footer to the bottom of the flex container */
   /* margin-bottom: 10px;  */
 }
 
@@ -1163,7 +1165,7 @@ html, body {
   
     .footer {
       padding: 1rem 0;
-      /* margin-top: 1.5rem; */
+      margin-top: auto;
     }
   
     .footer-title {
@@ -2174,7 +2176,8 @@ html, body {
     justify-content: center;
     padding: 3rem;
     color: #666;
-    margin-bottom: -100%;
+    min-height: 20rem;
+    min-height: 20rem;
   }
   
   .loading-spinner {
@@ -2197,7 +2200,6 @@ html, body {
     padding: 3rem;
     color: #e74c3c;
     text-align: center;
-    margin-bottom: -100%;
   }
   
   .retry-btn {
@@ -2978,7 +2980,7 @@ html, body {
 
 .notification-container {
   position: fixed;
-  top: 10%;
+  top: 9%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2000; 
