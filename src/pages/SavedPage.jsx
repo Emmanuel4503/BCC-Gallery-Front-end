@@ -424,9 +424,9 @@ function SavedPage() {
           <hr />
 
           {isLoading ? (
-            <div className="placeholder-text">
+            <div className="loading-container">
               <Loader2 className="loading-spinner" />
-              <p>Loading saved images...</p>
+              <p className="placeholder-text">Loading saved images...</p>
             </div>
           ) : error ? (
             <div className="error-container">

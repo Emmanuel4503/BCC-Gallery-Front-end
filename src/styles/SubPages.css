@@ -115,6 +115,17 @@
     min-height: 20rem;
     font-size: 1.2rem;
   }
+  .placeholder-loading{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    font-style: italic;
+    min-height: 20rem;
+    font-size: 1.2rem;
+  }
   
 
   @media (min-width: 768px) {
