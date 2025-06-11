@@ -836,7 +836,7 @@ html, body {
   padding: 1.5rem 0;
   /* margin-top: 100vh; */
   /* margin-bottom: 10px;  */
-  position: fixed;
+  position: absolute;
   top: 100%;
   bottom: 0;
   right: 0;
