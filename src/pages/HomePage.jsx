@@ -38,101 +38,164 @@ const [isTransitioning, setIsTransitioning] = useState(false)
 const [isPreLoading, setIsPreLoading] = useState(true);
 const [preloadProgress, setPreloadProgress] = useState(0);
 
+const [notifications, setNotifications] = useState([]);
+
+// Add a notification
+const addNotification = (message) => {
+  const id = Date.now(); // Unique ID for each notification
+  setNotifications((prev) => [...prev, { id, message }]);
+  // Auto-remove after 6 seconds
+  setTimeout(() => {
+    removeNotification(id);
+  }, 6000);
+};
+
+// Remove a notification
+const removeNotification = (id) => {
+  setNotifications((prev) => prev.filter((notification) => notification.id !== id));
+};
+
 // Fetch carousel images
 const fetchCarouselImages = async () => {
     try {
-    setIsLoadingCarousel(true)
-    setCarouselError(null)
-    
-    const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/selected')
-    
-    if (!response.ok) {
-        throw new Error(`Failed to fetch carousel images: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    console.log('Carousel images fetched:', data)
-    
-
-    setCarouselImages(data)
+      setIsLoadingCarousel(true);
+      setCarouselError(null);
+  
+      const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/selected');
+  
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Database error: Unable to retrieve carousel images from the server.');
+        }
+        throw new Error(`Failed to fetch carousel images: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log('Carousel images fetched:', data);
+  
+      setCarouselImages(data);
     } catch (error) {
-    console.error('Error fetching carousel images:', error)
-    setCarouselError(error.message)
-    
-    setCarouselImages([])
+      console.error('Error fetching carousel images:', error);
+      let message;
+      if (!navigator.onLine) {
+        message = 'No internet connection. Please check your network and try again.';
+      } else if (error.message.includes('Database error')) {
+        message = 'Unable to load carousel images due to a server issue. Please try again later.';
+      } else {
+        message = 'Network error. Failed to connect to the server. Please try again.';
+      }
+      addNotification(message);
+      setCarouselError(error.message);
+      setCarouselImages([]);
     } finally {
-    setIsLoadingCarousel(false)
+      setIsLoadingCarousel(false);
     }
-}
+  };
 
 // Fetch gallery images 
 const fetchGalleryImages = async (silent = false) => {
-try {
-if (!silent) {
-    setIsLoadingGallery(true)
-}
-setGalleryError(null)
-
-const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest')
-
-if (!response.ok) {
-    throw new Error(`Failed to fetch gallery images: ${response.status}`)
-}
-
-const data = await response.json()
-console.log('Gallery images fetched:', data)
-
-
-setGalleryImages(data)
-} catch (error) {
-console.error('Error fetching gallery images:', error)
-setGalleryError(error.message)
-
-setGalleryImages([])
-} finally {
-if (!silent) {
-    setIsLoadingGallery(false)
-}
-}
-}
-
-    // Fetch user reactions from backend
-const fetchUserReactions = async (userId) => {
     try {
-    const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch user reactions: ${response.status}`);
-    }
-    const data = await response.json();
-    console.log('User reactions fetched:', data);
-    const reactions = Object.entries(data).reduce((acc, [imageId, reactionType]) => {
-        acc[`${imageId}_${userId}`] = reactionType;
-        return acc;
-    }, {});
-    setUserReactions(reactions);
+      if (!silent) {
+        setIsLoadingGallery(true);
+      }
+      setGalleryError(null);
+  
+      const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest');
+  
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Database error: Unable to retrieve gallery images from the server.');
+        }
+        throw new Error(`Failed to fetch gallery images: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log('Gallery images fetched:', data);
+  
+      setGalleryImages(data);
     } catch (error) {
-    console.error('Error fetching user reactions:', error);
+      console.error('Error fetching gallery images:', error);
+      let message;
+      if (!navigator.onLine) {
+        message = 'No internet connection. Please check your network and try again.';
+      } else if (error.message.includes('Database error')) {
+        message = 'Unable to load gallery images due to a server issue. Please try again later.';
+      } else {
+        message = 'Network error. Failed to connect to the server. Please try again.';
+      }
+      addNotification(message);
+      setGalleryError(error.message);
+      setGalleryImages([]);
+    } finally {
+      if (!silent) {
+        setIsLoadingGallery(false);
+      }
     }
-};
+  };
+    // Fetch user reactions from backend
+    const fetchUserReactions = async (userId) => {
+        try {
+          const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`);
+          if (!response.ok) {
+            if (response.status >= 500) {
+              throw new Error('Database error: Unable to retrieve user reactions from the server.');
+            }
+            throw new Error(`Failed to fetch user reactions: ${response.status}`);
+          }
+          const data = await response.json();
+          console.log('User reactions fetched:', data);
+          const reactions = Object.entries(data).reduce((acc, [imageId, reactionType]) => {
+            acc[`${imageId}_${userId}`] = reactionType;
+            return acc;
+          }, {});
+          setUserReactions(reactions);
+        } catch (error) {
+          console.error('Error fetching user reactions:', error);
+          let message;
+          if (!navigator.onLine) {
+            message = 'No internet connection. Please check your network and try again.';
+          } else if (error.message.includes('Database error')) {
+            message = 'Unable to load user reactions due to a server issue. Please try again later.';
+          } else {
+            message = 'Network error: Failed to connect to the server. Please try again.';
+          }
+          addNotification(message);
+        }
+      };
 
 const fetchLatestAlbum = async () => {
     try {
-        setIsLoadingAlbum(true);
-        setAlbumError(null);
-        const response = await fetch('https://bcc-gallery-back-end.onrender.com/album/latest');
-        if (!response.ok) {
-            throw new Error(`Failed to fetch latest album: ${response.status}`);
+      setIsLoadingAlbum(true);
+      setAlbumError(null);
+  
+      const response = await fetch('https://bcc-gallery-back-end.onrender.com/album/latest');
+  
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Database error: Unable to retrieve the latest album from the server.');
         }
-        const data = await response.json();
-        setLatestAlbumTitle(data?.title || null);
+        throw new Error(`Failed to fetch latest album: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      setLatestAlbumTitle(data?.title || null);
     } catch (error) {
-        console.error('Error fetching latest album:', error);
-        setAlbumError(error.message);
-        setLatestAlbumTitle(null);
+      console.error('Error fetching latest album:', error);
+      let message;
+      if (!navigator.onLine) {
+        message = 'No internet connection. Please check your network and try again.';
+      } else if (error.message.includes('Database error')) {
+        message = 'Unable to load the latest album due to a server issue. Please try again later.';
+      } else {
+        message = 'Network error: Failed to connect to the server. Please try again.';
+      }
+      addNotification(message);
+      setAlbumError(error.message);
+      setLatestAlbumTitle(null);
     } finally {
-        setIsLoadingAlbum(false);
+      setIsLoadingAlbum(false);
     }
-};
+  };
 
 const handleReaction = useCallback(
     async (imageId, reactionType) => {
@@ -182,8 +245,17 @@ const handleReaction = useCallback(
         await fetchUserReactions(Number(currentUser.id));
       } catch (error) {
         console.error('Error processing reaction:', error);
-  
-       
+        let message;
+        if (!navigator.onLine) {
+          message = 'No internet connection. Please check your network and try again.';
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
+          message = 'Unable to process reaction due to a server issue. Please try again later.';
+        } else {
+          message = `Failed to process reaction: ${error.message}`;
+        }
+        addNotification(message);
+      
+        // Revert reaction state
         setUserReactions((prev) => {
           const newReactions = { ...prev };
           if (currentUserReaction === reactionType) {
@@ -193,8 +265,6 @@ const handleReaction = useCallback(
           }
           return newReactions;
         });
-  
-        alert(`Failed to process reaction: ${error.message}`);
       } finally {
       
         setTimeout(() => {
@@ -576,16 +646,19 @@ const handleUserSignup = async (e) => {
             
             console.log('User created successfully:', userData);
     } catch (error) {
-    console.error('Signup error:', error)
-    
-    if (error.message.includes('Failed to fetch')) {
-        alert('Cannot connect to server. Please check if the server is running on https://bcc-gallery-back-end.onrender.com')
-    } else if (error.message.includes('non-JSON response')) {
-        alert('Server error: Invalid response format')
-    } else {
-        alert(`Failed to create account: ${error.message}`)
-    }
-    } finally {
+        console.error('Signup error:', error);
+        let message;
+        if (!navigator.onLine) {
+          message = 'No internet connection. Please check your network and try again.';
+        } else if (error.message.includes('Failed to fetch')) {
+          message = 'Cannot connect to server. Please try again later.';
+        } else if (error.message.includes('non-JSON response')) {
+          message = 'Server error. Invalid response format.';
+        } else {
+          message = `Failed to create account: ${error.message}`;
+        }
+        addNotification(message);
+      }finally {
     setIsSubmitting(false)
     }
 }
@@ -664,6 +737,16 @@ const handleSaveAll = async () => {
                 }
                 successCount++
             } catch (error) {
+                console.error('Bulk save failed:', error);
+  let message;
+  if (!navigator.onLine) {
+    message = 'No internet connection. Please check your network and try again.';
+  } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
+    message = 'Unable to save images due to a server issue. Please try again later.';
+  } else {
+    message = `Failed to save images: ${error.message}`;
+  }
+  addNotification(message);
                 console.error(`Failed to save image ${index}:`, error)
                 failCount++
             }
@@ -722,9 +805,17 @@ const handleSaveSelected = async (index) => {
 
         alert('Image saved successfully!')
     } catch (error) {
-        console.error('Error saving image:', error)
-        alert(`${error.message}`)
-    } finally {
+        console.error('Error saving image:', error);
+        let message;
+        if (!navigator.onLine) {
+          message = 'No internet connection. Please check your network and try again.';
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
+          message = 'Unable to save image due to a server issue. Please try again later.';
+        } else {
+          message = `Failed to save image: ${error.message}`;
+        }
+        addNotification(message);
+      }finally {
         setIsSubmitting(false)
     }
 }
@@ -804,6 +895,19 @@ useEffect(() => {
 
 return (
 <div className="page-container">
+<div className="notification-container">
+  {notifications.map((notification) => (
+    <div key={notification.id} className="notification">
+      <span className="notification-message">{notification.message}</span>
+      <button
+        className="notification-close"
+        onClick={() => removeNotification(notification.id)}
+      >
+        <X className="close-icon" />
+      </button>
+    </div>
+  ))}
+</div>
 {isPreLoading ? (
 <div className="preloader-overlay">
 <div className="preloader-container">
