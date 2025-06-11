@@ -1162,12 +1162,12 @@ html, body {
   
     .footer {
       padding: 1rem 0;
-      margin-top: 1.5rem;
+      /* margin-top: 1.5rem; */
     }
   
     .footer-title {
       font-size: 1rem;
-      margin-bottom: 0.125rem;
+      margin-bottom: 0.225rem;
     }
   
     .footer-subtitle {
@@ -1539,7 +1539,7 @@ html, body {
   
     .footer {
       padding: 2rem 0;
-      margin-top: 3rem;
+      /* margin-top: 3rem; */
     }
   
     .footer-title {
