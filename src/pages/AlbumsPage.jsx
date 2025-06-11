@@ -49,7 +49,7 @@ function AlbumsPage() {
       })
       .catch((error) => {
         console.error("Error fetching albums:", error);
-        setError("Failed to load albums. Please try again later.");
+        setError("Failed to load albums. Please check you internet connection and try again later.");
         setIsLoading(false);
       });
   }, []);
@@ -96,7 +96,7 @@ function AlbumsPage() {
       setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
     } catch (error) {
       console.error(`Error fetching images for album ${albumTitle}:`, error);
-      setAlbumErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
+      setAlbumErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images. Please check you internet connection and try again later: ${error.message}` }));
       setAlbumImages((prev) => ({ ...prev, [albumTitle]: [] }));
     } finally {
       if (!silent) {
