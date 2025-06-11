@@ -2174,6 +2174,7 @@ html, body {
     justify-content: center;
     padding: 3rem;
     color: #666;
+    margin-bottom: -100%;
   }
   
   .loading-spinner {
@@ -2196,6 +2197,7 @@ html, body {
     padding: 3rem;
     color: #e74c3c;
     text-align: center;
+    margin-bottom: -100%;
   }
   
   .retry-btn {
