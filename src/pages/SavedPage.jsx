@@ -425,8 +425,11 @@ function SavedPage() {
 
           {isLoading ? (
             <div className="loading-container">
-              <Loader2 className="loading-spinner" />
-              <p className="placeholder-text">Loading saved images...</p>
+              <div className="placeholder-text">
+                <Loader2 className="loading-spinner" />
+              <p >Loading saved images...</p>
+              </div>
+              
             </div>
           ) : error ? (
             <div className="error-container">
