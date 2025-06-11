@@ -2836,17 +2836,17 @@ html, body {
   overflow: hidden;
 }
 
-/* Background layer with blur */
 .preloader-background {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: -50px;
+  left: -50px;
+  right: -50px;
+  bottom: -50px;
   background: linear-gradient(135deg, rgba(254, 154, 101, 0.7), rgba(253, 131, 50, 0.5));
-  filter: blur(30px);
+  filter: blur(40px);
   z-index: 1;
 }
+
 
 /* Foreground content stays sharp */
 .preloader-container {
@@ -2856,7 +2856,7 @@ html, body {
   border-radius: 20px;
   padding: 40px;
   text-align: center;
-  /* box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3); */
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
   max-width: 400px;
   width: 90%;
   animation: modalSlideIn 0.5s ease-out;
