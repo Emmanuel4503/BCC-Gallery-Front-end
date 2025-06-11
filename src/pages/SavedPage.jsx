@@ -425,7 +425,7 @@ function SavedPage() {
 
           {isLoading ? (
             <div className="loading-container">
-              <div className="placeholder-text">
+              <div className="placeholder-loading">
                 <Loader2 className="loading-spinner" />
               <p >Loading saved images...</p>
               </div>
