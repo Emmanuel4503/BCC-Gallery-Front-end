@@ -836,6 +836,11 @@ html, body {
   padding: 1.5rem 0;
   /* margin-top: 100vh; */
   /* margin-bottom: 10px;  */
+  position: fixed;
+  top: 100%;
+  bottom: 0;
+  right: 0;
+  left: 0;
 }
 
 .footer-content {
