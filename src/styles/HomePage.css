@@ -2972,15 +2972,19 @@ html, body {
     height: 24px;
   }
 }
+
 .notification-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000; 
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  width: 100%;
   max-width: 400px;
+  padding: 10px;
 }
 
 .notification {
@@ -2992,6 +2996,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 5.7s forwards;
   opacity: 1;
 }
@@ -3020,22 +3025,65 @@ html, body {
 
 @keyframes slideIn {
   from {
-    transform: translateX(100%);
+    transform: translateY(-100%);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
 
 @keyframes slideOut {
   from {
-    transform: translateX(0);
+    transform: translateY(0);
     opacity: 1;
   }
   to {
-    transform: translateX(100%);
+    transform: translateY(-100%);
     opacity: 0;
+  }
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  .notification-container {
+    max-width: 90%; 
+    padding: 8px;
+  }
+
+  .notification {
+    padding: 10px 12px;
+  }
+
+  .notification-message {
+    font-size: 13px;
+  }
+
+  .notification-close .close-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notification-container {
+    max-width: 95%;
+    padding: 5px;
+  }
+
+  .notification {
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+
+  .notification-message {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .notification-close .close-icon {
+    width: 12px;
+    height: 12px;
   }
 }

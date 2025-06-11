@@ -34,18 +34,32 @@ const [albumError, setAlbumError] = useState(null);
 const [isTransitioning, setIsTransitioning] = useState(false)
 // const [isPreLoading, setIsPreLoading] = useState(true);
 // const [preloadProgress, setPreloadProgress] = useState(0);
-
-const [notifications, setNotifications] = useState([]);
-
+const [notificationQueue, setNotificationQueue] = useState([]);
+const [currentNotification, setCurrentNotification] = useState(null);
 
 const addNotification = (message) => {
-  const id = Date.now();
-  setNotifications((prev) => [...prev, { id, message }]);
- 
-  setTimeout(() => {
-    removeNotification(id);
-  }, 6000);
+  setNotificationQueue((prev) => [...prev, { id: Date.now(), message }]);
 };
+
+const removeCurrentNotification = () => {
+  setCurrentNotification(null);
+};
+
+// Process the notification queue
+useEffect(() => {
+  if (!currentNotification && notificationQueue.length > 0) {
+    const nextNotification = notificationQueue[0];
+    setCurrentNotification(nextNotification);
+    setNotificationQueue((prev) => prev.slice(1));
+
+    // Auto-remove after 6 seconds
+    const timeoutId = setTimeout(() => {
+      removeCurrentNotification();
+    }, 6000);
+
+    return () => clearTimeout(timeoutId);
+  }
+}, [currentNotification, notificationQueue]);
 
 const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
@@ -429,14 +443,22 @@ const downloadImage = async (imageUrl, filename, format) => {
         alert('Image downloaded successfully!');
       }, 1000);
     } catch (error) {
-      console.error('Single download failed:', {
-        message: error.message,
-        image: currentDownloadImage,
-      });
-      alert(`Failed to download image: ${error.message}`);
-      setIsDownloading(false);
-      setDownloadProgress(0);
-    }
+        console.error('Single download failed:', {
+          message: error.message,
+          image: currentDownloadImage,
+        });
+        let message;
+        if (!navigator.onLine) {
+          message = 'No internet connection. Please check your network and try again.';
+        } else if (error.message.includes('Failed to fetch')) {
+          message = 'Unable to download image due to a server issue. Please try again later.';
+        } else {
+          message = `Failed to download image: ${error.message}`;
+        }
+        addNotification(message);
+        setIsDownloading(false);
+        setDownloadProgress(0);
+      }
   };
 
   const handleMultipleDownload = async () => {
@@ -472,8 +494,18 @@ const downloadImage = async (imageUrl, filename, format) => {
             successCount++;
             console.log(`Successfully downloaded image at index ${imageIndex}`);
           } catch (error) {
-            console.error(`Failed to download image at index ${imageIndex}:`, error);
-            failCount++;
+            console.error('Bulk download failed:', error);
+            let message;
+            if (!navigator.onLine) {
+              message = 'No internet connection. Please check your network and try again.';
+            } else if (error.message.includes('Failed to fetch')) {
+              message = 'Unable to download images due to a server issue. Please try again later.';
+            } else {
+              message = `Failed to download images: ${error.message}`;
+            }
+            addNotification(message);
+            setIsDownloading(false);
+            setDownloadProgress(0);
           }
         } else {
           console.error(`No valid image found at index ${imageIndex}`);
@@ -500,11 +532,18 @@ const downloadImage = async (imageUrl, filename, format) => {
         }
       }, 1000);
     } catch (error) {
-      console.error('Bulk download failed:', error);
-      alert(`Failed to download images: ${error.message}`);
-      setIsDownloading(false);
-      setDownloadProgress(0);
-    }
+        console.error(`Failed to download image at index ${imageIndex}:`, error);
+        let message;
+        if (!navigator.onLine) {
+          message = 'No internet connection. Please check your network and try again.';
+        } else if (error.message.includes('Failed to fetch')) {
+          message = 'Unable to download image due to a server issue.';
+        } else {
+          message = `Failed to download image: ${error.message}`;
+        }
+        addNotification(message);
+        failCount++;
+      }
   };
 
 useEffect(() => {
@@ -891,18 +930,18 @@ useEffect(() => {
 
 return (
     <div className="page-container">
-        <div className="notification-container">
-  {notifications.map((notification) => (
-    <div key={notification.id} className="notification">
-      <span className="notification-message">{notification.message}</span>
+    <div className="notification-container">
+  {currentNotification && (
+    <div className="notification">
+      <span className="notification-message">{currentNotification.message}</span>
       <button
         className="notification-close"
-        onClick={() => removeNotification(notification.id)}
+        onClick={removeCurrentNotification}
       >
         <X className="close-icon" />
       </button>
     </div>
-  ))}
+  )}
 </div>
     {/* User Signup Modal */}
     {showUserModal && (
