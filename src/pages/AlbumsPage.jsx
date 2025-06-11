@@ -82,7 +82,7 @@ function AlbumsPage() {
 
       const processedData = data.map((image) => {
         let imageUrl = image.imageUrl;
-        let thumbnailUrl = image.thumbnailUrl || image.imageUrl;
+        let thumbnailUrl = image.thumbnailUrl || image.imageUrl; // Fallback to imageUrl if no thumbnail
         if (imageUrl && !imageUrl.startsWith('http')) {
           imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
         }
@@ -91,7 +91,7 @@ function AlbumsPage() {
         }
         return { ...image, imageUrl, thumbnailUrl };
       });
-      
+
       setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
       setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
     } catch (error) {
@@ -386,7 +386,7 @@ function AlbumsPage() {
                                 gap: "1rem",
                               }}
                             >
-                              {albumImages[album.displayName].slice(0, 20).map((image, index) => (
+                              {albumImages[album.displayName].map((image, index) => (
                                 <div
                                   key={`image-${album.displayName}-${image._id || index}`}
                                   style={{
