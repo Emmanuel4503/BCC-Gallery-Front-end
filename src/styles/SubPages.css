@@ -112,7 +112,7 @@
     color: #e74c3c;
     text-align: center;
     font-style: italic;
-    min-height: 20rem;
+    min-height: 10rem;
     font-size: 1.1rem;
   }
   .placeholder-loading{
@@ -123,7 +123,7 @@
     padding: 3rem;
     text-align: center;
     font-style: italic;
-    min-height: 20rem;
+    min-height: 10rem;
     font-size: 1.1rem;
   }
   
