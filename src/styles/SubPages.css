@@ -114,6 +114,9 @@
     font-style: italic;
     min-height: 10rem;
     font-size: 1.1rem;
+    white-space: nowrap; /* Prevent text from wrapping */
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis; /* Add ellipsis for truncated text */
   }
   .placeholder-loading{
     display: flex;
@@ -125,6 +128,9 @@
     font-style: italic;
     min-height: 10rem;
     font-size: 1.1rem;
+    white-space: nowrap; /* Prevent text from wrapping */
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis; /* Add ellipsis for truncated text */
   }
   
 
