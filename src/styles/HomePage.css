@@ -886,7 +886,7 @@ html, body {
 
 .copyright-text {
   color: #9ca3af;
-  font-size: 0.30rem;
+  font-size: 1rem;
 }
   
   
@@ -1213,7 +1213,7 @@ html, body {
     }
   
     .copyright-text {
-      font-size: 0.20rem;
+      font-size: 0.90rem;
     }
   
     .fullscreen-close {
@@ -1613,7 +1613,7 @@ html, body {
     }
   
     .copyright-text {
-      font-size: 0.30rem;
+      font-size: 1rem;
     }
    
   }
