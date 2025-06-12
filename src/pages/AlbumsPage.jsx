@@ -309,7 +309,10 @@ function AlbumsPage() {
           <div className="albums-container" style={{ marginTop: "2rem" }}>
             {isLoading ? (
               <div className="page-placeholder">
-                <p className="placeholder-text">Loading albums...</p>
+                <div className="placeholder-loading">
+                  <p>Loading albums...</p>
+                </div>
+                
               </div>
             ) : error ? (
               <div className="page-placeholder">
