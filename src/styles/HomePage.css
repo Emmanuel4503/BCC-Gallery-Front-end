@@ -347,31 +347,31 @@ html, body {
     padding: 1.5rem 1rem 1rem; 
   }
   /* hhhhhhhhhhhhhhh */
-  /* hhhhhhhhhhhhhhhhhhhhhhhhhhhh */
+
   
   .carousel {
     position: relative;
     height: 20rem;
     overflow: hidden;
-    border-radius: 16px; /* Slightly larger radius for a polished look */
-    padding: 0.75rem; /* Increased padding for thicker frame */
-    background: linear-gradient(135deg, #fe9a65, #fd8332); /* Gradient frame */
+    border-radius: 16px; 
+    padding: 0.75rem; 
+    background: linear-gradient(135deg, #fe9a65, #fd8332); 
     box-shadow: 
-      0 10px 25px -5px rgba(0, 0, 0, 0.2), /* Outer shadow */
-      inset 0 2px 4px rgba(255, 255, 255, 0.3), /* Inner highlight */
-      inset 0 -2px 4px rgba(0, 0, 0, 0.15); /* Inner shadow for depth */
-    border: 2px solid #ffffff; /* White inner border for contrast */
+      0 10px 25px -5px rgba(0, 0, 0, 0.2),
+      inset 0 2px 4px rgba(255, 255, 255, 0.3), 
+      inset 0 -2px 4px rgba(0, 0, 0, 0.15); 
+    border: 2px solid #ffffff; 
     position: relative;
   }
   
   .carousel::before {
     content: '';
     position: absolute;
-    inset: -2px; /* Extend slightly beyond the border */
-    border-radius: 18px; /* Match radius + border thickness */
-    background: linear-gradient(45deg, #fd8332, #fe9a65, #fd8332); /* Outer gradient */
-    z-index: -1; /* Behind the carousel */
-    filter: blur(1px); /* Subtle glow */
+    inset: -2px; 
+    border-radius: 18px;
+    background: linear-gradient(45deg, #fd8332, #fe9a65, #fd8332); 
+    z-index: -1; 
+    filter: blur(1px);
   }
   
   .carousel-slide {
@@ -388,7 +388,7 @@ html, body {
     transform-origin: left center;
     will-change: transform, opacity;
     backface-visibility: hidden;
-    border-radius: 12px; /* Slightly smaller radius for inner content */
+    border-radius: 12px; 
   }
   
   .carousel-slide.slide-active {
@@ -1120,7 +1120,7 @@ html, body {
       inset: -1.5px;
       border-radius: 14px;
     }
-    .carousel-slide {
+    /* .carousel-slide {
       top: 0.5rem;
       left: 0.5rem;
       right: 0.5rem;
@@ -1128,7 +1128,7 @@ html, body {
       width: calc(100% - 1rem);
       height: calc(100% - 1rem);
       border-radius: 8px;
-    }
+    } */
   
     .carousel-content {
       bottom: 0.75rem;
@@ -1533,7 +1533,7 @@ html, body {
       inset: -2px;
       border-radius: 22px;
     }
-    .carousel-slide {
+    /* .carousel-slide {
       top: 1rem;
       left: 1rem;
       right: 1rem;
@@ -1542,7 +1542,7 @@ html, body {
       height: calc(100% - 2rem);
       border-radius: 16px;
     }
-  
+   */
   
     .carousel-content {
       bottom: 1.5rem;
@@ -1738,7 +1738,7 @@ html, body {
       inset: -2px;
       border-radius: 22px;
     }
-    .carousel-slide {
+    /* .carousel-slide {
       top: 1rem;
       left: 1rem;
       right: 1rem;
@@ -1746,7 +1746,7 @@ html, body {
       width: calc(100% - 2rem);
       height: calc(100% - 2rem);
       border-radius: 16px;
-    }
+    } */
     .carousel-content {
       bottom: 2rem;
       left: 2rem;

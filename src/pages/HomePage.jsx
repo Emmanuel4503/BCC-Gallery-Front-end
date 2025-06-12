@@ -556,49 +556,53 @@ useEffect(() => {
 }, [currentUser?.id]);
 
 // useEffect(() => {
-//     if (!carouselImages.length && !galleryImages.length) return;
+//   if (!carouselImages.length && !galleryImages.length) {
+//       setIsLoadingCarousel(false);
+//       setIsLoadingGallery(false);
+//       return;
+//   }
 
-//     const allImages = [
-//         ...carouselImages.map(image => image.imageUrl),
-//         ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
-//     ].filter(url => url && typeof url === 'string');
+//   const allImages = [
+//       ...carouselImages.map(image => image.imageUrl),
+//       ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
+//   ].filter(url => url && typeof url === 'string');
 
-//     if (!allImages.length) {
-//         setPreloadProgress(100);
-//         setTimeout(() => setIsPreLoading(false), 1000); 
-//         return;
-//     }
+//   if (!allImages.length) {
+//       setIsLoadingCarousel(false);
+//       setIsLoadingGallery(false);
+//       return;
+//   }
 
-//     let loadedImages = 0;
-//     const totalImages = allImages.length;
+//   let loadedImages = 0;
+//   const totalImages = allImages.length;
 
-//     const updateProgress = () => {
-//         loadedImages += 1;
-//         const progress = (loadedImages / totalImages) * 100;
-//         setPreloadProgress(Math.min(progress, 100));
-//         if (loadedImages >= totalImages) {
-//             setTimeout(() => {
-//                 setPreloadProgress(100);
-//                 setIsPreLoading(false);
-//             }, 1000); 
-//         }
-//     };
+//   const updateProgress = () => {
+//       loadedImages += 1;
+//       if (loadedImages >= totalImages) {
+//           setIsLoadingCarousel(false);
+//           setIsLoadingGallery(false);
+//       }
+//   };
 
-//     allImages.forEach(url => {
-//         const img = new window.Image(); 
-//         img.src = url;
-//         img.onload = updateProgress;
-//         img.onerror = updateProgress; 
-//     });
+//   allImages.forEach(url => {
+//       const img = new window.Image();
+//       img.src = url;
+//       img.onload = updateProgress;
+//       img.onerror = () => {
+//           console.error(`Failed to preload image: ${url}`);
+//           updateProgress(); // Continue even if one image fails
+//       };
+//   });
 
-//     const fallbackTimeout = setTimeout(() => {
-//         if (loadedImages < totalImages) {
-//             setPreloadProgress(100);
-//             setIsPreLoading(false);
-//         }
-//     }, 5000); 
+//   // Fallback in case some images take too long
+//   const fallbackTimeout = setTimeout(() => {
+//       if (loadedImages < totalImages) {
+//           setIsLoadingCarousel(false);
+//           setIsLoadingGallery(false);
+//       }
+//   }, 10000); // 10-second timeout
 
-//     return () => clearTimeout(fallbackTimeout);
+//   return () => clearTimeout(fallbackTimeout);
 // }, [carouselImages, galleryImages]);
 
     useEffect(() => {
