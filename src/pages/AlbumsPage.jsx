@@ -49,7 +49,7 @@ function AlbumsPage() {
       })
       .catch((error) => {
         console.error("Error fetching albums:", error);
-        setError("Failed to load albums. Please check you internet connection and try again later.");
+        setError("Failed to load albums. Please try again later.");
         setIsLoading(false);
       });
   }, []);
