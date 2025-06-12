@@ -353,32 +353,42 @@ html, body {
     position: relative;
     height: 20rem;
     overflow: hidden;
-    border-radius: 12px;
-    padding: 0.5rem;
-    background: linear-gradient(135deg, #fe9a65, #fd8332);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(254, 154, 101, 0.1);
+    border-radius: 16px; /* Slightly larger radius for a polished look */
+    padding: 0.75rem; /* Increased padding for thicker frame */
+    background: linear-gradient(135deg, #fe9a65, #fd8332); /* Gradient frame */
+    box-shadow: 
+      0 10px 25px -5px rgba(0, 0, 0, 0.2), /* Outer shadow */
+      inset 0 2px 4px rgba(255, 255, 255, 0.3), /* Inner highlight */
+      inset 0 -2px 4px rgba(0, 0, 0, 0.15); /* Inner shadow for depth */
+    border: 2px solid #ffffff; /* White inner border for contrast */
+    position: relative;
   }
   
-  .carousel {
-    position: relative;
-    overflow: hidden;
-    border-radius: 12px;
+  .carousel::before {
+    content: '';
+    position: absolute;
+    inset: -2px; /* Extend slightly beyond the border */
+    border-radius: 18px; /* Match radius + border thickness */
+    background: linear-gradient(45deg, #fd8332, #fe9a65, #fd8332); /* Outer gradient */
+    z-index: -1; /* Behind the carousel */
+    filter: blur(1px); /* Subtle glow */
   }
   
   .carousel-slide {
     position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: 0.5rem;
-    width: calc(100% - 1rem);
-    height: calc(100% - 1rem);
+    top: 0.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    width: calc(100% - 1.5rem);
+    height: calc(100% - 1.5rem);
     transform: translateX(100%) rotateY(90deg);
     opacity: 0;
     transition: all 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     transform-origin: left center;
     will-change: transform, opacity;
     backface-visibility: hidden;
+    border-radius: 12px; /* Slightly smaller radius for inner content */
   }
   
   .carousel-slide.slide-active {
@@ -876,7 +886,7 @@ html, body {
 
 .copyright-text {
   color: #9ca3af;
-  font-size: 0.5rem;
+  font-size: 0.15rem;
 }
   
   
@@ -1097,23 +1107,32 @@ html, body {
     }
     .carousel {
       height: 15rem;
-      padding: 0.375rem;
-      border-radius: 8px;
+      padding: 0.5rem;
+      border-radius: 12px;
       background: linear-gradient(135deg, #fe9a65, #fd8332);
-      box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.15);
+      box-shadow: 
+        0 8px 20px -5px rgba(0, 0, 0, 0.15),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.15);
+      border: 1.5px solid #ffffff;
+    }
+    .carousel::before {
+      inset: -1.5px;
+      border-radius: 14px;
+    }
+    .carousel-slide {
+      top: 0.5rem;
+      left: 0.5rem;
+      right: 0.5rem;
+      bottom: 0.5rem;
+      width: calc(100% - 1rem);
+      height: calc(100% - 1rem);
+      border-radius: 8px;
     }
   
     .carousel-content {
       bottom: 0.75rem;
       left: 0.75rem;
-    }
-    .carousel-slide {
-      top: 0.375rem;
-      left: 0.375rem;
-      right: 0.375rem;
-      bottom: 0.375rem;
-      width: calc(100% - 0.75rem);
-      height: calc(100% - 0.75rem);
     }
   
   
@@ -1194,7 +1213,7 @@ html, body {
     }
   
     .copyright-text {
-      font-size: 0.7rem;
+      font-size: 0.15rem;
     }
   
     .fullscreen-close {
@@ -1501,18 +1520,27 @@ html, body {
   
     .carousel {
       height: 25rem;
-      padding: 0.75rem;
-      border-radius: 16px;
+      padding: 1rem;
+      border-radius: 20px;
       background: linear-gradient(135deg, #fe9a65, #fd8332);
-      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.25);
+      box-shadow: 
+        0 12px 30px -5px rgba(0, 0, 0, 0.25),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+      border: 2px solid #ffffff;
+    }
+    .carousel::before {
+      inset: -2px;
+      border-radius: 22px;
     }
     .carousel-slide {
-      top: 0.75rem;
-      left: 0.75rem;
-      right: 0.75rem;
-      bottom: 0.75rem;
-      width: calc(100% - 1.5rem);
-      height: calc(100% - 1.5rem);
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+      width: calc(100% - 2rem);
+      height: calc(100% - 2rem);
+      border-radius: 16px;
     }
   
   
@@ -1585,7 +1613,7 @@ html, body {
     }
   
     .copyright-text {
-      font-size: 0.9rem;
+      font-size: 0.16rem;
     }
    
   }
@@ -1696,9 +1724,29 @@ html, body {
     }
   
     .carousel {
-      height: 24rem; 
+      height: 24rem;
+      padding: 1rem;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #fe9a65, #fd8332);
+      box-shadow: 
+        0 12px 30px -5px rgba(0, 0, 0, 0.25),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+      border: 2px solid #ffffff;
     }
-  
+    .carousel::before {
+      inset: -2px;
+      border-radius: 22px;
+    }
+    .carousel-slide {
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+      width: calc(100% - 2rem);
+      height: calc(100% - 2rem);
+      border-radius: 16px;
+    }
     .carousel-content {
       bottom: 2rem;
       left: 2rem;
@@ -1800,18 +1848,27 @@ html, body {
   
     .carousel {
       height: 24rem;
-      padding: 0.75rem;
-      border-radius: 16px;
+      padding: 1rem;
+      border-radius: 20px;
       background: linear-gradient(135deg, #fe9a65, #fd8332);
-      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.25);
+      box-shadow: 
+        0 12px 30px -5px rgba(0, 0, 0, 0.25),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+      border: 2px solid #ffffff;
+    }
+    .carousel::before {
+      inset: -2px;
+      border-radius: 22px;
     }
     .carousel-slide {
-      top: 0.75rem;
-      left: 0.75rem;
-      right: 0.75rem;
-      bottom: 0.75rem;
-      width: calc(100% - 1.5rem);
-      height: calc(100% - 1.5rem);
+      top: 1rem;
+      left: 1rem;
+      right: 1rem;
+      bottom: 1rem;
+      width: calc(100% - 2rem);
+      height: calc(100% - 2rem);
+      border-radius: 16px;
     }
   
     .image-gallery {
