@@ -112,7 +112,7 @@
     color: #e74c3c;
     text-align: center;
     font-style: italic;
-    min-height: 10rem;
+    min-height: 20rem;
     font-size: 1.1rem;
     white-space: nowrap; /* Prevent text from wrapping */
   overflow: hidden; /* Hide overflow text */
@@ -126,7 +126,7 @@
     padding: 3rem;
     text-align: center;
     font-style: italic;
-    min-height: 10rem;
+    min-height: 20rem;
     font-size: 1.1rem;
     white-space: nowrap; /* Prevent text from wrapping */
   overflow: hidden; /* Hide overflow text */
