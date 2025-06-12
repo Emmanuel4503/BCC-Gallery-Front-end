@@ -27,7 +27,7 @@ function NotificationPage() {
           </p>
 
           <div className="page-placeholder">
-            <p className="placeholder-text">
+            <p >
               This features is coming soon
               {/* Notifications will be displayed here. You'll receive updates about new photos and church events! */}
             </p>
