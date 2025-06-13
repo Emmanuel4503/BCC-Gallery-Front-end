@@ -122,10 +122,46 @@ function AlbumsPage() {
     try {
       let processedUrl = imageUrl;
       if (imageUrl.startsWith('/')) {
-        processedUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl}`;
+        processedUrl = `https://res.cloudinary.com/dqxhczhxk/image/upload${imageUrl}`;
       } else if (!imageUrl.startsWith('http')) {
-        processedUrl = `https://bcc-gallery-back-end.onrender.com/${imageUrl}`;
+        processedUrl = `https://res.cloudinary.com/dqxhczhxk/image/upload/${imageUrl}`;
       }
+
+      // For HEIC, use Cloudinary's transformation to convert to HEIC
+      if (format === 'heic') {
+        // Add f_heic to the Cloudinary URL
+        const heicUrl = processedUrl.replace('/image/upload/', '/image/upload/f_heic/');
+        console.log('Fetching HEIC image from:', heicUrl);
+
+        const response = await fetch(heicUrl, {
+          mode: 'cors',
+          credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Failed to fetch HEIC image: ${response.status} ${response.statusText} - ${text.slice(0, 100)}`);
+        }
+
+        const blob = await response.blob();
+        if (!blob.type.startsWith('image/')) {
+          throw new Error(`Downloaded content is not an image: ${blob.type}`);
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.heic`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      // Existing logic for JPEG, PNG, WebP
+      console.log('Fetching image from:', processedUrl);
 
       const response = await fetch(processedUrl, {
         mode: 'cors',
@@ -189,7 +225,7 @@ function AlbumsPage() {
       console.error('Download error:', error);
       throw error;
     }
-  };
+};
 
   // Handle image download
   const handleDownload = (imageUrl) => {
@@ -513,6 +549,13 @@ function AlbumsPage() {
                         <span className="format-name">WebP</span>
                         <span className="format-desc">Modern format, good compression</span>
                       </button>
+                      <button
+    className={`format-btn ${selectedFormat === 'heic' ? 'format-active' : ''}`}
+    onClick={() => setSelectedFormat('heic')}
+  >
+    <span className="format-name">HEIC</span>
+    <span className="format-desc">Optimized for iPhone, high quality</span>
+  </button>
                     </div>
                   </div>
 
