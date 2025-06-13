@@ -318,92 +318,124 @@ const isUserReacted = (imageId, reactionType) => {
 
 // Download functionality
 const downloadImage = async (imageUrl, filename, format) => {
-    try {
-      console.log('Downloading image:', { imageUrl, filename, format });
-  
-     
-      if (!imageUrl || typeof imageUrl !== 'string') {
-        throw new Error('Invalid image URL provided');
-      }
-  
-    
-      let processedUrl = imageUrl;
-      if (!imageUrl.startsWith('http')) {
-        processedUrl = `https://res.cloudinary.com/dqxhczhxk/image/upload/${imageUrl}`;
-      }
-  
-      console.log('Fetching image from:', processedUrl);
-  
-      const response = await fetch(processedUrl, {
+  try {
+    console.log('Downloading image:', { imageUrl, filename, format });
+
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      throw new Error('Invalid image URL provided');
+    }
+
+    let processedUrl = imageUrl;
+    if (!imageUrl.startsWith('http')) {
+      processedUrl = `https://res.cloudinary.com/dqxhczhxk/image/upload/${imageUrl}`;
+    }
+
+    // For HEIC, use Cloudinary's transformation to convert to HEIC
+    if (format === 'heic') {
+      // Add f_heic to the Cloudinary URL
+      const heicUrl = processedUrl.replace('/image/upload/', '/image/upload/f_heic/');
+      console.log('Fetching HEIC image from:', heicUrl);
+
+      const response = await fetch(heicUrl, {
         mode: 'cors',
         credentials: 'same-origin',
       });
-  
+
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} - ${text.slice(0, 100)}`);
+        throw new Error(`Failed to fetch HEIC image: ${response.status} ${response.statusText} - ${text.slice(0, 100)}`);
       }
-  
+
       const blob = await response.blob();
       if (!blob.type.startsWith('image/')) {
         throw new Error(`Downloaded content is not an image: ${blob.type}`);
       }
-  
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = document.createElement('img');
-  
-      return new Promise((resolve, reject) => {
-        img.onload = () => {
-          try {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-  
-            const mimeType =
-              format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
-            const quality = format === 'jpeg' ? 0.95 : undefined;
-  
-            canvas.toBlob(
-              (convertedBlob) => {
-                if (convertedBlob) {
-                  const url = URL.createObjectURL(convertedBlob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `${filename}.${format}`;
-                  a.style.display = 'none';
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                  resolve();
-                } else {
-                  reject(new Error('Failed to convert image to selected format'));
-                }
-              },
-              mimeType,
-              quality
-            );
-          } catch (error) {
-            reject(new Error(`Canvas processing failed: ${error.message}`));
-          }
-        };
-  
-        img.onerror = () => reject(new Error('Failed to load image for processing'));
-        img.crossOrigin = 'anonymous';
-        img.src = URL.createObjectURL(blob);
-      });
-    } catch (error) {
-      console.error('Download error:', {
-        message: error.message,
-        stack: error.stack,
-        imageUrl,
-        filename,
-        format
-      });
-      throw error;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.heic`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
     }
-  };
+
+    // Existing logic for JPEG, PNG, WebP
+    console.log('Fetching image from:', processedUrl);
+
+    const response = await fetch(processedUrl, {
+      mode: 'cors',
+      credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} - ${text.slice(0, 100)}`);
+    }
+
+    const blob = await response.blob();
+    if (!blob.type.startsWith('image/')) {
+      throw new Error(`Downloaded content is not an image: ${blob.type}`);
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = document.createElement('img');
+
+    return new Promise((resolve, reject) => {
+      img.onload = () => {
+        try {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const mimeType =
+            format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+          const quality = format === 'jpeg' ? 0.95 : undefined;
+
+          canvas.toBlob(
+            (convertedBlob) => {
+              if (convertedBlob) {
+                const url = URL.createObjectURL(convertedBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.${format}`;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                resolve();
+              } else {
+                reject(new Error('Failed to convert image to selected format'));
+              }
+            },
+            mimeType,
+            quality
+          );
+        } catch (error) {
+          reject(new Error(`Canvas processing failed: ${error.message}`));
+        }
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image for processing'));
+      img.crossOrigin = 'anonymous';
+      img.src = URL.createObjectURL(blob);
+    });
+  } catch (error) {
+    console.error('Download error:', {
+      message: error.message,
+      stack: error.stack,
+      imageUrl,
+      filename,
+      format
+    });
+    throw error;
+  }
+};
 
   const handleSingleDownload = async () => {
     if (!currentDownloadImage) {
@@ -1023,6 +1055,7 @@ return (
                         </p>
                     </div>
                 )}
+                {/* jdbgbgfffffffffffffffffffffffffffffdhhhhhhhhhhfjh */}
                 <div className="format-selection">
                     <h3 className="format-title">Select Format:</h3>
                     <div className="format-options">
@@ -1047,6 +1080,13 @@ return (
                             <span className="format-name">WebP</span>
                             <span className="format-desc">Modern format, good compression</span>
                         </button>
+                        <button
+        className={`format-btn ${selectedFormat === 'heic' ? 'format-active' : ''}`}
+        onClick={() => setSelectedFormat('heic')}
+    >
+        <span className="format-name">HEIC</span>
+        <span className="format-desc">Optimized for iPhone, high quality</span>
+    </button>
                     </div>
                 </div>
 
