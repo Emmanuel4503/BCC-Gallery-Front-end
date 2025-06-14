@@ -83,32 +83,6 @@ const handleHeicModalClose = () => {
   localStorage.setItem('hasSeenHeicModal', 'true'); // Mark as seen
 };
 
-useEffect(() => {
-  const handleEscape = (e) => {
-    if (e.key === "Escape") {
-      closeFullscreen();
-      if (!isDownloading) {
-        closeDownloadModal();
-      }
-      if (showHeicModal) {
-        handleHeicModalClose();
-      }
-    }
-  };
-
-  if (fullscreenImage || showDownloadModal || showHeicModal) {
-    document.addEventListener("keydown", handleEscape);
-    document.body.style.overflow = "hidden";
-  } else {
-    document.body.style.overflow = "unset";
-  }
-
-  return () => {
-    document.removeEventListener("keydown", handleEscape);
-    document.body.style.overflow = "unset";
-  };
-}, [fullscreenImage, showDownloadModal, showHeicModal, isDownloading]);
-
 const fetchCarouselImages = async () => {
     try {
       setIsLoadingCarousel(true);
@@ -1022,6 +996,39 @@ return (
     </div>
   )}
 </div>
+
+{showHeicModal && (
+  <div className="heic-modal-overlay">
+    <div className="heic-modal">
+      <div className="heic-modal-header">
+        <div className="heic-modal-icon">
+          <Image className="modal-image-icon" />
+        </div>
+        <h2 className="heic-modal-title">Important Notice for iPhone Users</h2>
+        <button onClick={handleHeicModalClose} className="heic-modal-close">
+    <X className="close-icon" />
+  </button>
+      </div>
+      <div className="heic-modal-content">
+        <p className="heic-modal-text">
+          We've noticed that some iPhone users have had issues downloading images due to incompatible formats. To address this, we've added support for the <strong>HEIC</strong> format, which is optimized for Apple devices, offering high-quality images with smaller file sizes.
+        </p>
+        <p className="heic-modal-text">
+          When downloading images, please select the <strong>HEIC</strong> format for the best experience on your iPhone. If you encounter any issues, don’t hesitate to contact our <a href="mailto:media@bcconline.org" className="heic-modal-link">Media Team</a> for assistance.
+        </p>
+      </div>
+      <div className="heic-modal-actions">
+        <button
+          onClick={handleHeicModalClose}
+          className="heic-modal-btn"
+        >
+          Understood
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     {/* User Signup Modal */}
     {showUserModal && (
         <div className="user-modal-overlay">
@@ -1088,37 +1095,7 @@ return (
         )}
     </div>
 
-    {showHeicModal && (
-  <div className="heic-modal-overlay">
-    <div className="heic-modal">
-      <div className="heic-modal-header">
-        <div className="heic-modal-icon">
-          <Image className="modal-image-icon" />
-        </div>
-        <h2 className="heic-modal-title">Important Notice for iPhone Users</h2>
-        <button onClick={handleHeicModalClose} className="heic-modal-close">
-    <X className="close-icon" />
-  </button>
-      </div>
-      <div className="heic-modal-content">
-        <p className="heic-modal-text">
-          We've noticed that some iPhone users have had issues downloading images due to incompatible formats. To address this, we've added support for the <strong>HEIC</strong> format, which is optimized for Apple devices, offering high-quality images with smaller file sizes.
-        </p>
-        <p className="heic-modal-text">
-          When downloading images, please select the <strong>HEIC</strong> format for the best experience on your iPhone. If you encounter any issues, don’t hesitate to contact our <a href="mailto:media@bcconline.org" className="heic-modal-link">Media Team</a> for assistance.
-        </p>
-      </div>
-      <div className="heic-modal-actions">
-        <button
-          onClick={handleHeicModalClose}
-          className="heic-modal-btn"
-        >
-          Understood
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+  
     <div className="download-modal-content">
         {!isDownloading ? (
             <>
