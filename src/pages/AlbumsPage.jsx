@@ -605,7 +605,7 @@ function AlbumsPage() {
             <p className="footer-subtitle">God's platform for building men</p>
           </div>
           <div className="footer-copyright">
-            <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
+            <p className="copyright-text">© {new Date().getFullYear()}<a href="https://wa.me/+2349110241218" className="heic-modal-link" target="_blank" rel="noopener noreferrer">BCC Media.</a> All rights reserved.</p>
           </div>
         </div>
       </footer>
