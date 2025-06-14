@@ -583,7 +583,7 @@ html, body {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
     margin-top: 1.8rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
   }
   
   .image-card {
@@ -3338,25 +3338,3 @@ html, body {
   }
 }
 
-.heic-modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.close-icon {
-  width: 20px;
-  height: 20px;
-  color: #4b5563;
-}
-
-.heic-modal-close:hover .close-icon {
-  color: #1f2937;
-}

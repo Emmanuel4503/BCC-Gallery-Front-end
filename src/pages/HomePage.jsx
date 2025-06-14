@@ -1014,8 +1014,8 @@ return (
           We've noticed that some iPhone users have had issues downloading images due to incompatible formats. To address this, we've added support for the <strong>HEIC</strong> format, which is optimized for Apple devices, offering high-quality images with smaller file sizes.
         </p>
         <p className="heic-modal-text">
-          When downloading images, please select the <strong>HEIC</strong> format for the best experience on your iPhone. If you encounter any issues, don’t hesitate to contact our <a href="mailto:media@bcconline.org" className="heic-modal-link">Media Team</a> for assistance.
-        </p>
+  When downloading images, please select the <strong>HEIC</strong> format for the best experience on your iPhone. If you encounter any issues, don’t hesitate to contact our <a href="https://wa.me/+2349110241218" className="heic-modal-link" target="_blank" rel="noopener noreferrer">Media Team</a> for assistance.
+</p>
       </div>
       <div className="heic-modal-actions">
         <button
