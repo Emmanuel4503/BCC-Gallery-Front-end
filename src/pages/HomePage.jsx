@@ -27,6 +27,8 @@ const [downloadProgress, setDownloadProgress] = useState(0)
 const [isDownloading, setIsDownloading] = useState(false)
 const [currentDownloadImage, setCurrentDownloadImage] = useState(null)
 
+
+
 const [latestAlbumTitle, setLatestAlbumTitle] = useState(null);
 const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
@@ -36,6 +38,7 @@ const [isTransitioning, setIsTransitioning] = useState(false)
 // const [preloadProgress, setPreloadProgress] = useState(0);
 const [notificationQueue, setNotificationQueue] = useState([]);
 const [currentNotification, setCurrentNotification] = useState(null);
+
 
 const addNotification = (message) => {
   setNotificationQueue((prev) => [...prev, { id: Date.now(), message }]);
@@ -65,6 +68,46 @@ const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
+const [showHeicModal, setShowHeicModal] = useState(false);
+
+useEffect(() => {
+  // Check if the modal has been shown before
+  const hasSeenHeicModal = localStorage.getItem('hasSeenHeicModal');
+  if (!hasSeenHeicModal && !isLoadingCarousel && !isLoadingGallery) {
+    setShowHeicModal(true);
+  }
+}, [isLoadingCarousel, isLoadingGallery]);
+
+const handleHeicModalClose = () => {
+  setShowHeicModal(false);
+  localStorage.setItem('hasSeenHeicModal', 'true'); // Mark as seen
+};
+
+useEffect(() => {
+  const handleEscape = (e) => {
+    if (e.key === "Escape") {
+      closeFullscreen();
+      if (!isDownloading) {
+        closeDownloadModal();
+      }
+      if (showHeicModal) {
+        handleHeicModalClose();
+      }
+    }
+  };
+
+  if (fullscreenImage || showDownloadModal || showHeicModal) {
+    document.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "unset";
+  }
+
+  return () => {
+    document.removeEventListener("keydown", handleEscape);
+    document.body.style.overflow = "unset";
+  };
+}, [fullscreenImage, showDownloadModal, showHeicModal, isDownloading]);
 
 const fetchCarouselImages = async () => {
     try {
@@ -1045,6 +1088,37 @@ return (
         )}
     </div>
 
+    {showHeicModal && (
+  <div className="heic-modal-overlay">
+    <div className="heic-modal">
+      <div className="heic-modal-header">
+        <div className="heic-modal-icon">
+          <Image className="modal-image-icon" />
+        </div>
+        <h2 className="heic-modal-title">Important Notice for iPhone Users</h2>
+        <button onClick={handleHeicModalClose} className="heic-modal-close">
+    <X className="close-icon" />
+  </button>
+      </div>
+      <div className="heic-modal-content">
+        <p className="heic-modal-text">
+          We've noticed that some iPhone users have had issues downloading images due to incompatible formats. To address this, we've added support for the <strong>HEIC</strong> format, which is optimized for Apple devices, offering high-quality images with smaller file sizes.
+        </p>
+        <p className="heic-modal-text">
+          When downloading images, please select the <strong>HEIC</strong> format for the best experience on your iPhone. If you encounter any issues, don’t hesitate to contact our <a href="mailto:media@bcconline.org" className="heic-modal-link">Media Team</a> for assistance.
+        </p>
+      </div>
+      <div className="heic-modal-actions">
+        <button
+          onClick={handleHeicModalClose}
+          className="heic-modal-btn"
+        >
+          Understood
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     <div className="download-modal-content">
         {!isDownloading ? (
             <>
