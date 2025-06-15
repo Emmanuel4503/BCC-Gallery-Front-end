@@ -27,8 +27,6 @@ const [downloadProgress, setDownloadProgress] = useState(0)
 const [isDownloading, setIsDownloading] = useState(false)
 const [currentDownloadImage, setCurrentDownloadImage] = useState(null)
 
-
-
 const [latestAlbumTitle, setLatestAlbumTitle] = useState(null);
 const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
@@ -39,7 +37,6 @@ const [isTransitioning, setIsTransitioning] = useState(false)
 const [notificationQueue, setNotificationQueue] = useState([]);
 const [currentNotification, setCurrentNotification] = useState(null);
 
-
 const addNotification = (message) => {
   setNotificationQueue((prev) => [...prev, { id: Date.now(), message }]);
 };
@@ -48,13 +45,14 @@ const removeCurrentNotification = () => {
   setCurrentNotification(null);
 };
 
-// Notification
+// Process the notification queue
 useEffect(() => {
   if (!currentNotification && notificationQueue.length > 0) {
     const nextNotification = notificationQueue[0];
     setCurrentNotification(nextNotification);
     setNotificationQueue((prev) => prev.slice(1));
 
+    // Auto-remove after 6 seconds
     const timeoutId = setTimeout(() => {
       removeCurrentNotification();
     }, 10000);
@@ -67,20 +65,6 @@ const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
-const [showHeicModal, setShowHeicModal] = useState(false);
-
-useEffect(() => {
-  // Check if the modal has been shown before
-  const hasSeenHeicModal = localStorage.getItem('hasSeenHeicNewModal');
-  if (!hasSeenHeicModal && !isLoadingCarousel && !isLoadingGallery) {
-    setShowHeicModal(true);
-  }
-}, [isLoadingCarousel, isLoadingGallery]);
-
-const handleHeicModalClose = () => {
-  setShowHeicModal(false);
-  localStorage.setItem('hasSeenHeicNewModal', 'true'); 
-};
 
 const fetchCarouselImages = async () => {
     try {
@@ -995,39 +979,6 @@ return (
     </div>
   )}
 </div>
-
-{showHeicModal && (
-  <div className="heic-modal-overlay">
-    <div className="heic-modal">
-      <div className="heic-modal-header">
-        <div className="heic-modal-icon">
-          <Image className="modal-image-icon" />
-        </div>
-        <h2 className="heic-modal-title">Important Notice for iPhone Users</h2>
-        <button onClick={handleHeicModalClose} className="heic-modal-close">
-    <X className="close-icon" />
-  </button>
-      </div>
-      <div className="heic-modal-content">
-        <p className="heic-modal-text">
-          We've noticed that some iPhone users have had issues downloading images due to incompatible formats. To address this, we've added support for the <strong>HEIC</strong> format, which is optimized for Apple devices, offering high-quality images with smaller file sizes.
-        </p>
-        <p className="heic-modal-text">
-  When downloading images, please select the <strong>HEIC</strong> format for the best experience on your iPhone. If you encounter any issues, don’t hesitate to contact the <a href="https://wa.me/+2349110241218" className="heic-modal-link" target="_blank" rel="noopener noreferrer">Media Team</a> for assistance.
-</p>
-      </div>
-      <div className="heic-modal-actions">
-        <button
-          onClick={handleHeicModalClose}
-          className="heic-modal-btn"
-        >
-          Understood
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
     {/* User Signup Modal */}
     {showUserModal && (
         <div className="user-modal-overlay">
@@ -1094,7 +1045,6 @@ return (
         )}
     </div>
 
-  
     <div className="download-modal-content">
         {!isDownloading ? (
             <>
@@ -1456,7 +1406,7 @@ disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
             <p className="footer-subtitle">God's platfrom for building men</p>
             </div>
             <div className="footer-copyright">
-            <p className="copyright-text">© {new Date().getFullYear()} <a href="https://wa.me/+2349110241218" className="heic-modal-link" target="_blank" rel="noopener noreferrer">BCC Media.</a> All rights reserved.</p>
+            <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
             </div>
         </div>
         </footer>
