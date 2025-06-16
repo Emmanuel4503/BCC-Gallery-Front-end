@@ -3342,3 +3342,43 @@ html, body {
   }
 }
 
+/* HomePage.css */
+
+/* Spinner container for carousel and gallery images */
+.image-loading-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.1); /* Optional: slight background overlay */
+  z-index: 10;
+}
+
+/* Ensure spinner is centered */
+.image-loading-spinner {
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+/* Ensure image container is relatively positioned */
+.carousel-slide,
+.image-container {
+  position: relative;
+}
+
+/* Optional: Fade-in effect for images */
+.carousel-image,
+.gallery-image {
+  transition: opacity 0.3s ease-in-out;
+  opacity: 1;
+}
+
+.carousel-image.loading,
+.gallery-image.loading {
+  opacity: 0;
+}

@@ -31,11 +31,18 @@ const [latestAlbumTitle, setLatestAlbumTitle] = useState(null);
 const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
 
+// asggggggggggggggggggggggggggggggggggggggg
+// dgggggggggggggggggggggggggggggggggggggggg
+
+const [carouselImageLoading, setCarouselImageLoading] = useState({});
+const [galleryImageLoading, setGalleryImageLoading] = useState({});
+
 const [isTransitioning, setIsTransitioning] = useState(false)
 // const [isPreLoading, setIsPreLoading] = useState(true);
 // const [preloadProgress, setPreloadProgress] = useState(0);
 const [notificationQueue, setNotificationQueue] = useState([]);
 const [currentNotification, setCurrentNotification] = useState(null);
+
 
 const addNotification = (message) => {
   setNotificationQueue((prev) => [...prev, { id: Date.now(), message }]);
@@ -69,81 +76,89 @@ const removeNotification = (id) => {
 
 
 const fetchCarouselImages = async () => {
-    try {
-      setIsLoadingCarousel(true);
-      setCarouselError(null);
-  
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
-  
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Database error: Unable to retrieve carousel images from the server.');
-        }
-        throw new Error(`Failed to fetch carousel images: ${response.status}`);
+  try {
+    setIsLoadingCarousel(true);
+    setCarouselError(null);
+
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
+
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Database error: Unable to retrieve carousel images from the server.');
       }
-  
-      const data = await response.json();
-    //   console.log('Carousel images fetched:', data);
-  
-      setCarouselImages(data);
-    } catch (error) {
-      console.error('Error fetching carousel images:', error);
-      let message;
-      if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Database error')) {
-        message = 'Unable to load carousel images due to a server issue. Please try again later.';
-      } else {
-        message = 'Network error. Failed to connect to the server. Please try again.';
-      }
-      addNotification(message);
-      setCarouselError(error.message);
-      setCarouselImages([]);
-    } finally {
-      setIsLoadingCarousel(false);
+      throw new Error(`Failed to fetch carousel images: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+    // Initialize loading state for each carousel image
+    const initialLoadingState = data.reduce((acc, image) => {
+      acc[image._id || image.imageUrl] = true;
+      return acc;
+    }, {});
+    setCarouselImageLoading(initialLoadingState);
+    setCarouselImages(data);
+  } catch (error) {
+    console.error('Error fetching carousel images:', error);
+    let message;
+    if (!navigator.onLine) {
+      message = 'No internet connection. Please check your network and try again.';
+    } else if (error.message.includes('Database error')) {
+      message = 'Unable to load carousel images due to a server issue. Please try again later.';
+    } else {
+      message = 'Network error. Failed to connect to the server. Please try again.';
+    }
+    addNotification(message);
+    setCarouselError(error.message);
+    setCarouselImages([]);
+  } finally {
+    setIsLoadingCarousel(false);
+  }
+};
 
 // Fetch gallery images 
 const fetchGalleryImages = async (silent = false) => {
-    try {
-      if (!silent) {
-        setIsLoadingGallery(true);
-      }
-      setGalleryError(null);
-  
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
-  
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Database error: Unable to retrieve gallery images from the server.');
-        }
-        throw new Error(`Failed to fetch gallery images: ${response.status}`);
-      }
-  
-      const data = await response.json();
-    //   console.log('Gallery images fetched:', data);
-  
-      setGalleryImages(data);
-    } catch (error) {
-      console.error('Error fetching gallery images:', error);
-      let message;
-      if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Database error')) {
-        message = 'Unable to load gallery images due to a server issue. Please try again later.';
-      } else {
-        message = 'Network error. Failed to connect to the server. Please try again.';
-      }
-      addNotification(message);
-      setGalleryError(error.message);
-      setGalleryImages([]);
-    } finally {
-      if (!silent) {
-        setIsLoadingGallery(false);
-      }
+  try {
+    if (!silent) {
+      setIsLoadingGallery(true);
     }
-  };
+    setGalleryError(null);
+
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
+
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Database error: Unable to retrieve gallery images from the server.');
+      }
+      throw new Error(`Failed to fetch gallery images: ${response.status}`);
+    }
+
+    const data = await response.json();
+    // Initialize loading state for each gallery image
+    const initialLoadingState = data.reduce((acc, image) => {
+      acc[image._id || image.imageUrl] = true;
+      return acc;
+    }, {});
+    setGalleryImageLoading(initialLoadingState);
+    setGalleryImages(data);
+  } catch (error) {
+    console.error('Error fetching gallery images:', error);
+    let message;
+    if (!navigator.onLine) {
+      message = 'No internet connection. Please check your network and try again.';
+    } else if (error.message.includes('Database error')) {
+      message = 'Unable to load gallery images due to a server issue. Please try again later.';
+    } else {
+      message = 'Network error. Failed to connect to the server. Please try again.';
+    }
+    addNotification(message);
+    setGalleryError(error.message);
+    setGalleryImages([]);
+  } finally {
+    if (!silent) {
+      setIsLoadingGallery(false);
+    }
+  }
+};
 
     const fetchUserReactions = async (userId) => {
         try {
@@ -1244,32 +1259,51 @@ aria-label="Scroll to top"
         ) : (
             <>
 
-            <div className="carousel">
-{carouselImages.map((image, index) => {
-let slideClass = "carousel-slide";
-if (index === currentSlide && !isTransitioning) {
-slideClass += " slide-active";
-} else if (index === currentSlide && isTransitioning) {
-slideClass += " slide-exiting";
-} else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
-slideClass += " slide-entering";
-}
+<div className="carousel">
+  {carouselImages.map((image, index) => {
+    let slideClass = "carousel-slide";
+    if (index === currentSlide && !isTransitioning) {
+      slideClass += " slide-active";
+    } else if (index === currentSlide && isTransitioning) {
+      slideClass += " slide-exiting";
+    } else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
+      slideClass += " slide-entering";
+    }
 
-return (
-<div key={image._id || index} className={slideClass}>
-<img
-  src={image.imageUrl || "/placeholder.svg"} 
-  alt={`Church gallery image ${index + 1}`}
-  className="carousel-image"
-//   onClick={() => openFullscreen(image.imageUrl)} 
-/>
-<div className="carousel-overlay" />
-</div>
-);
-})}
-<div className="carousel-content">
-<center></center>
-</div>
+    const isImageLoading = carouselImageLoading[image._id || image.imageUrl];
+
+    return (
+      <div key={image._id || index} className={slideClass}>
+        {isImageLoading && (
+          <div className="image-loading-container">
+            <Loader2 className="image-loading-spinner" />
+          </div>
+        )}
+        <img
+          src={image.imageUrl || "/placeholder.svg"}
+          alt={`Church gallery image ${index + 1}`}
+          className={`carousel-image ${isImageLoading ? 'loading' : ''}`}
+          onLoad={() => {
+            setCarouselImageLoading((prev) => ({
+              ...prev,
+              [image._id || image.imageUrl]: false,
+            }));
+          }}
+          onError={() => {
+            setCarouselImageLoading((prev) => ({
+              ...prev,
+              [image._id || image.imageUrl]: false,
+            }));
+            addNotification(`Failed to load carousel image ${index + 1}`);
+          }}
+        />
+        <div className="carousel-overlay" />
+      </div>
+    );
+  })}
+  <div className="carousel-content">
+    <center></center>
+  </div>
 </div>
 
             </>
@@ -1320,83 +1354,105 @@ Save All ({selectedImages.length} selected)
             <p>No gallery images available</p>
             </div>
         ) : (
-            <div className="image-gallery">
-{galleryImages.map((image, index) => (
-<div key={image._id || index} className="image-card">
-<div className="image-container">
-<img
-  src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
-  alt={`Service ${index + 1}`}
-  className="gallery-image"
-  onClick={() => openFullscreen(image.imageUrl)}
-/>
-<div className="image-overlay">
-  <input
-    type="checkbox"
-    className="image-checkbox"
-    checked={selectedImages.includes(index)}
-    onChange={() => handleImageSelect(index)}
-    onClick={(e) => e.stopPropagation()}
-  />
-</div>
-</div>
-                
+<div className="image-gallery">
+  {galleryImages.map((image, index) => {
+    const isImageLoading = galleryImageLoading[image._id || image.imageUrl];
+
+    return (
+      <div key={image._id || index} className="image-card">
+        <div className="image-container">
+          {isImageLoading && (
+            <div className="image-loading-container">
+              <Loader2 className="image-loading-spinner" />
+            </div>
+          )}
+          <img
+            src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"}
+            alt={`Service ${index + 1}`}
+            className={`gallery-image ${isImageLoading ? 'loading' : ''}`}
+            onClick={() => openFullscreen(image.imageUrl)}
+            onLoad={() => {
+              setGalleryImageLoading((prev) => ({
+                ...prev,
+                [image._id || image.imageUrl]: false,
+              }));
+            }}
+            onError={() => {
+              setGalleryImageLoading((prev) => ({
+                ...prev,
+                [image._id || image.imageUrl]: false,
+              }));
+              addNotification(`Failed to load gallery image ${index + 1}`);
+            }}
+          />
+          <div className="image-overlay">
+            <input
+              type="checkbox"
+              className="image-checkbox"
+              checked={selectedImages.includes(index)}
+              onChange={() => handleImageSelect(index)}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+
         {/* Reaction Section */}
         <div className="reaction-section">
-<button
-className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
-onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
-title="Party Popper"
-disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
->
-🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
-</button>
-<button
-className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
-onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
-title="Thumbs Up"
-disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
->
-👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
-</button>
-<button
-className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
-onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
-title="Red Heart"
-disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
->
-❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
-</button>
-<button
-className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
-onClick={() => debouncedHandleReaction(image._id, 'fire')}
-title="Fire"
-disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
->
-🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
-</button>
+          <button
+            className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
+            onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
+            title="Party Popper"
+            disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
+          >
+            🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
+          </button>
+          <button
+            className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
+            onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
+            title="Thumbs Up"
+            disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
+          >
+            👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
+          </button>
+          <button
+            className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
+            onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
+            title="Red Heart"
+            disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
+          >
+            ❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
+          </button>
+          <button
+            className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
+            onClick={() => debouncedHandleReaction(image._id, 'fire')}
+            title="Fire"
+            disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
+          >
+            🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
+          </button>
+        </div>
+
+        <div className="image-actions">
+          <button
+            onClick={() => handleDownloadSelected(index)}
+            className="image-btn download-btn"
+            title="Download"
+          >
+            <Download className="image-btn-icon" />
+          </button>
+          <button
+            onClick={() => handleSaveSelected(index)}
+            className="image-btn save-btn"
+            title="Save"
+            disabled={isSubmitting}
+          >
+            <Save className="image-btn-icon" />
+          </button>
+        </div>
+      </div>
+    );
+  })}
 </div>
-                
-                <div className="image-actions">
-                <button
-  onClick={() => handleDownloadSelected(index)}
-  className="image-btn download-btn"
-  title="Download"
->
-  <Download className="image-btn-icon" />
-</button>
-<button
-  onClick={() => handleSaveSelected(index)}
-  className="image-btn save-btn"
-  title="Save"
-  disabled={isSubmitting}
->
-  <Save className="image-btn-icon" />
-</button>
-                </div>
-                </div>
-            ))}
-            </div>
         )}
         </div>
 
