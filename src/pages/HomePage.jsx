@@ -744,7 +744,7 @@ useEffect(() => {
         setCurrentSlide((prev) => (prev + 1) % carouselImages.length)
         setIsTransitioning(false)
       }, 100)
-    }, 4000)
+    }, 6000)
   
     return () => clearInterval(timer)
   }, [carouselImages.length])
