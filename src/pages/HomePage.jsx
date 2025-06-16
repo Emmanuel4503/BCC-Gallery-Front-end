@@ -65,90 +65,8 @@ const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
-// Add this helper function
-const normalizeImageUrl = (imageUrl) => {
-  if (!imageUrl || typeof imageUrl !== 'string') {
-    return '/placeholder.svg';
-  }
-  
-  // If it's already a full URL, return as is
-  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    return imageUrl;
-  }
-  
-  // If it's a Cloudinary path, construct the full URL
-  if (imageUrl.includes('upload/') || imageUrl.startsWith('v')) {
-    return `https://res.cloudinary.com/dqxhczhxk/image/upload/${imageUrl}`;
-  }
-  
-  // Default fallback
-  return imageUrl;
-};
-// gggggggggggg
-// jhhhhhh
-// Enhanced Image Component with error handling
-const SafeImage = ({ src, alt, className, onClick, ...props }) => {
-  const [imageSrc, setImageSrc] = useState(normalizeImageUrl(src));
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    setImageSrc(normalizeImageUrl(src));
-    setHasError(false);
-    setIsLoading(true);
-  }, [src]);
 
-  const handleError = () => {
-    if (!hasError) {
-      setHasError(true);
-      setIsLoading(false);
-      // Try alternative URL format if the first one fails
-      const altUrl = src?.startsWith('http') 
-        ? `https://res.cloudinary.com/dqxhczhxk/image/upload/${src.split('/').pop()}`
-        : `https://res.cloudinary.com/dqxhczhxk/image/upload/${src}`;
-      
-      if (altUrl !== imageSrc) {
-        setImageSrc(altUrl);
-        setHasError(false);
-      }
-    }
-  };
-
-  const handleLoad = () => {
-    setIsLoading(false);
-    setHasError(false);
-  };
-
-  if (hasError) {
-    return (
-      <div className={`${className} image-error`} onClick={onClick} {...props}>
-        <div className="error-placeholder">
-          <span>Image unavailable</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {isLoading && (
-        <div className={`${className} image-loading`}>
-          <Loader2 className="image-loader" />
-        </div>
-      )}
-      <img
-        src={imageSrc}
-        alt={alt}
-        className={`${className} ${isLoading ? 'loading' : ''}`}
-        onClick={onClick}
-        onError={handleError}
-        onLoad={handleLoad}
-        style={{ display: isLoading ? 'none' : 'block' }}
-        {...props}
-      />
-    </>
-  );
-};
 
 const fetchCarouselImages = async () => {
     try {
@@ -1339,10 +1257,11 @@ slideClass += " slide-entering";
 
 return (
 <div key={image._id || index} className={slideClass}>
-<SafeImage
-  src={image.imageUrl}
+<img
+  src={image.imageUrl || "/placeholder.svg"} 
   alt={`Church gallery image ${index + 1}`}
   className="carousel-image"
+//   onClick={() => openFullscreen(image.imageUrl)} 
 />
 <div className="carousel-overlay" />
 </div>
@@ -1405,8 +1324,8 @@ Save All ({selectedImages.length} selected)
 {galleryImages.map((image, index) => (
 <div key={image._id || index} className="image-card">
 <div className="image-container">
-<SafeImage
-  src={image.thumbnailUrl || image.imageUrl}
+<img
+  src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
   alt={`Service ${index + 1}`}
   className="gallery-image"
   onClick={() => openFullscreen(image.imageUrl)}
@@ -1504,7 +1423,7 @@ disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
 
         <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
             <img
-          onClick={() => openFullscreen(normalizeImageUrl(image.imageUrl))}
+            src={fullscreenImage || "/placeholder.svg"}
             alt="Fullscreen view"
             className="fullscreen-image"
             />
