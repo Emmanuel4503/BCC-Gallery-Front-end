@@ -1,4 +1,4 @@
- import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
 import { Link } from "react-router-dom"
 import "../styles/HomePage.css"
@@ -32,12 +32,10 @@ const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
 
 const [isTransitioning, setIsTransitioning] = useState(false)
-const [isPreLoading, setIsPreLoading] = useState(true);
-const [preloadProgress, setPreloadProgress] = useState(0);
+// const [isPreLoading, setIsPreLoading] = useState(true);
+// const [preloadProgress, setPreloadProgress] = useState(0);
 const [notificationQueue, setNotificationQueue] = useState([]);
 const [currentNotification, setCurrentNotification] = useState(null);
-const [countdown, setCountdown] = useState(10) // Countdown for preloader fallback
-
 
 const addNotification = (message) => {
   setNotificationQueue((prev) => [...prev, { id: Date.now(), message }]);
@@ -589,62 +587,55 @@ useEffect(() => {
     }
 }, [currentUser?.id]);
 
-useEffect(() => {
-  if (!carouselImages.length && !galleryImages.length) {
-    setIsPreLoading(false);
-    setIsLoadingCarousel(false);
-    setIsLoadingGallery(false);
-    return;
-  }
+// useEffect(() => {
+//   if (!carouselImages.length && !galleryImages.length) {
+//       setIsLoadingCarousel(false);
+//       setIsLoadingGallery(false);
+//       return;
+//   }
 
-  const allImages = [
-    ...carouselImages.map(image => image.imageUrl),
-    ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
-  ].filter(url => url && typeof url === 'string');
+//   const allImages = [
+//       ...carouselImages.map(image => image.imageUrl),
+//       ...galleryImages.map(image => image.thumbnailUrl || image.imageUrl)
+//   ].filter(url => url && typeof url === 'string');
 
-  if (!allImages.length) {
-    setIsPreLoading(false);
-    setIsLoadingCarousel(false);
-    setIsLoadingGallery(false);
-    return;
-  }
+//   if (!allImages.length) {
+//       setIsLoadingCarousel(false);
+//       setIsLoadingGallery(false);
+//       return;
+//   }
 
-  let loadedImages = 0;
-  const totalImages = allImages.length;
+//   let loadedImages = 0;
+//   const totalImages = allImages.length;
 
-  const updateProgress = () => {
-    loadedImages += 1;
-    setPreloadProgress(Math.round((loadedImages / totalImages) * 100));
-    if (loadedImages >= totalImages) {
-      setIsPreLoading(false);
-      setIsLoadingCarousel(false);
-      setIsLoadingGallery(false);
-    }
-  };
+//   const updateProgress = () => {
+//       loadedImages += 1;
+//       if (loadedImages >= totalImages) {
+//           setIsLoadingCarousel(false);
+//           setIsLoadingGallery(false);
+//       }
+//   };
 
-  allImages.forEach(url => {
-    const img = new window.Image();
-    img.src = url;
-    img.onload = updateProgress;
-    img.onerror = updateProgress; // Treat errors as completed to ensure all images are processed
-  });
+//   allImages.forEach(url => {
+//       const img = new window.Image();
+//       img.src = url;
+//       img.onload = updateProgress;
+//       img.onerror = () => {
+//           console.error(`Failed to preload image: ${url}`);
+//           updateProgress(); // Continue even if one image fails
+//       };
+//   });
 
-  // Countdown timer as fallback
-  let countdown = 10;
-  setCountdown(countdown);
-  setPreloadProgress(0);
-  const countdownInterval = setInterval(() => {
-    countdown -= 1;
-    setCountdown(countdown);
-    if (countdown <= 0 && loadedImages < totalImages) {
-      setIsPreLoading(false);
-      setIsLoadingCarousel(false);
-      setIsLoadingGallery(false);
-    }
-  }, 1000);
+//   // Fallback in case some images take too long
+//   const fallbackTimeout = setTimeout(() => {
+//       if (loadedImages < totalImages) {
+//           setIsLoadingCarousel(false);
+//           setIsLoadingGallery(false);
+//       }
+//   }, 10000); // 10-second timeout
 
-  return () => clearInterval(countdownInterval);
-}, [carouselImages, galleryImages]);
+//   return () => clearTimeout(fallbackTimeout);
+// }, [carouselImages, galleryImages]);
 
     useEffect(() => {
         const checkExistingUser = () => {
@@ -974,32 +965,7 @@ useEffect(() => {
 
 
 return (
-  
     <div className="page-container">
-      {isPreLoading && (
-  <div className="preloader-overlay">
-    <div className="preloader-content">
-      <Loader2 className="preloader-spinner" />
-      <h2 className="preloader-title">Loading BCC Gallery</h2>
-      <div className="preloader-progress">
-        <div className="preloader-progress-bar">
-          <div
-            className="preloader-progress-fill"
-            style={{ width: `${preloadProgress}%` }}
-          ></div>
-        </div>
-        <span className="preloader-progress-text">{preloadProgress}%</span>
-      </div>
-      <div className="preloader-countdown">
-        {preloadProgress < 100 ? (
-          <>Waiting for images... ({countdown}s remaining)</>
-        ) : (
-          <>Finalizing...</>
-        )}
-      </div>
-    </div>
-  </div>
-)}
     <div className="notification-container">
   {currentNotification && (
     <div className="notification">
