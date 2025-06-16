@@ -693,6 +693,22 @@ useEffect(() => {
         checkExistingUser();
     }, []);
 
+    useEffect(() => {
+      // Initialize loading state for carousel images
+      if (carouselImages.length > 0) {
+        const carouselIds = carouselImages.map((image, index) => `carousel-${image._id || index}`);
+        setLoadingImages(prev => new Set([...prev, ...carouselIds]));
+      }
+    }, [carouselImages]);
+    
+    useEffect(() => {
+      // Initialize loading state for gallery images
+      if (galleryImages.length > 0) {
+        const galleryIds = galleryImages.map((image, index) => `gallery-${image._id || index}`);
+        setLoadingImages(prev => new Set([...prev, ...galleryIds]));
+      }
+    }, [galleryImages]);
+
 // Handle user signup
 const handleUserSignup = async (e) => {
     if (e) e.preventDefault()
@@ -1342,9 +1358,7 @@ Save All ({selectedImages.length} selected)
         </div>
 
         <hr />
-
-       {/* Image Gallery */}
-{isLoadingGallery ? (
+        {isLoadingGallery ? (
     <div className="loading-container">
         <Loader2 className="loading-spinner" />
         <p>Loading gallery images...</p>
@@ -1361,7 +1375,8 @@ Save All ({selectedImages.length} selected)
 ) : (
     <div className="image-gallery">
         {galleryImages.map((image, index) => {
-            const isImageLoading = galleryImageLoading[image._id || image.imageUrl];
+            const imageId = `gallery-${image._id || index}`;
+            const isImageLoading = loadingImages.has(imageId);
 
             return (
                 <div key={image._id || index} className="image-card">
@@ -1376,17 +1391,10 @@ Save All ({selectedImages.length} selected)
                                 src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"}
                                 alt={`Service ${index + 1}`}
                                 className={`gallery-image ${isImageLoading ? 'loading' : ''}`}
-                                onLoad={() => {
-                                    setGalleryImageLoading((prev) => ({
-                                        ...prev,
-                                        [image._id || image.imageUrl]: false,
-                                    }));
-                                }}
+                                onLoadStart={() => handleImageStart(imageId)}
+                                onLoad={() => handleImageLoad(imageId)}
                                 onError={() => {
-                                    setGalleryImageLoading((prev) => ({
-                                        ...prev,
-                                        [image._id || image.imageUrl]: false,
-                                    }));
+                                    handleImageError(imageId);
                                     addNotification(`Failed to load gallery image ${index + 1}`);
                                 }}
                                 onClick={() => openFullscreen(image.imageUrl)}
@@ -1462,7 +1470,6 @@ Save All ({selectedImages.length} selected)
     </div>
 )}
 </div>
-
         {/* Footer */}
         <footer className="footer">
         <div className="footer-content">
