@@ -71,7 +71,7 @@ const fetchCarouselImages = async () => {
       setIsLoadingCarousel(true);
       setCarouselError(null);
   
-      const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/selected');
+      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
   
       if (!response.ok) {
         if (response.status >= 500) {
@@ -110,7 +110,7 @@ const fetchGalleryImages = async (silent = false) => {
       }
       setGalleryError(null);
   
-      const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest');
+      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
   
       if (!response.ok) {
         if (response.status >= 500) {
@@ -145,7 +145,7 @@ const fetchGalleryImages = async (silent = false) => {
 
     const fetchUserReactions = async (userId) => {
         try {
-          const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`);
+          const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/images/reactions?userId=${userId}`);
           if (!response.ok) {
             if (response.status >= 500) {
               throw new Error('Database error: Unable to retrieve user reactions from the server.');
@@ -178,7 +178,7 @@ const fetchLatestAlbum = async () => {
       setIsLoadingAlbum(true);
       setAlbumError(null);
   
-      const response = await fetch('https://bcc-gallery-back-end.onrender.com/album/latest');
+      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/album/latest');
   
       if (!response.ok) {
         if (response.status >= 500) {
@@ -231,7 +231,7 @@ const handleReaction = useCallback(
         });
   
         // Send reaction to backend
-        const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/react', {
+        const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/react', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -677,7 +677,7 @@ const handleUserSignup = async (e) => {
     try {
     console.log('Attempting to create user:', userName.trim())
     
-    const response = await fetch('https://bcc-gallery-back-end.onrender.com/users/signup', {
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/users/signup', {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
@@ -791,7 +791,7 @@ const handleSaveAll = async () => {
             }
 
             try {
-                const response = await fetch('https://bcc-gallery-back-end.onrender.com/saved/add', {
+                const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -858,7 +858,7 @@ const handleSaveSelected = async (index) => {
 
     setIsSubmitting(true)
     try {
-        const response = await fetch('https://bcc-gallery-back-end.onrender.com/saved/add', {
+        const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -30,7 +30,7 @@ function AlbumsPage() {
   // Fetch all albums
   useEffect(() => {
     setIsLoading(true);
-    fetch("https://bcc-gallery-back-end.onrender.com/album/get")
+    fetch("https://bcc-gallery-back-end-production.up.railway.app/album/get")
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -66,7 +66,7 @@ function AlbumsPage() {
         setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
       }
 
-      const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/album/${encodeURIComponent(albumTitle)}`, {
+      const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/images/album/${encodeURIComponent(albumTitle)}`, {
         mode: 'cors',
         credentials: 'same-origin',
       });
@@ -84,10 +84,10 @@ function AlbumsPage() {
         let imageUrl = image.imageUrl;
         let thumbnailUrl = image.thumbnailUrl || image.imageUrl; // Fallback to imageUrl if no thumbnail
         if (imageUrl && !imageUrl.startsWith('http')) {
-          imageUrl = `https://bcc-gallery-back-end.onrender.com${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+          imageUrl = `https://bcc-gallery-back-end-production.up.railway.app${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
         }
         if (thumbnailUrl && !thumbnailUrl.startsWith('http')) {
-          thumbnailUrl = `https://bcc-gallery-back-end.onrender.com${thumbnailUrl.startsWith('/') ? thumbnailUrl : `/${thumbnailUrl}`}`;
+          thumbnailUrl = `https://bcc-gallery-back-end-production.up.railway.app${thumbnailUrl.startsWith('/') ? thumbnailUrl : `/${thumbnailUrl}`}`;
         }
         return { ...image, imageUrl, thumbnailUrl };
       });
