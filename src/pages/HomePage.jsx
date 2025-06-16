@@ -616,21 +616,6 @@ useEffect(() => {
     fetchUserReactions(currentUser.id);
     }
 }, [currentUser?.id]);
-useEffect(() => {
-  // Initialize loading state for carousel images
-  if (carouselImages.length > 0) {
-    const carouselIds = carouselImages.map((image, index) => `carousel-${image._id || index}`);
-    setLoadingImages(prev => new Set([...prev, ...carouselIds]));
-  }
-}, [carouselImages]);
-
-useEffect(() => {
-  // Initialize loading state for gallery images
-  if (galleryImages.length > 0) {
-    const galleryIds = galleryImages.map((image, index) => `gallery-${image._id || index}`);
-    setLoadingImages(prev => new Set([...prev, ...galleryIds]));
-  }
-}, [galleryImages]);
 
 // useEffect(() => {
 //   if (!carouselImages.length && !galleryImages.length) {
