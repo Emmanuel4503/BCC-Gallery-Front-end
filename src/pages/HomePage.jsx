@@ -33,9 +33,7 @@ const [albumError, setAlbumError] = useState(null);
 
 // HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 // HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
-// HHHHHHHHHHHHHHHHHHHHHHHHHHHHS
-const [loadingImages, setLoadingImages] = useState(new Set())
-const [loadedImages, setLoadedImages] = useState(new Set())
+// hhhhhhhhhhhhhhhhhhhhh
 
 const [isTransitioning, setIsTransitioning] = useState(false)
 // const [isPreLoading, setIsPreLoading] = useState(true);
@@ -313,27 +311,6 @@ const debouncedHandleReaction = useCallback(
     [handleReaction]
 );
 
-const handleImageLoad = (imageId) => {
-  setLoadingImages(prev => {
-    const newSet = new Set(prev)
-    newSet.delete(imageId)
-    return newSet
-  })
-  setLoadedImages(prev => new Set([...prev, imageId]))
-}
-
-const handleImageError = (imageId) => {
-  setLoadingImages(prev => {
-    const newSet = new Set(prev)
-    newSet.delete(imageId)
-    return newSet
-  })
-  console.error(`Failed to load image: ${imageId}`)
-}
-
-const handleImageStart = (imageId) => {
-  setLoadingImages(prev => new Set([...prev, imageId]))
-}
 
 
 const getReactionCount = (image, reactionType) => {
@@ -692,22 +669,6 @@ useEffect(() => {
         
         checkExistingUser();
     }, []);
-
-    useEffect(() => {
-      // Initialize loading state for carousel images
-      if (carouselImages.length > 0) {
-        const carouselIds = carouselImages.map((image, index) => `carousel-${image._id || index}`);
-        setLoadingImages(prev => new Set([...prev, ...carouselIds]));
-      }
-    }, [carouselImages]);
-    
-    useEffect(() => {
-      // Initialize loading state for gallery images
-      if (galleryImages.length > 0) {
-        const galleryIds = galleryImages.map((image, index) => `gallery-${image._id || index}`);
-        setLoadingImages(prev => new Set([...prev, ...galleryIds]));
-      }
-    }, [galleryImages]);
 
 // Handle user signup
 const handleUserSignup = async (e) => {
@@ -1287,7 +1248,8 @@ aria-label="Scroll to top"
             </div>
         ) : (
             <>
-<div className="carousel">
+
+            <div className="carousel">
 {carouselImages.map((image, index) => {
 let slideClass = "carousel-slide";
 if (index === currentSlide && !isTransitioning) {
@@ -1298,30 +1260,14 @@ slideClass += " slide-exiting";
 slideClass += " slide-entering";
 }
 
-const imageId = `carousel-${image._id || index}`;
-const isImageLoading = loadingImages.has(imageId);
-
 return (
 <div key={image._id || index} className={slideClass}>
-<div className={`image-wrapper ${isImageLoading ? 'loading' : ''}`}>
-  {isImageLoading && (
-    <div className="image-loading-spinner">
-      <Loader2 className="loading-spinner-icon" />
-    </div>
-  )}
-  <img
-    src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"}
-    alt={`Service ${index + 1}`}
-    className={`gallery-image ${isImageLoading ? 'loading' : ''}`}
-    onLoadStart={() => handleImageStart(imageId)}
-    onLoad={() => handleImageLoad(imageId)}
-    onError={() => {
-      handleImageError(imageId);
-      addNotification(`Failed to load gallery image ${index + 1}`);
-    }}
-    onClick={() => openFullscreen(image.imageUrl)}
-  />
-</div>
+<img
+  src={image.imageUrl || "/placeholder.svg"} 
+  alt={`Church gallery image ${index + 1}`}
+  className="carousel-image"
+//   onClick={() => openFullscreen(image.imageUrl)} 
+/>
 <div className="carousel-overlay" />
 </div>
 );
@@ -1330,6 +1276,7 @@ return (
 <center></center>
 </div>
 </div>
+
             </>
         )}
         </div>
@@ -1361,114 +1308,103 @@ Save All ({selectedImages.length} selected)
         </div>
 
         <hr />
-        {isLoadingGallery ? (
-    <div className="loading-container">
-        <Loader2 className="loading-spinner" />
-        <p>Loading gallery images...</p>
-    </div>
-) : galleryError ? (
-    <div className="error-container">
-        <p>Error loading gallery: {galleryError}</p>
-        <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
-    </div>
-) : galleryImages.length === 0 ? (
-    <div className="no-images-container">
-        <p>No gallery images available</p>
-    </div>
-) : (
-    <div className="image-gallery">
-        {galleryImages.map((image, index) => {
-            const imageId = `gallery-${image._id || index}`;
-            const isImageLoading = loadingImages.has(imageId);
 
-            return (
-                <div key={image._id || index} className="image-card">
-                    <div className="image-container">
-                    <div className={`image-wrapper ${isImageLoading ? 'loading' : ''}`}>
-  {isImageLoading && (
-    <div className="image-loading-spinner">
-      <Loader2 className="loading-spinner-icon" />
-    </div>
-  )}
-  <img
-    src={image.imageUrl || "/placeholder.svg"} 
-    alt={`Church gallery image ${index + 1}`}
-    className={`carousel-image ${isImageLoading ? 'loading' : ''}`}
-    onLoadStart={() => handleImageStart(imageId)}
-    onLoad={() => handleImageLoad(imageId)}
-    onError={() => handleImageError(imageId)}
+        {/* Image Gallery */}
+        {isLoadingGallery ? (
+            <div className="loading-container">
+            <Loader2 className="loading-spinner" />
+            <p>Loading gallery images...</p>
+            </div>
+        ) : galleryError ? (
+            <div className="error-container">
+            <p>Error loading gallery: {galleryError}</p>
+            <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
+            </div>
+        ) : galleryImages.length === 0 ? (
+            <div className="no-images-container">
+            <p>No gallery images available</p>
+            </div>
+        ) : (
+            <div className="image-gallery">
+{galleryImages.map((image, index) => (
+<div key={image._id || index} className="image-card">
+<div className="image-container">
+<img
+  src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
+  alt={`Service ${index + 1}`}
+  className="gallery-image"
+  onClick={() => openFullscreen(image.imageUrl)}
+/>
+<div className="image-overlay">
+  <input
+    type="checkbox"
+    className="image-checkbox"
+    checked={selectedImages.includes(index)}
+    onChange={() => handleImageSelect(index)}
+    onClick={(e) => e.stopPropagation()}
   />
 </div>
-                        <div className="image-overlay">
-                            <input
-                                type="checkbox"
-                                className="image-checkbox"
-                                checked={selectedImages.includes(index)}
-                                onChange={() => handleImageSelect(index)}
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Reaction Section */}
-                    <div className="reaction-section">
-                        <button
-                            className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
-                            onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
-                            title="Party Popper"
-                            disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
-                        >
-                            🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
-                        </button>
-                        <button
-                            className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
-                            onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
-                            title="Thumbs Up"
-                            disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
-                        >
-                            👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
-                        </button>
-                        <button
-                            className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
-                            onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
-                            title="Red Heart"
-                            disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
-                        >
-                            ❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
-                        </button>
-                        <button
-                            className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
-                            onClick={() => debouncedHandleReaction(image._id, 'fire')}
-                            title="Fire"
-                            disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
-                        >
-                            🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
-                        </button>
-                    </div>
-
-                    <div className="image-actions">
-                        <button
-                            onClick={() => handleDownloadSelected(index)}
-                            className="image-btn download-btn"
-                            title="Download"
-                        >
-                            <Download className="image-btn-icon" />
-                        </button>
-                        <button
-                            onClick={() => handleSaveSelected(index)}
-                            className="image-btn save-btn"
-                            title="Save"
-                            disabled={isSubmitting}
-                        >
-                            <Save className="image-btn-icon" />
-                        </button>
-                    </div>
-                </div>
-            );
-        })}
-    </div>
-)}
 </div>
+                
+        {/* Reaction Section */}
+        <div className="reaction-section">
+<button
+className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
+onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
+title="Party Popper"
+disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
+>
+🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
+</button>
+<button
+className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
+onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
+title="Thumbs Up"
+disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
+>
+👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
+</button>
+<button
+className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
+onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
+title="Red Heart"
+disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
+>
+❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
+</button>
+<button
+className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
+onClick={() => debouncedHandleReaction(image._id, 'fire')}
+title="Fire"
+disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
+>
+🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
+</button>
+</div>
+                
+                <div className="image-actions">
+                <button
+  onClick={() => handleDownloadSelected(index)}
+  className="image-btn download-btn"
+  title="Download"
+>
+  <Download className="image-btn-icon" />
+</button>
+<button
+  onClick={() => handleSaveSelected(index)}
+  className="image-btn save-btn"
+  title="Save"
+  disabled={isSubmitting}
+>
+  <Save className="image-btn-icon" />
+</button>
+                </div>
+                </div>
+            ))}
+            </div>
+        )}
+        </div>
+
         {/* Footer */}
         <footer className="footer">
         <div className="footer-content">
