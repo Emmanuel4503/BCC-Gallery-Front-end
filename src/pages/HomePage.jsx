@@ -31,6 +31,8 @@ const [latestAlbumTitle, setLatestAlbumTitle] = useState(null);
 const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
 
+const [imageLoadingStates, setImageLoadingStates] = useState({})
+
 // HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 // HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 // hhhhhhhhhhhhhhhhhhhhh
@@ -70,6 +72,23 @@ const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
+const handleImageLoad = (imageId) => {
+  setImageLoadingStates(prev => ({
+    ...prev,
+    [imageId]: false
+  }))
+}
+
+const handleImageLoadStart = (imageId) => {
+  setImageLoadingStates(prev => ({
+    ...prev,
+    [imageId]: true
+  }))
+}
+
+const isImageLoading = (imageId) => {
+  return imageLoadingStates[imageId] || false
+}
 
 
 
@@ -1262,10 +1281,18 @@ slideClass += " slide-entering";
 
 return (
 <div key={image._id || index} className={slideClass}>
+{isImageLoading(`carousel_${image._id || index}`) && (
+  <div className="image-loading-overlay">
+    <Loader2 className="image-loading-spinner" />
+  </div>
+)}
 <img
   src={image.imageUrl || "/placeholder.svg"} 
   alt={`Church gallery image ${index + 1}`}
   className="carousel-image"
+  onLoadStart={() => handleImageLoadStart(`carousel_${image._id || index}`)}
+  onLoad={() => handleImageLoad(`carousel_${image._id || index}`)}
+  onError={() => handleImageLoad(`carousel_${image._id || index}`)}
 //   onClick={() => openFullscreen(image.imageUrl)} 
 />
 <div className="carousel-overlay" />
@@ -1329,10 +1356,18 @@ Save All ({selectedImages.length} selected)
 {galleryImages.map((image, index) => (
 <div key={image._id || index} className="image-card">
 <div className="image-container">
+{isImageLoading(`gallery_${image._id || index}`) && (
+  <div className="image-loading-overlay">
+    <Loader2 className="image-loading-spinner" />
+  </div>
+)}
 <img
   src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
   alt={`Service ${index + 1}`}
   className="gallery-image"
+  onLoadStart={() => handleImageLoadStart(`gallery_${image._id || index}`)}
+  onLoad={() => handleImageLoad(`gallery_${image._id || index}`)}
+  onError={() => handleImageLoad(`gallery_${image._id || index}`)}
   onClick={() => openFullscreen(image.imageUrl)}
 />
 <div className="image-overlay">
