@@ -1303,22 +1303,25 @@ const isImageLoading = loadingImages.has(imageId);
 
 return (
 <div key={image._id || index} className={slideClass}>
-  <div className="image-wrapper">
-    {isImageLoading && (
-      <div className="image-loading-spinner">
-        <Loader2 className="loading-spinner-icon" />
-      </div>
-    )}
-    <img
-      src={image.imageUrl || "/placeholder.svg"} 
-      alt={`Church gallery image ${index + 1}`}
-      className="carousel-image"
-      onLoadStart={() => handleImageStart(imageId)}
-      onLoad={() => handleImageLoad(imageId)}
-      onError={() => handleImageError(imageId)}
-      style={{ display: isImageLoading ? 'none' : 'block' }}
-    />
-  </div>
+<div className={`image-wrapper ${isImageLoading ? 'loading' : ''}`}>
+  {isImageLoading && (
+    <div className="image-loading-spinner">
+      <Loader2 className="loading-spinner-icon" />
+    </div>
+  )}
+  <img
+    src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"}
+    alt={`Service ${index + 1}`}
+    className={`gallery-image ${isImageLoading ? 'loading' : ''}`}
+    onLoadStart={() => handleImageStart(imageId)}
+    onLoad={() => handleImageLoad(imageId)}
+    onError={() => {
+      handleImageError(imageId);
+      addNotification(`Failed to load gallery image ${index + 1}`);
+    }}
+    onClick={() => openFullscreen(image.imageUrl)}
+  />
+</div>
 <div className="carousel-overlay" />
 </div>
 );
@@ -1381,25 +1384,21 @@ Save All ({selectedImages.length} selected)
             return (
                 <div key={image._id || index} className="image-card">
                     <div className="image-container">
-                        <div className="image-wrapper">
-                            {isImageLoading && (
-                                <div className="image-loading-spinner">
-                                    <Loader2 className="loading-spinner-icon" />
-                                </div>
-                            )}
-                            <img
-                                src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"}
-                                alt={`Service ${index + 1}`}
-                                className={`gallery-image ${isImageLoading ? 'loading' : ''}`}
-                                onLoadStart={() => handleImageStart(imageId)}
-                                onLoad={() => handleImageLoad(imageId)}
-                                onError={() => {
-                                    handleImageError(imageId);
-                                    addNotification(`Failed to load gallery image ${index + 1}`);
-                                }}
-                                onClick={() => openFullscreen(image.imageUrl)}
-                            />
-                        </div>
+                    <div className={`image-wrapper ${isImageLoading ? 'loading' : ''}`}>
+  {isImageLoading && (
+    <div className="image-loading-spinner">
+      <Loader2 className="loading-spinner-icon" />
+    </div>
+  )}
+  <img
+    src={image.imageUrl || "/placeholder.svg"} 
+    alt={`Church gallery image ${index + 1}`}
+    className={`carousel-image ${isImageLoading ? 'loading' : ''}`}
+    onLoadStart={() => handleImageStart(imageId)}
+    onLoad={() => handleImageLoad(imageId)}
+    onError={() => handleImageError(imageId)}
+  />
+</div>
                         <div className="image-overlay">
                             <input
                                 type="checkbox"
