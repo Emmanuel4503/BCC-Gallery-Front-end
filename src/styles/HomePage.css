@@ -3342,37 +3342,24 @@ html, body {
   }
 }
 
-
-.image-loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
+.image-loading-container {
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 2;
-  border-radius: 8px;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  background-color: #f0f0f0;
 }
 
 .image-loading-spinner {
-  width: 24px;
-  height: 24px;
-  color: white;
+  width: 40px;
+  height: 40px;
+  color: #333;
   animation: spin 1s linear infinite;
 }
 
-.carousel-slide {
-  position: relative;
-}
-
 @keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
   to {
-    transform: rotate(360deg);
+      transform: rotate(360deg);
   }
 }

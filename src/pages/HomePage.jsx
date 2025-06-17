@@ -31,11 +31,11 @@ const [latestAlbumTitle, setLatestAlbumTitle] = useState(null);
 const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
 
-const [imageLoadingStates, setImageLoadingStates] = useState({})
+const [loadingImages, setLoadingImages] = useState({});
 
 // HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 // HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
-// hhhhhhhhhhhhhhhhhhhhh
+// hhhhhhhhhhhhhhhhhhhhhhhhhhh
 
 const [isTransitioning, setIsTransitioning] = useState(false)
 // const [isPreLoading, setIsPreLoading] = useState(true);
@@ -72,103 +72,88 @@ const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
+
 const handleImageLoad = (imageId) => {
-  setImageLoadingStates(prev => ({
-    ...prev,
-    [imageId]: false
-  }))
-}
-
-const handleImageLoadStart = (imageId) => {
-  setImageLoadingStates(prev => ({
-    ...prev,
-    [imageId]: true
-  }))
-}
-
-const isImageLoading = (imageId) => {
-  return imageLoadingStates[imageId] || false
-}
-
-
+  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+};
 
 const fetchCarouselImages = async () => {
-    try {
+  try {
       setIsLoadingCarousel(true);
       setCarouselError(null);
-  
       const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
-  
       if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Database error: Unable to retrieve carousel images from the server.');
-        }
-        throw new Error(`Failed to fetch carousel images: ${response.status}`);
+          if (response.status >= 500) {
+              throw new Error('Database error: Unable to retrieve carousel images from the server.');
+          }
+          throw new Error(`Failed to fetch carousel images: ${response.status}`);
       }
-  
       const data = await response.json();
-    //   console.log('Carousel images fetched:', data);
-  
       setCarouselImages(data);
-    } catch (error) {
+      // Initialize loading state for carousel images
+      const initialLoadingState = data.reduce((acc, image) => {
+          acc[image._id] = true;
+          return acc;
+      }, {});
+      setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
+  } catch (error) {
       console.error('Error fetching carousel images:', error);
       let message;
       if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
+          message = 'No internet connection. Please check your network and try again.';
       } else if (error.message.includes('Database error')) {
-        message = 'Unable to load carousel images due to a server issue. Please try again later.';
+          message = 'Unable to load carousel images due to a server issue. Please try again later.';
       } else {
-        message = 'Network error. Failed to connect to the server. Please try again.';
+          message = 'Network error. Failed to connect to the server. Please try again.';
       }
       addNotification(message);
       setCarouselError(error.message);
       setCarouselImages([]);
-    } finally {
+  } finally {
       setIsLoadingCarousel(false);
-    }
-  };
+  }
+};
 
-// Fetch gallery images 
 const fetchGalleryImages = async (silent = false) => {
-    try {
+  try {
       if (!silent) {
-        setIsLoadingGallery(true);
+          setIsLoadingGallery(true);
       }
       setGalleryError(null);
-  
       const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
-  
       if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Database error: Unable to retrieve gallery images from the server.');
-        }
-        throw new Error(`Failed to fetch gallery images: ${response.status}`);
+          if (response.status >= 500) {
+              throw new Error('Database error: Unable to retrieve gallery images from the server.');
+          }
+          throw new Error(`Failed to fetch gallery images: ${response.status}`);
       }
-  
       const data = await response.json();
-    //   console.log('Gallery images fetched:', data);
-  
       setGalleryImages(data);
-    } catch (error) {
+      // Initialize loading state for gallery images
+      const initialLoadingState = data.reduce((acc, image) => {
+          acc[image._id] = true;
+          return acc;
+      }, {});
+      setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
+  } catch (error) {
       console.error('Error fetching gallery images:', error);
       let message;
       if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
+          message = 'No internet connection. Please check your network and try again.';
       } else if (error.message.includes('Database error')) {
-        message = 'Unable to load gallery images due to a server issue. Please try again later.';
+          message = 'Unable to load gallery images due to a server issue. Please try again later.';
       } else {
-        message = 'Network error. Failed to connect to the server. Please try again.';
+          message = 'Network error. Failed to connect to the server. Please try again.';
       }
       addNotification(message);
       setGalleryError(error.message);
       setGalleryImages([]);
-    } finally {
+  } finally {
       if (!silent) {
-        setIsLoadingGallery(false);
+          setIsLoadingGallery(false);
       }
-    }
-  };
-
+  }
+};
     const fetchUserReactions = async (userId) => {
         try {
           const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/images/reactions?userId=${userId}`);
@@ -1267,41 +1252,39 @@ aria-label="Scroll to top"
             </div>
         ) : (
             <>
+<div className="carousel">
+    {carouselImages.map((image, index) => {
+        let slideClass = "carousel-slide";
+        if (index === currentSlide && !isTransitioning) {
+            slideClass += " slide-active";
+        } else if (index === currentSlide && isTransitioning) {
+            slideClass += " slide-exiting";
+        } else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
+            slideClass += " slide-entering";
+        }
 
-            <div className="carousel">
-{carouselImages.map((image, index) => {
-let slideClass = "carousel-slide";
-if (index === currentSlide && !isTransitioning) {
-slideClass += " slide-active";
-} else if (index === currentSlide && isTransitioning) {
-slideClass += " slide-exiting";
-} else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
-slideClass += " slide-entering";
-}
-
-return (
-<div key={image._id || index} className={slideClass}>
-{isImageLoading(`carousel_${image._id || index}`) && (
-  <div className="image-loading-overlay">
-    <Loader2 className="image-loading-spinner" />
-  </div>
-)}
-<img
-  src={image.imageUrl || "/placeholder.svg"} 
-  alt={`Church gallery image ${index + 1}`}
-  className="carousel-image"
-  onLoadStart={() => handleImageLoadStart(`carousel_${image._id || index}`)}
-  onLoad={() => handleImageLoad(`carousel_${image._id || index}`)}
-  onError={() => handleImageLoad(`carousel_${image._id || index}`)}
-//   onClick={() => openFullscreen(image.imageUrl)} 
-/>
-<div className="carousel-overlay" />
-</div>
-);
-})}
-<div className="carousel-content">
-<center></center>
-</div>
+        return (
+            <div key={image._id || index} className={slideClass}>
+                {loadingImages[image._id] ? (
+                    <div className="image-loading-container">
+                        <Loader2 className="image-loading-spinner" />
+                    </div>
+                ) : (
+                    <img
+                        src={image.imageUrl || "/placeholder.svg"}
+                        alt={`Church gallery image ${index + 1}`}
+                        className="carousel-image"
+                        onLoad={() => handleImageLoad(image._id)}
+                        // onClick={() => openFullscreen(image.imageUrl)}
+                    />
+                )}
+                <div className="carousel-overlay" />
+            </div>
+        );
+    })}
+    <div className="carousel-content">
+        <center></center>
+    </div>
 </div>
 
             </>
@@ -1352,34 +1335,33 @@ Save All ({selectedImages.length} selected)
             <p>No gallery images available</p>
             </div>
         ) : (
-            <div className="image-gallery">
-{galleryImages.map((image, index) => (
-<div key={image._id || index} className="image-card">
-<div className="image-container">
-{isImageLoading(`gallery_${image._id || index}`) && (
-  <div className="image-loading-overlay">
-    <Loader2 className="image-loading-spinner" />
-  </div>
-)}
-<img
-  src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
-  alt={`Service ${index + 1}`}
-  className="gallery-image"
-  onLoadStart={() => handleImageLoadStart(`gallery_${image._id || index}`)}
-  onLoad={() => handleImageLoad(`gallery_${image._id || index}`)}
-  onError={() => handleImageLoad(`gallery_${image._id || index}`)}
-  onClick={() => openFullscreen(image.imageUrl)}
-/>
-<div className="image-overlay">
-  <input
-    type="checkbox"
-    className="image-checkbox"
-    checked={selectedImages.includes(index)}
-    onChange={() => handleImageSelect(index)}
-    onClick={(e) => e.stopPropagation()}
-  />
-</div>
-</div>
+          <div className="image-gallery">
+          {galleryImages.map((image, index) => (
+              <div key={image._id || index} className="image-card">
+                  <div className="image-container">
+                      {loadingImages[image._id] ? (
+                          <div className="image-loading-container">
+                              <Loader2 className="image-loading-spinner" />
+                          </div>
+                      ) : (
+                          <img
+                              src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"}
+                              alt={`Service ${index + 1}`}
+                              className="gallery-image"
+                              onLoad={() => handleImageLoad(image._id)}
+                              onClick={() => openFullscreen(image.imageUrl)}
+                          />
+                      )}
+                      <div className="image-overlay">
+                          <input
+                              type="checkbox"
+                              className="image-checkbox"
+                              checked={selectedImages.includes(index)}
+                              onChange={() => handleImageSelect(index)}
+                              onClick={(e) => e.stopPropagation()}
+                          />
+                      </div>
+                  </div>
                 
         {/* Reaction Section */}
         <div className="reaction-section">
