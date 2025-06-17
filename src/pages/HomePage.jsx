@@ -103,7 +103,7 @@ const removeNotification = (id) => {
 
 
 const handleImageLoad = (imageId) => {
-    console.log(`Image loaded successfully: ${imageId}`);
+    // console.log(`Image loaded successfully: ${imageId}`);
     setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
     setErrorImages((prev) => {
         const newErrors = { ...prev };
@@ -155,28 +155,42 @@ useEffect(() => {
   };
 }, [loadingImages]);
 
-// Add a cache object outside the component to persist across mounts
-const imageCache = {
-  carousel: { data: null, timestamp: null },
-  gallery: { data: null, timestamp: null },
-};
-
-// Cache duration (e.g., 5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-const fetchCarouselImages = async () => {
+const getCachedData = (key) => {
   try {
-    // Check cache first
-    if (
-      imageCache.carousel.data &&
-      Date.now() - imageCache.carousel.timestamp < CACHE_DURATION
-    ) {
-      setIsLoadingCarousel(false);
-      setCarouselImages(imageCache.carousel.data);
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_DURATION) {
+        return data;
+      }
+    }
+  } catch (error) {
+    console.error(`Error reading ${key} from localStorage:`, error);
+  }
+  return null;
+};
 
-      // Initialize loading state for carousel images
+const setCachedData = (key, data) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch (error) {
+    console.error(`Error writing ${key} to localStorage:`, error);
+  }
+};
+
+const fetchCarouselImages = async () => {
+  console.log('fetchCarouselImages: Checking localStorage');
+  try {
+    const cachedCarousel = getCachedData('carouselImages');
+    if (cachedCarousel) {
+      console.log('fetchCarouselImages: Cache hit');
+      setIsLoadingCarousel(false);
+      setCarouselImages(cachedCarousel);
+
       const initialLoadingState = {};
-      for (const image of imageCache.carousel.data) {
+      for (const image of cachedCarousel) {
         if (!loadingImages[image._id] && !(await isImageCached(image.imageUrl))) {
           initialLoadingState[image._id] = true;
         } else {
@@ -187,6 +201,7 @@ const fetchCarouselImages = async () => {
       return;
     }
 
+    console.log('fetchCarouselImages: Cache miss, fetching from backend');
     setIsLoadingCarousel(true);
     setCarouselError(null);
     const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
@@ -199,10 +214,9 @@ const fetchCarouselImages = async () => {
     const data = await response.json();
     setCarouselImages(data);
 
-    // Update cache
-    imageCache.carousel = { data, timestamp: Date.now() };
+    setCachedData('carouselImages', data);
+    console.log('fetchCarouselImages: localStorage updated');
 
-    // Initialize loading state for carousel images
     const initialLoadingState = {};
     for (const image of data) {
       if (!loadingImages[image._id] && !(await isImageCached(image.imageUrl))) {
@@ -231,20 +245,18 @@ const fetchCarouselImages = async () => {
 };
 
 const fetchGalleryImages = async (silent = false) => {
+  console.log('fetchGalleryImages: Checking localStorage');
   try {
-    // Check cache first
-    if (
-      imageCache.gallery.data &&
-      Date.now() - imageCache.gallery.timestamp < CACHE_DURATION
-    ) {
+    const cachedGallery = getCachedData('galleryImages');
+    if (cachedGallery) {
+      console.log('fetchGalleryImages: Cache hit');
       if (!silent) {
         setIsLoadingGallery(false);
       }
-      setGalleryImages(imageCache.gallery.data);
+      setGalleryImages(cachedGallery);
 
-      // Initialize loading state for gallery images
       const initialLoadingState = {};
-      for (const image of imageCache.gallery.data) {
+      for (const image of cachedGallery) {
         const imageUrl = image.thumbnailUrl || image.imageUrl;
         if (!loadingImages[image._id] && !(await isImageCached(imageUrl))) {
           initialLoadingState[image._id] = true;
@@ -256,6 +268,7 @@ const fetchGalleryImages = async (silent = false) => {
       return;
     }
 
+    console.log('fetchGalleryImages: Cache miss, fetching from backend');
     if (!silent) {
       setIsLoadingGallery(true);
     }
@@ -270,10 +283,9 @@ const fetchGalleryImages = async (silent = false) => {
     const data = await response.json();
     setGalleryImages(data);
 
-    // Update cache
-    imageCache.gallery = { data, timestamp: Date.now() };
+    setCachedData('galleryImages', data);
+    console.log('fetchGalleryImages: localStorage updated');
 
-    // Initialize loading state for gallery images
     const initialLoadingState = {};
     for (const image of data) {
       const imageUrl = image.thumbnailUrl || image.imageUrl;
@@ -751,14 +763,30 @@ const downloadImage = async (imageUrl, filename, format) => {
       }
   };
 
-useEffect(() => {
-    fetchCarouselImages();
-    fetchGalleryImages();
+  useEffect(() => {
+    const cachedCarousel = getCachedData('carouselImages');
+    if (cachedCarousel) {
+      console.log('useEffect: Using cached carousel data');
+      setIsLoadingCarousel(false);
+      setCarouselImages(cachedCarousel);
+    } else {
+      fetchCarouselImages();
+    }
+  
+    const cachedGallery = getCachedData('galleryImages');
+    if (cachedGallery) {
+      console.log('useEffect: Using cached gallery data');
+      setIsLoadingGallery(false);
+      setGalleryImages(cachedGallery);
+    } else {
+      fetchGalleryImages();
+    }
+  
     fetchLatestAlbum();
     if (currentUser?.id) {
-    fetchUserReactions(currentUser.id);
+      fetchUserReactions(currentUser.id);
     }
-}, [currentUser?.id]);
+  }, [currentUser?.id]);
 
 // useEffect(() => {
 //   if (!carouselImages.length && !galleryImages.length) {
