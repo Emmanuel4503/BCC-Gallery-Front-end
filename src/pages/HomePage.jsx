@@ -119,7 +119,7 @@ useEffect(() => {
                     ...prev,
                     [imageId]: 'Image took too long to load. Please retry.'
                 }));
-            }, 10000);
+            }, 20000);
         }
     });
     return () => {
