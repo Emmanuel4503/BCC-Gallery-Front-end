@@ -72,34 +72,60 @@ const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
+const [errorImages, setErrorImages] = useState({});
 
 const handleImageLoad = (imageId) => {
-  console.log(`Image loaded successfully: ${imageId}`);
-  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+    console.log(`Image loaded successfully: ${imageId}`);
+    setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+    setErrorImages((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[imageId];
+        return newErrors;
+    });
 };
 
-// Add this after the last useEffect, before the return statement
 const handleImageError = (imageId, imageUrl) => {
-  console.error(`Failed to load image: ${imageUrl}`);
-  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-  addNotification('Failed to load an image. Please try again.');
+    console.error(`Failed to load image: ${imageUrl}`);
+    setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+    setErrorImages((prev) => ({
+        ...prev,
+        [imageId]: 'Failed to load image. Please try again.'
+    }));
+};
+
+const handleImageRetry = (imageId, imageUrl) => {
+    console.log(`Retrying image load: ${imageId}`);
+    setErrorImages((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[imageId];
+        return newErrors;
+    });
+    setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
+    const img = new Image();
+    img.src = imageUrl;
+    img.crossOrigin = 'anonymous';
+    img.onload = () => handleImageLoad(imageId);
+    img.onerror = () => handleImageError(imageId, imageUrl);
 };
 
 useEffect(() => {
-  const timeouts = {};
-  Object.keys(loadingImages).forEach((imageId) => {
-      if (loadingImages[imageId]) {
-          timeouts[imageId] = setTimeout(() => {
-              console.warn(`Image loading timeout for: ${imageId}`);
-              setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-              addNotification('An image took too long to load and was skipped.');
-          }, 10000); // 10-second timeout
-      }
-  });
-  return () => {
-      Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
-  };
-}, [loadingImages, addNotification]);
+    const timeouts = {};
+    Object.keys(loadingImages).forEach((imageId) => {
+        if (loadingImages[imageId]) {
+            timeouts[imageId] = setTimeout(() => {
+                console.warn(`Image loading timeout for: ${imageId}`);
+                setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+                setErrorImages((prev) => ({
+                    ...prev,
+                    [imageId]: 'Image took too long to load. Please retry.'
+                }));
+            }, 10000);
+        }
+    });
+    return () => {
+        Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
+    };
+}, [loadingImages]);
 
 const fetchCarouselImages = async () => {
   try {
@@ -1375,23 +1401,33 @@ aria-label="Scroll to top"
                             {galleryImages.map((image, index) => {
                                 const imageUrl = image.thumbnailUrl || image.imageUrl || "/placeholder.svg";
                                 return (
-                                    <div key={image._id || index} className="image-card">
-                                        <div className="image-container">
-                                            {loadingImages[image._id] ? (
-                                                <div className="image-loading-container">
-                                                    <Loader2 className="image-loading-spinner" />
-                                                </div>
-                                            ) : (
-                                                <img
-                                                    src={imageUrl}
-                                                    alt={`Service ${index + 1}`}
-                                                    className="gallery-image"
-                                                    crossOrigin="anonymous"
-                                                    onLoad={() => handleImageLoad(image._id)}
-                                                    onError={() => handleImageError(image._id, imageUrl)}
-                                                    onClick={() => openFullscreen(image.imageUrl)}
-                                                />
-                                            )}
+                                  <div key={image._id || index} className="image-card">
+                                  <div className="image-container">
+                                      {errorImages[image._id] ? (
+                                          <div className="image-error-container">
+                                              <span className="image-error-message">{errorImages[image._id]}</span>
+                                              <button
+                                                  className="image-retry-btn"
+                                                  onClick={() => handleImageRetry(image._id, imageUrl)}
+                                              >
+                                                  Retry
+                                              </button>
+                                          </div>
+                                      ) : loadingImages[image._id] ? (
+                                          <div className="image-loading-container">
+                                              <Loader2 className="image-loading-spinner" />
+                                          </div>
+                                      ) : (
+                                          <img
+                                              src={imageUrl}
+                                              alt={`Service ${index + 1}`}
+                                              className="gallery-image"
+                                              crossOrigin="anonymous"
+                                              onLoad={() => handleImageLoad(image._id)}
+                                              onError={() => handleImageError(image._id, imageUrl)}
+                                              onClick={() => openFullscreen(image.imageUrl)}
+                                          />
+                                      )}
                                             <div className="image-overlay">
                                                 <input
                                                     type="checkbox"

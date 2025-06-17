@@ -3363,3 +3363,37 @@ html, body {
       transform: rotate(360deg);
   }
 }
+
+.image-error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 16px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.image-error-message {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.image-retry-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.image-retry-btn:hover {
+  background-color: #c82333;
+}
