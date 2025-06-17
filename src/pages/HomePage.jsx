@@ -1052,7 +1052,7 @@ useEffect(() => {
           timeouts[imageId] = setTimeout(() => {
               console.warn(`Image loading timeout for: ${imageId}`);
               setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-          }, 10000); // 10-second timeout
+          }, 20000); // 10-second timeout
       }
   });
   return () => {
