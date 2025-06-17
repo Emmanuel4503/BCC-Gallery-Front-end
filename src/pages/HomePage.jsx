@@ -119,7 +119,7 @@ useEffect(() => {
                     ...prev,
                     [imageId]: 'Image took too long to load. Please retry.'
                 }));
-            }, 20000);
+            }, 15000);
         }
     });
     return () => {
@@ -795,20 +795,28 @@ const handleUserSignup = async (e) => {
     }
 }
 
-// Auto-slide
 useEffect(() => {
-    if (carouselImages.length === 0) return
-    
-    const timer = setInterval(() => {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setCurrentSlide((prev) => (prev + 1) % carouselImages.length)
-        setIsTransitioning(false)
-      }, 100)
-    }, 6000)
-  
-    return () => clearInterval(timer)
-  }, [carouselImages.length])
+  // Exit if no carousel images or still loading
+  if (carouselImages.length === 0 || isLoadingCarousel || carouselError) return;
+
+  // Check if all carousel images are loaded
+  const allImagesLoaded = carouselImages.every(
+    (image) => !loadingImages[image._id]
+  );
+
+  // Only start the timer if all images are loaded
+  if (!allImagesLoaded) return;
+
+  const timer = setInterval(() => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+      setIsTransitioning(false);
+    }, 100);
+  }, 6000);
+
+  return () => clearInterval(timer);
+}, [carouselImages, isLoadingCarousel, carouselError, loadingImages]);
 
 const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
