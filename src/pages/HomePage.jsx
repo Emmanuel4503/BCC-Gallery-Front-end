@@ -49,14 +49,20 @@ const [currentNotification, setCurrentNotification] = useState(null);
 
 const isImageCached = (url) => {
   return new Promise((resolve) => {
-    const img = new Image();
-    img.src = url;
-    img.crossOrigin = 'anonymous';
-    if (img.complete) {
-      resolve(true);
+    // Check if running in a browser environment and Image is available
+    if (typeof window !== 'undefined' && window.Image) {
+      const img = new window.Image();
+      img.src = url;
+      img.crossOrigin = 'anonymous';
+      if (img.complete) {
+        resolve(true);
+      } else {
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+      }
     } else {
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
+      // Fallback: assume image is not cached if Image constructor is unavailable
+      resolve(false);
     }
   });
 };
@@ -131,22 +137,22 @@ const handleImageRetry = (imageId, imageUrl) => {
 };
 
 useEffect(() => {
-    const timeouts = {};
-    Object.keys(loadingImages).forEach((imageId) => {
-        if (loadingImages[imageId]) {
-            timeouts[imageId] = setTimeout(() => {
-                console.warn(`Image loading timeout for: ${imageId}`);
-                setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-                setErrorImages((prev) => ({
-                    ...prev,
-                    [imageId]: 'Image took too long to load. Please retry.'
-                }));
-            }, 15000);
-        }
-    });
-    return () => {
-        Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
-    };
+  const timeouts = {};
+  Object.keys(loadingImages).forEach((imageId) => {
+    if (loadingImages[imageId]) {
+      timeouts[imageId] = setTimeout(() => {
+        console.warn(`Image loading timeout for: ${imageId}`);
+        setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+        setErrorImages((prev) => ({
+          ...prev,
+          [imageId]: 'Image took too long to load. Please retry.',
+        }));
+      }, 10000); // Consistent 10-second timeout
+    }
+  });
+  return () => {
+    Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
+  };
 }, [loadingImages]);
 
 const fetchCarouselImages = async () => {
