@@ -268,7 +268,7 @@ const fetchLatestAlbum = async () => {
     }
   };
 
-const handleReaction = useCallback(
+  const handleReaction = useCallback(
     async (imageId, reactionType) => {
       if (!currentUser?.id) {
         alert('Please sign in to react to images');
@@ -309,10 +309,25 @@ const handleReaction = useCallback(
           throw new Error(errorData.error || `Failed to process reaction: ${response.status}`);
         }
   
-        // Re-fetch gallery images 
-        await fetchGalleryImages(true);
+        // Update only the specific image's reaction data without resetting loading state
+        setGalleryImages((prevImages) =>
+          prevImages.map((image) =>
+            image._id === imageId
+              ? {
+                  ...image,
+                  reactions: {
+                    ...image.reactions,
+                    [reactionType]: (image.reactions?.[reactionType] || 0) + (currentUserReaction === reactionType ? -1 : 1),
+                    ...(currentUserReaction && currentUserReaction !== reactionType && {
+                      [currentUserReaction]: (image.reactions?.[currentUserReaction] || 0) - 1,
+                    }),
+                  },
+                }
+              : image
+          )
+        );
   
-       
+        // Re-fetch user reactions to ensure consistency
         await fetchUserReactions(Number(currentUser.id));
       } catch (error) {
         console.error('Error processing reaction:', error);
@@ -337,7 +352,6 @@ const handleReaction = useCallback(
           return newReactions;
         });
       } finally {
-      
         setTimeout(() => {
           setDisabledButtons((prev) => {
             const newSet = new Set(prev);
@@ -347,9 +361,8 @@ const handleReaction = useCallback(
         }, 200); 
       }
     },
-    [currentUser, userReactions, fetchGalleryImages, fetchUserReactions]
+    [currentUser, userReactions, fetchUserReactions]
 );
-
 
 const debounce = (func, wait) => {
     let timeoutId;
