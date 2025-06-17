@@ -796,16 +796,16 @@ const handleUserSignup = async (e) => {
 }
 
 useEffect(() => {
-  // Exit if no carousel images or still loading
+  // Exit if no carousel images, still loading, or error
   if (carouselImages.length === 0 || isLoadingCarousel || carouselError) return;
 
-  // Check if all carousel images are loaded
-  const allImagesLoaded = carouselImages.every(
+  // Count how many carousel images are loaded
+  const loadedImagesCount = carouselImages.filter(
     (image) => !loadingImages[image._id]
-  );
+  ).length;
 
-  // Only start the timer if all images are loaded
-  if (!allImagesLoaded) return;
+  // Start the timer if at least 5 images are loaded or all images are loaded if fewer than 5
+  if (loadedImagesCount < Math.min(5, carouselImages.length)) return;
 
   const timer = setInterval(() => {
     setIsTransitioning(true);
