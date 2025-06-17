@@ -352,7 +352,7 @@ function AlbumsPage() {
               </div>
             ) : error ? (
               <div className="page-placeholder">
-                <p style={{ color: "#b91c1c" }}>
+                <p className="placeholder-te" style={{ color: "#b91c1c" }}>
                   {error}
                 </p>
               </div>
