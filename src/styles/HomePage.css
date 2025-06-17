@@ -440,7 +440,7 @@ html, body {
   
   /* Service Section */
   .service-section {
-    padding: 2rem 0.10rem;
+    padding: 2rem 1rem;
     max-width: 1300px;
     margin: 0 auto;
     color: #ff9a56;
@@ -456,7 +456,7 @@ html, body {
     color: #ff9a56;
     text-align: center;
     margin: auto;
-    padding: 1rem 2.5rem;
+    padding: 1rem 0.10rem;
     width: 90%;
     position: relative;
 
