@@ -155,8 +155,38 @@ useEffect(() => {
   };
 }, [loadingImages]);
 
+// Add a cache object outside the component to persist across mounts
+const imageCache = {
+  carousel: { data: null, timestamp: null },
+  gallery: { data: null, timestamp: null },
+};
+
+// Cache duration (e.g., 5 minutes)
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 const fetchCarouselImages = async () => {
   try {
+    // Check cache first
+    if (
+      imageCache.carousel.data &&
+      Date.now() - imageCache.carousel.timestamp < CACHE_DURATION
+    ) {
+      setIsLoadingCarousel(false);
+      setCarouselImages(imageCache.carousel.data);
+
+      // Initialize loading state for carousel images
+      const initialLoadingState = {};
+      for (const image of imageCache.carousel.data) {
+        if (!loadingImages[image._id] && !(await isImageCached(image.imageUrl))) {
+          initialLoadingState[image._id] = true;
+        } else {
+          initialLoadingState[image._id] = false;
+        }
+      }
+      setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
+      return;
+    }
+
     setIsLoadingCarousel(true);
     setCarouselError(null);
     const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
@@ -168,6 +198,9 @@ const fetchCarouselImages = async () => {
     }
     const data = await response.json();
     setCarouselImages(data);
+
+    // Update cache
+    imageCache.carousel = { data, timestamp: Date.now() };
 
     // Initialize loading state for carousel images
     const initialLoadingState = {};
@@ -199,6 +232,30 @@ const fetchCarouselImages = async () => {
 
 const fetchGalleryImages = async (silent = false) => {
   try {
+    // Check cache first
+    if (
+      imageCache.gallery.data &&
+      Date.now() - imageCache.gallery.timestamp < CACHE_DURATION
+    ) {
+      if (!silent) {
+        setIsLoadingGallery(false);
+      }
+      setGalleryImages(imageCache.gallery.data);
+
+      // Initialize loading state for gallery images
+      const initialLoadingState = {};
+      for (const image of imageCache.gallery.data) {
+        const imageUrl = image.thumbnailUrl || image.imageUrl;
+        if (!loadingImages[image._id] && !(await isImageCached(imageUrl))) {
+          initialLoadingState[image._id] = true;
+        } else {
+          initialLoadingState[image._id] = false;
+        }
+      }
+      setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
+      return;
+    }
+
     if (!silent) {
       setIsLoadingGallery(true);
     }
@@ -212,6 +269,9 @@ const fetchGalleryImages = async (silent = false) => {
     }
     const data = await response.json();
     setGalleryImages(data);
+
+    // Update cache
+    imageCache.gallery = { data, timestamp: Date.now() };
 
     // Initialize loading state for gallery images
     const initialLoadingState = {};
