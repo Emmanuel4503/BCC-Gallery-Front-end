@@ -133,19 +133,14 @@ const removeNotification = (id) => {
 };
 
 const [errorImages, setErrorImages] = useState({});
-
 const handleImageLoad = (imageId) => {
   console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
-  setLoadingImages((prev) => {
-    const newLoading = { ...prev, [imageId]: false };
-    return newLoading;
-  });
+  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
   setErrorImages((prev) => {
     const newErrors = { ...prev };
     delete newErrors[imageId];
     return newErrors;
   });
-  // Clear timeout
   if (timeouts.current[imageId]) {
     clearTimeout(timeouts.current[imageId]);
     delete timeouts.current[imageId];
@@ -154,15 +149,11 @@ const handleImageLoad = (imageId) => {
 
 const handleImageError = (imageId, imageUrl) => {
   console.error(`Image error at: ${new Date().toISOString()}, imageId: ${imageId}, url: ${imageUrl}`);
-  setLoadingImages((prev) => {
-    const newLoading = { ...prev, [imageId]: false };
-    return newLoading;
-  });
+  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
   setErrorImages((prev) => ({
     ...prev,
     [imageId]: 'Failed to load image. Please try again.'
   }));
-  // Clear timeout
   if (timeouts.current[imageId]) {
     clearTimeout(timeouts.current[imageId]);
     delete timeouts.current[imageId];
@@ -181,33 +172,12 @@ const handleImageRetry = (imageId, imageUrl) => {
   img.src = imageUrl;
   img.crossOrigin = 'anonymous';
   img.onload = () => handleImageLoad(imageId);
-  img.onerror = () => handleImageError(imageId, imageUrl);
-};
-
-useEffect(() => {
-  Object.keys(loadingImages).forEach((imageId) => {
-    if (loadingImages[imageId]) {
-      console.log(`Setting timeout for imageId: ${imageId}`);
-      timeouts.current[imageId] = setTimeout(() => {
-        console.warn(`Timeout triggered for imageId: ${imageId}`);
-        setLoadingImages((prev) => {
-          const newLoading = { ...prev, [imageId]: false };
-          return newLoading;
-        });
-        setErrorImages((prev) => ({
-          ...prev,
-          [imageId]: 'Image took too long to load. Please retry.'
-        }));
-        delete timeouts.current[imageId];
-      }, 12000); // 20-second timeout
-    }
-  });
-  return () => {
-    console.log('Cleaning up timeouts');
-    Object.values(timeouts.current).forEach((timeout) => clearTimeout(timeout));
-    timeouts.current = {};
+  img.onerror = () => {
+    timeouts.current[imageId] = setTimeout(() => {
+      handleImageError(imageId, imageUrl);
+    }, 12000); // 12-second timeout for retry
   };
-}, [loadingImages]);
+};
 
 const fetchCarouselImages = async () => {
   try {
