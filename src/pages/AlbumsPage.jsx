@@ -348,7 +348,7 @@ function AlbumsPage() {
                 <div className="placeholder-loading">
                   <p>Loading albums...</p>
                 </div>
-                
+              
               </div>
             ) : error ? (
               <div className="page-placeholder">

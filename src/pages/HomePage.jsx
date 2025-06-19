@@ -199,7 +199,7 @@ useEffect(() => {
           [imageId]: 'Image took too long to load. Please retry.'
         }));
         delete timeouts.current[imageId];
-      }, 20000); // 20-second timeout
+      }, 12000); // 20-second timeout
     }
   });
   return () => {
@@ -1566,7 +1566,11 @@ aria-label="Scroll to top"
                                 const imageUrl = image.thumbnailUrl || image.imageUrl || "/placeholder.svg";
                                 return (
                                   <div key={image._id || index} className="image-card">
-                                  <div className="image-container">
+                               <div
+  className={`image-container ${
+    errorImages[image._id] ? 'error' : loadingImages[image._id] ? 'loading' : 'loaded'
+  }`} 
+>
                                       {errorImages[image._id] ? (
                                           <div className="image-error-container">
                                               <span className="image-error-message">{errorImages[image._id]}</span>

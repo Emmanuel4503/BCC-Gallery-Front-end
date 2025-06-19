@@ -603,6 +603,8 @@ html, body {
     position: relative;
     aspect-ratio: 3 / 2;
     overflow: hidden;
+    background-color: #f9fafb;
+  border-radius: 0.75rem;
   }
   
   .gallery-image {
@@ -613,6 +615,8 @@ html, body {
     transition: transform 0.2s;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+    opacity: 1; 
+  z-index: 3;
   }
   
   .gallery-image:hover {
@@ -3348,14 +3352,17 @@ html, body {
   align-items: center;
   height: 100%;
   width: 100%;
-  background-color: #f0f0f0;
+  background-color: rgba(240, 240, 240, 0.9); 
+  opacity: 1; 
+  z-index: 2; 
 }
 
 .image-loading-spinner {
   width: 40px;
   height: 40px;
-  color: #333;
+
   animation: spin 1s linear infinite;
+  color: #fe9a65;
 }
 
 @keyframes spin {
@@ -3371,11 +3378,14 @@ html, body {
   align-items: center;
   height: 100%;
   width: 100%;
-  background-color: #f8d7da;
+  background-color: rgba(248, 215, 218, 0.95);
   color: #721c24;
   padding: 16px;
   box-sizing: border-box;
   text-align: center;
+}
+.image-error-container.visible {
+  opacity: 1; 
 }
 
 .image-error-message {
@@ -3384,7 +3394,7 @@ html, body {
 }
 
 .image-retry-btn {
-  background-color: #dc3545;
+  background-color: #fe9a65;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -3395,5 +3405,20 @@ html, body {
 }
 
 .image-retry-btn:hover {
-  background-color: #c82333;
+  background-color: #fd8332;
+}
+
+.image-container.loading .image-loading-container {
+  opacity: 1;
+  z-index: 3;
+}
+
+.image-container.error .image-error-container {
+  opacity: 1;
+  z-index: 3;
+}
+
+.image-container.loaded .gallery-image {
+  opacity: 1;
+  z-index: 3;
 }
