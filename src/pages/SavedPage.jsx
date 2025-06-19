@@ -422,8 +422,8 @@ function SavedPage() {
           </p>
            <br />
           <hr />
-          <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
-  Found {galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}
+          <p style={{ color: "#6b7280",  marginBottom: "0.70rem", marginTop: "1rem", textAlign: "center" }}>
+  Favorited {savedImages.length} image{savedImages.length !== 1 ? "s" : ""}
 </p>
 
           {isLoading ? (
