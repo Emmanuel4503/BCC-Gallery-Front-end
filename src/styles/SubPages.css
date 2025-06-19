@@ -118,6 +118,10 @@
   overflow: hidden; 
   text-overflow: ellipsis; 
   }
+  .placeholder-t{
+    text-align: center;
+    min-height: 20rem;
+  }
 
   .placeholder-te {
     display: flex;
