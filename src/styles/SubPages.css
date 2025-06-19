@@ -119,7 +119,8 @@
   text-overflow: ellipsis; 
   }
   .placeholder-t{
-color: white !important;
+color: black !important;
+min-height: 20rem;
   }
 
   .placeholder-te {
