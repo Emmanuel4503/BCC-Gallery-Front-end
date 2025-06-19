@@ -1520,6 +1520,9 @@ aria-label="Scroll to top"
                         </button>
                     </div>
                     <hr />
+                    <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
+  Found {galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}
+</p>
                     {isLoadingGallery ? (
                         <div className="loading-container">
                             <Loader2 className="loading-spinner" />
