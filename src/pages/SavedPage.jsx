@@ -441,8 +441,8 @@ function SavedPage() {
             
             </div>
           ) : savedImages.length === 0 ? (
-            <div >
-              <p className="placeholder-t">
+            <div className="placeholder-t">
+              <p >
                 Your saved photos will appear here. Start saving your favorite!
               </p>
             </div>
