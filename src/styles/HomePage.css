@@ -456,7 +456,7 @@ html, body {
     color: #ff9a56;
     text-align: center;
     margin: auto;
-    padding: 1rem 1rem;
+    padding: 1rem 0.10rem;
     width: 90%;
     position: relative;
 
@@ -1159,7 +1159,7 @@ html, body {
     .service-title {
         font-size: 0.90rem;
         margin-bottom: 1rem;
-        padding: 0.75rem 0.80rem;
+        padding: 0.75rem 0.10rem;
         border-radius: 12px;
       }
   
@@ -1348,7 +1348,7 @@ html, body {
   
     .service-title {
         font-size: 1.4rem;
-        padding: 1.25rem 1.5rem;
+        padding: 1.25rem 0.50rem;
       }
   
     .image-gallery {
@@ -1573,7 +1573,7 @@ html, body {
     .service-title {
         font-size: 1.65rem;
         margin-bottom: 2rem;
-        padding: 1.5rem 2rem;
+        padding: 1.5rem 0.50rem;
         border-radius: 20px;
       }
   
@@ -1764,7 +1764,7 @@ html, body {
   
     .service-title {
         font-size: 1.7rem;
-        padding: 1.75rem 3rem;
+        padding: 1.75rem 1rem;
         border-radius: 24px;
       }
   
