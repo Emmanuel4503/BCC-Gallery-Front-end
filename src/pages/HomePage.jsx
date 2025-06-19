@@ -36,6 +36,65 @@ const [loadingImages, setLoadingImages] = useState({});
 // HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 // HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 // hhhhhhhhhhhhhhhhhhhhhhhhhhh
+// ghhhhhhh
+// hhhhh
+// Add these functions after your existing state declarations and before the notification functions
+
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
+const GALLERY_CACHE_KEY = 'bcc_gallery_cache';
+const ALBUM_CACHE_KEY = 'bcc_album_cache';
+
+const setCacheData = (key, data) => {
+  try {
+    const cacheData = {
+      data: data,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + CACHE_DURATION
+    };
+    localStorage.setItem(key, JSON.stringify(cacheData));
+  } catch (error) {
+    console.error('Error setting cache data:', error);
+  }
+};
+
+const getCacheData = (key) => {
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+    
+    const cacheData = JSON.parse(cached);
+    if (Date.now() > cacheData.expiresAt) {
+      // Cache expired, remove it
+      localStorage.removeItem(key);
+      return null;
+    }
+    
+    return cacheData.data;
+  } catch (error) {
+    console.error('Error getting cache data:', error);
+    // Remove corrupted cache
+    localStorage.removeItem(key);
+    return null;
+  }
+};
+
+const clearExpiredCache = () => {
+  try {
+    [CAROUSEL_CACHE_KEY, GALLERY_CACHE_KEY, ALBUM_CACHE_KEY].forEach(key => {
+      const cached = localStorage.getItem(key);
+      if (cached) {
+        const cacheData = JSON.parse(cached);
+        if (Date.now() > cacheData.expiresAt) {
+          localStorage.removeItem(key);
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error clearing expired cache:', error);
+  }
+};
+
 
 const [isTransitioning, setIsTransitioning] = useState(false)
 // const [isPreLoading, setIsPreLoading] = useState(true);
@@ -129,79 +188,115 @@ useEffect(() => {
 
 const fetchCarouselImages = async () => {
   try {
-      setIsLoadingCarousel(true);
-      setCarouselError(null);
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
-      if (!response.ok) {
-          if (response.status >= 500) {
-              throw new Error('Database error: Unable to retrieve carousel images from the server.');
-          }
-          throw new Error(`Failed to fetch carousel images: ${response.status}`);
-      }
-      const data = await response.json();
-      setCarouselImages(data);
-      // Initialize loading state for carousel images
-      const initialLoadingState = data.reduce((acc, image) => {
-          acc[image._id] = true;
-          return acc;
-      }, {});
-      setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
-  } catch (error) {
-      console.error('Error fetching carousel images:', error);
-      let message;
-      if (!navigator.onLine) {
-          message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Database error')) {
-          message = 'Unable to load carousel images due to a server issue. Please try again later.';
-      } else {
-          message = 'Network error. Failed to connect to the server. Please try again.';
-      }
-      addNotification(message);
-      setCarouselError(error.message);
-      setCarouselImages([]);
-  } finally {
+    setIsLoadingCarousel(true);
+    setCarouselError(null);
+    
+    // Check cache first
+    const cachedData = getCacheData(CAROUSEL_CACHE_KEY);
+    if (cachedData) {
+      console.log('Loading carousel images from cache');
+      setCarouselImages(cachedData);
+      // Skip individual loading for cached images
       setIsLoadingCarousel(false);
+      return;
+    }
+    
+    // Fetch from backend if no cache
+    console.log('Fetching carousel images from backend');
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
+    if (!response.ok) {
+        if (response.status >= 500) {
+            throw new Error('Database error: Unable to retrieve carousel images from the server.');
+        }
+        throw new Error(`Failed to fetch carousel images: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Cache the data
+    setCacheData(CAROUSEL_CACHE_KEY, data);
+    
+    setCarouselImages(data);
+    // Initialize loading state for carousel images
+    const initialLoadingState = data.reduce((acc, image) => {
+        acc[image._id] = true;
+        return acc;
+    }, {});
+    setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
+  } catch (error) {
+    console.error('Error fetching carousel images:', error);
+    let message;
+    if (!navigator.onLine) {
+        message = 'No internet connection. Please check your network and try again.';
+    } else if (error.message.includes('Database error')) {
+        message = 'Unable to load carousel images due to a server issue. Please try again later.';
+    } else {
+        message = 'Network error. Failed to connect to the server. Please try again.';
+    }
+    addNotification(message);
+    setCarouselError(error.message);
+    setCarouselImages([]);
+  } finally {
+    setIsLoadingCarousel(false);
   }
 };
 
 const fetchGalleryImages = async (silent = false) => {
   try {
+    if (!silent) {
+        setIsLoadingGallery(true);
+    }
+    setGalleryError(null);
+    
+    // Check cache first
+    const cachedData = getCacheData(GALLERY_CACHE_KEY);
+    if (cachedData) {
+      console.log('Loading gallery images from cache');
+      setGalleryImages(cachedData);
+      // Skip individual loading for cached images
       if (!silent) {
-          setIsLoadingGallery(true);
+        setIsLoadingGallery(false);
       }
-      setGalleryError(null);
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
-      if (!response.ok) {
-          if (response.status >= 500) {
-              throw new Error('Database error: Unable to retrieve gallery images from the server.');
-          }
-          throw new Error(`Failed to fetch gallery images: ${response.status}`);
-      }
-      const data = await response.json();
-      setGalleryImages(data);
-      // Initialize loading state for gallery images
-      const initialLoadingState = data.reduce((acc, image) => {
-          acc[image._id] = true;
-          return acc;
-      }, {});
-      setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
+      return;
+    }
+    
+    // Fetch from backend if no cache
+    console.log('Fetching gallery images from backend');
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
+    if (!response.ok) {
+        if (response.status >= 500) {
+            throw new Error('Database error: Unable to retrieve gallery images from the server.');
+        }
+        throw new Error(`Failed to fetch gallery images: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Cache the data
+    setCacheData(GALLERY_CACHE_KEY, data);
+    
+    setGalleryImages(data);
+    // Initialize loading state for gallery images
+    const initialLoadingState = data.reduce((acc, image) => {
+        acc[image._id] = true;
+        return acc;
+    }, {});
+    setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
   } catch (error) {
-      console.error('Error fetching gallery images:', error);
-      let message;
-      if (!navigator.onLine) {
-          message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Database error')) {
-          message = 'Unable to load gallery images due to a server issue. Please try again later.';
-      } else {
-          message = 'Network error. Failed to connect to the server. Please try again.';
-      }
-      addNotification(message);
-      setGalleryError(error.message);
-      setGalleryImages([]);
+    console.error('Error fetching gallery images:', error);
+    let message;
+    if (!navigator.onLine) {
+        message = 'No internet connection. Please check your network and try again.';
+    } else if (error.message.includes('Database error')) {
+        message = 'Unable to load gallery images due to a server issue. Please try again later.';
+    } else {
+        message = 'Network error. Failed to connect to the server. Please try again.';
+    }
+    addNotification(message);
+    setGalleryError(error.message);
+    setGalleryImages([]);
   } finally {
-      if (!silent) {
-          setIsLoadingGallery(false);
-      }
+    if (!silent) {
+        setIsLoadingGallery(false);
+    }
   }
 };
     const fetchUserReactions = async (userId) => {
@@ -234,39 +329,54 @@ const fetchGalleryImages = async (silent = false) => {
         }
       };
 
-const fetchLatestAlbum = async () => {
-    try {
-      setIsLoadingAlbum(true);
-      setAlbumError(null);
-  
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/album/latest');
-  
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Database error: Unable to retrieve the latest album from the server.');
+      const fetchLatestAlbum = async () => {
+        try {
+          setIsLoadingAlbum(true);
+          setAlbumError(null);
+      
+          // Check cache first
+          const cachedData = getCacheData(ALBUM_CACHE_KEY);
+          if (cachedData) {
+            console.log('Loading album data from cache');
+            setLatestAlbumTitle(cachedData?.title || null);
+            setIsLoadingAlbum(false);
+            return;
+          }
+      
+          // Fetch from backend if no cache
+          console.log('Fetching album data from backend');
+          const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/album/latest');
+      
+          if (!response.ok) {
+            if (response.status >= 500) {
+              throw new Error('Database error: Unable to retrieve the latest album from the server.');
+            }
+            throw new Error(`Failed to fetch latest album: ${response.status}`);
+          }
+      
+          const data = await response.json();
+          
+          // Cache the data
+          setCacheData(ALBUM_CACHE_KEY, data);
+          
+          setLatestAlbumTitle(data?.title || null);
+        } catch (error) {
+          console.error('Error fetching latest album:', error);
+          let message;
+          if (!navigator.onLine) {
+            message = 'No internet connection. Please check your network and try again.';
+          } else if (error.message.includes('Database error')) {
+            message = 'Unable to load the latest album due to a server issue. Please try again later.';
+          } else {
+            message = 'Network error: Failed to connect to the server. Please try again.';
+          }
+          addNotification(message);
+          setAlbumError(error.message);
+          setLatestAlbumTitle(null);
+        } finally {
+          setIsLoadingAlbum(false);
         }
-        throw new Error(`Failed to fetch latest album: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      setLatestAlbumTitle(data?.title || null);
-    } catch (error) {
-      console.error('Error fetching latest album:', error);
-      let message;
-      if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Database error')) {
-        message = 'Unable to load the latest album due to a server issue. Please try again later.';
-      } else {
-        message = 'Network error: Failed to connect to the server. Please try again.';
-      }
-      addNotification(message);
-      setAlbumError(error.message);
-      setLatestAlbumTitle(null);
-    } finally {
-      setIsLoadingAlbum(false);
-    }
-  };
+      };
 
   const handleReaction = useCallback(
     async (imageId, reactionType) => {
@@ -660,6 +770,13 @@ useEffect(() => {
     fetchUserReactions(currentUser.id);
     }
 }, [currentUser?.id]);
+
+
+
+useEffect(() => {
+  // Clear expired cache on component mount
+  clearExpiredCache();
+}, []);
 
 // useEffect(() => {
 //   if (!carouselImages.length && !galleryImages.length) {
