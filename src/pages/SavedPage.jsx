@@ -422,6 +422,9 @@ function SavedPage() {
           </p>
            <br />
           <hr />
+          <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
+  Found {galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}
+</p>
 
           {isLoading ? (
             <div className="loading-container">
