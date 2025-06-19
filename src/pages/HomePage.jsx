@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback,useRef } from "react"
 import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
 import { Link } from "react-router-dom"
 import "../styles/HomePage.css"
@@ -32,6 +32,7 @@ const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
 
 const [loadingImages, setLoadingImages] = useState({});
+const timeouts = useRef({}); 
 
 // HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 // HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
@@ -134,56 +135,78 @@ const removeNotification = (id) => {
 const [errorImages, setErrorImages] = useState({});
 
 const handleImageLoad = (imageId) => {
-    console.log(`Image loaded successfully: ${imageId}`);
-    setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-    setErrorImages((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[imageId];
-        return newErrors;
-    });
+  console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
+  setLoadingImages((prev) => {
+    const newLoading = { ...prev, [imageId]: false };
+    return newLoading;
+  });
+  setErrorImages((prev) => {
+    const newErrors = { ...prev };
+    delete newErrors[imageId];
+    return newErrors;
+  });
+  // Clear timeout
+  if (timeouts.current[imageId]) {
+    clearTimeout(timeouts.current[imageId]);
+    delete timeouts.current[imageId];
+  }
 };
 
 const handleImageError = (imageId, imageUrl) => {
-    console.error(`Failed to load image: ${imageUrl}`);
-    setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-    setErrorImages((prev) => ({
-        ...prev,
-        [imageId]: 'Failed to load image. Please try again.'
-    }));
+  console.error(`Image error at: ${new Date().toISOString()}, imageId: ${imageId}, url: ${imageUrl}`);
+  setLoadingImages((prev) => {
+    const newLoading = { ...prev, [imageId]: false };
+    return newLoading;
+  });
+  setErrorImages((prev) => ({
+    ...prev,
+    [imageId]: 'Failed to load image. Please try again.'
+  }));
+  // Clear timeout
+  if (timeouts.current[imageId]) {
+    clearTimeout(timeouts.current[imageId]);
+    delete timeouts.current[imageId];
+  }
 };
 
 const handleImageRetry = (imageId, imageUrl) => {
-    console.log(`Retrying image load: ${imageId}`);
-    setErrorImages((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[imageId];
-        return newErrors;
-    });
-    setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
-    const img = new Image();
-    img.src = imageUrl;
-    img.crossOrigin = 'anonymous';
-    img.onload = () => handleImageLoad(imageId);
-    img.onerror = () => handleImageError(imageId, imageUrl);
+  console.log(`Retrying image load: ${imageId}`);
+  setErrorImages((prev) => {
+    const newErrors = { ...prev };
+    delete newErrors[imageId];
+    return newErrors;
+  });
+  setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
+  const img = new Image();
+  img.src = imageUrl;
+  img.crossOrigin = 'anonymous';
+  img.onload = () => handleImageLoad(imageId);
+  img.onerror = () => handleImageError(imageId, imageUrl);
 };
 
 useEffect(() => {
-    const timeouts = {};
-    Object.keys(loadingImages).forEach((imageId) => {
-        if (loadingImages[imageId]) {
-            timeouts[imageId] = setTimeout(() => {
-                console.warn(`Image loading timeout for: ${imageId}`);
-                setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-                setErrorImages((prev) => ({
-                    ...prev,
-                    [imageId]: 'Image took too long to load. Please retry.'
-                }));
-            }, 20000);
-        }
-    });
-    return () => {
-        Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
-    };
+  Object.keys(loadingImages).forEach((imageId) => {
+    if (loadingImages[imageId]) {
+      console.log(`Setting timeout for imageId: ${imageId}`);
+      timeouts.current[imageId] = setTimeout(() => {
+        console.warn(`Timeout triggered for imageId: ${imageId}`);
+        setLoadingImages((prev) => {
+          const newLoading = { ...prev, [imageId]: false };
+          return newLoading;
+        });
+        setErrorImages((prev) => ({
+          ...prev,
+          [imageId]: 'Image took too long to load. Please retry.'
+        }));
+        delete timeouts.current[imageId];
+      }, 20000); // 20-second timeout
+    }
+  });
+  return () => {
+    console.log('Cleaning up timeouts');
+    Object.values(timeouts.current).forEach((timeout) => clearTimeout(timeout));
+    timeouts.current = {};
+  };
 }, [loadingImages]);
 
 const fetchCarouselImages = async () => {
@@ -704,7 +727,7 @@ const downloadImage = async (imageUrl, filename, format) => {
             const randomNumber = Math.floor(1000 + Math.random() * 9000);
             await downloadImage(
               image.imageUrl,
-              `BCC-image-${imageIndex + 1}-${randomNumber}-${Date.now()}`,
+              `BCC-image-${imageIndex + 1}-${Date.now()}-${randomNumber}}`,
               selectedFormat
             );
             successCount++;
