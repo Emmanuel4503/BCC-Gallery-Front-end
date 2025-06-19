@@ -119,8 +119,7 @@
   text-overflow: ellipsis; 
   }
   .placeholder-t{
-    text-align: center;
-    min-height: 20rem;
+color: white !important;
   }
 
   .placeholder-te {
