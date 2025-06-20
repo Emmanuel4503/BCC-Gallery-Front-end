@@ -3,6 +3,7 @@ import { ArrowLeft, ImageIcon, ChevronDown, Download, X, Loader2 } from "lucide-
 import { useState, useEffect } from "react";
 import "../styles/SubPages.css";
 
+
 function AlbumsPage() {
   const [albums, setAlbums] = useState([]);
   const [albumImages, setAlbumImages] = useState({});
@@ -17,7 +18,7 @@ function AlbumsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
-  const [totalImages, setTotalImages] = useState(0);
+  const [totalImages, setTotalImages] = useState(0);  
 
   // Split title into event name and date
   const splitTitle = (title) => {
@@ -37,17 +38,21 @@ function AlbumsPage() {
         }
         return response.json();
       })
-      .then((data) => {
+      .then(async (data) => {
         const validAlbums = data
           .filter((album) => album && (album.title || album._id))
           .map((album, index) => ({
             ...album,
             displayName: album.title || album._id || `Album ${index + 1}`,
-            imageCount: album.imageCount || 0, // Ensure imageCount is included
           }));
         setAlbums(validAlbums);
-        // Calculate total images from all albums
-        const total = validAlbums.reduce((sum, album) => sum + (album.imageCount || 0), 0);
+  
+        // Fetch image counts for all albums silently
+        let total = 0;
+        for (const album of validAlbums) {
+          const count = await fetchAlbumImages(album.displayName, true);
+          total += count;
+        }
         setTotalImages(total);
         setIsLoading(false);
       })
@@ -61,32 +66,32 @@ function AlbumsPage() {
   const fetchAlbumImages = async (albumTitle, silent = false) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
       setAlbumErrors((prev) => ({ ...prev, [albumTitle]: 'Invalid album title' }));
-      return;
+      return 0; // Return 0 for invalid title
     }
-
+  
     try {
       if (!silent) {
         setAlbumLoading((prev) => ({ ...prev, [albumTitle]: true }));
         setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
       }
-
+  
       const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/images/album/${encodeURIComponent(albumTitle)}`, {
         mode: 'cors',
         credentials: 'same-origin',
       });
-
+  
       if (!response.ok) {
         throw new Error(`Failed to fetch images for album ${albumTitle}: ${response.status}`);
       }
-
+  
       const data = await response.json();
       if (!Array.isArray(data)) {
         throw new Error('Invalid response: Expected an array of images');
       }
-
+  
       const processedData = data.map((image) => {
         let imageUrl = image.imageUrl;
-        let thumbnailUrl = image.thumbnailUrl || image.imageUrl; // Fallback to imageUrl if no thumbnail
+        let thumbnailUrl = image.thumbnailUrl || image.imageUrl;
         if (imageUrl && !imageUrl.startsWith('http')) {
           imageUrl = `https://bcc-gallery-back-end-production.up.railway.app${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
         }
@@ -95,13 +100,19 @@ function AlbumsPage() {
         }
         return { ...image, imageUrl, thumbnailUrl };
       });
-
-      setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
-      setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
+  
+      if (!silent) {
+        setAlbumImages((prev) => ({ ...prev, [albumTitle]: processedData }));
+        setAlbumErrors((prev) => ({ ...prev, [albumTitle]: null }));
+      }
+      return processedData.length; // Return image count
     } catch (error) {
       console.error(`Error fetching images for album ${albumTitle}:`, error);
-      setAlbumErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
-      setAlbumImages((prev) => ({ ...prev, [albumTitle]: [] }));
+      if (!silent) {
+        setAlbumErrors((prev) => ({ ...prev, [albumTitle]: `Failed to load images: ${error.message}` }));
+        setAlbumImages((prev) => ({ ...prev, [albumTitle]: [] }));
+      }
+      return 0; // Return 0 on error
     } finally {
       if (!silent) {
         setAlbumLoading((prev) => ({ ...prev, [albumTitle]: false }));
@@ -362,7 +373,7 @@ function AlbumsPage() {
               </div>
             ) : albums.length > 0 ? (
               <>
-              <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
+               <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
   Found {albums.length} album{albums.length !== 1 ? "s" : ""} with {totalImages} image{totalImages !== 1 ? "s" : ""}
 </p>
                 {albums.map((album, index) => {
