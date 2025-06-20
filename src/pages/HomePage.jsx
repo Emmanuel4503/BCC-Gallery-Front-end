@@ -1682,7 +1682,7 @@ aria-label="Scroll to top"
         <footer className="footer">
         <div className="footer-content">
             <div className="footer-info">
-            <h3 className="footer-title">Believers Community Church</h3>
+            <h3 className="footer-title">Believers' Community Church</h3>
             <p className="footer-subtitle">God's platfrom for building men</p>
             </div>
             <div className="footer-copyright">
