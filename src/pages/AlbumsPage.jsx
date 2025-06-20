@@ -28,7 +28,6 @@ function AlbumsPage() {
     return [title, ""];
   };
 
-  // Fetch all albums
   useEffect(() => {
     setIsLoading(true);
     fetch("https://bcc-gallery-back-end-production.up.railway.app/album/get")
@@ -44,8 +43,12 @@ function AlbumsPage() {
           .map((album, index) => ({
             ...album,
             displayName: album.title || album._id || `Album ${index + 1}`,
+            imageCount: album.imageCount || 0, // Ensure imageCount is included
           }));
         setAlbums(validAlbums);
+        // Calculate total images from all albums
+        const total = validAlbums.reduce((sum, album) => sum + (album.imageCount || 0), 0);
+        setTotalImages(total);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -54,11 +57,6 @@ function AlbumsPage() {
         setIsLoading(false);
       });
   }, []);
-
-  useEffect(() => {
-    const total = Object.values(albumImages).reduce((sum, images) => sum + (images?.length || 0), 0);
-    setTotalImages(total);
-  }, [albumImages]);
 
   const fetchAlbumImages = async (albumTitle, silent = false) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
@@ -364,9 +362,9 @@ function AlbumsPage() {
               </div>
             ) : albums.length > 0 ? (
               <>
-              <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
-  Found {albums.length} album{albums.length !== 1 ? "s" : ""} with {totalImages} image{totalImages !== 1 ? "s" : ""}
-</p>
+                <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
+                  Found {albums.length} album{albums.length !== 1 ? "s" : ""}
+                </p>
                 {albums.map((album, index) => {
                   const [eventName, date] = splitTitle(album.displayName);
                   return (
