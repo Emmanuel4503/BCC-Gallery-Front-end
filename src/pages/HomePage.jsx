@@ -175,7 +175,7 @@ const handleImageRetry = (imageId, imageUrl) => {
   img.onerror = () => {
     timeouts.current[imageId] = setTimeout(() => {
       handleImageError(imageId, imageUrl);
-    }, 12000); // 12-second timeout for retry
+    }, 10000); // 12-second timeout for retry
   };
 };
 
@@ -1036,7 +1036,7 @@ const handleSaveAll = async () => {
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
 
-    let message = `Save completed: ${successCount} image${successCount !== 1 ? 's' : ''} saved successfully`;
+    let message = `${successCount} image${successCount !== 1 ? 's' : ''} saved successfully`;
     if (failCount > 0) {
       message += `, ${failCount} failed`;
     }
