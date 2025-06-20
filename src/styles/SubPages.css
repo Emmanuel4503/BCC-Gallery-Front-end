@@ -5,6 +5,8 @@
   }
   
   .page-header-content {
+    background-color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
@@ -14,7 +16,7 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 200;
   }
   
   .back-button {
