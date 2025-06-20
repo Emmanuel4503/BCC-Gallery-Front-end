@@ -175,4 +175,18 @@
     }
   }
   
+  .gball-spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid #6b7280; 
+    border-top: 3px solid transparent; 
+    border-radius: 50%;
+    animation: spin 1s linear infinite; 
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
   

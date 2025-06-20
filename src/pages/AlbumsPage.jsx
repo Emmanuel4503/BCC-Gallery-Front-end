@@ -358,14 +358,14 @@ function AlbumsPage() {
 
           <hr />
           <div className="albums-container" style={{ marginTop: "2rem" }}>
-            {isLoading ? (
-              <div className="page-placeholder">
-                <div className="placeholder-loading">
-                  <p>Loading albums...</p>
-                </div>
-              
-              </div>
-            ) : error ? (
+          {isLoading ? (
+  <div className="page-placeholder">
+    <div className="placeholder-loading" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div className="global-spinner"></div>
+      <p style={{ color: '#6b7280' }}>Loading albums...</p>
+    </div>
+  </div>
+) : error ? (
               <div className="page-placeholder">
                 <p className="placeholder-te" style={{ color: "#b91c1c" }}>
                   {error}
