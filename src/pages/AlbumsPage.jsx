@@ -362,9 +362,9 @@ function AlbumsPage() {
               </div>
             ) : albums.length > 0 ? (
               <>
-                <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
-                  Found {albums.length} album{albums.length !== 1 ? "s" : ""}
-                </p>
+              <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
+  Found {albums.length} album{albums.length !== 1 ? "s" : ""} with {totalImages} image{totalImages !== 1 ? "s" : ""}
+</p>
                 {albums.map((album, index) => {
                   const [eventName, date] = splitTitle(album.displayName);
                   return (
