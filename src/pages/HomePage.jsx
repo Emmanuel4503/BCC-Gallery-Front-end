@@ -1557,7 +1557,7 @@ aria-label="Scroll to top"
                         </button>
                     </div>
                     <hr />
-                    <p style={{ color: "#6b7280", marginBottom: "0.60rem", marginTop: "1.125rem", textAlign: "center" }}>
+                    <p style={{ color: "#6b7280", marginBottom: "0.50rem", marginTop: "1.4rem", textAlign: "center" }}>
   Found {galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}
 </p>
                     {isLoadingGallery ? (

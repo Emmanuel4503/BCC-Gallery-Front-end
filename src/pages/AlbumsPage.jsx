@@ -17,6 +17,7 @@ function AlbumsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [currentDownloadImage, setCurrentDownloadImage] = useState(null);
+  const [totalImages, setTotalImages] = useState(0);
 
   // Split title into event name and date
   const splitTitle = (title) => {
@@ -53,6 +54,11 @@ function AlbumsPage() {
         setIsLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    const total = Object.values(albumImages).reduce((sum, images) => sum + (images?.length || 0), 0);
+    setTotalImages(total);
+  }, [albumImages]);
 
   const fetchAlbumImages = async (albumTitle, silent = false) => {
     if (!albumTitle || typeof albumTitle !== 'string') {
@@ -358,9 +364,9 @@ function AlbumsPage() {
               </div>
             ) : albums.length > 0 ? (
               <>
-                <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
-                  Found {albums.length} album{albums.length !== 1 ? "s" : ""}
-                </p>
+              <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
+  Found {albums.length} album{albums.length !== 1 ? "s" : ""} with {totalImages} image{totalImages !== 1 ? "s" : ""}
+</p>
                 {albums.map((album, index) => {
                   const [eventName, date] = splitTitle(album.displayName);
                   return (

@@ -422,7 +422,7 @@ function SavedPage() {
           </p>
            <br />
           <hr />
-          <p style={{ color: "#6b7280",  marginBottom: "0.70rem", marginTop: "1rem", textAlign: "center" }}>
+          <p style={{ color: "#6b7280",  marginBottom: "0.50rem", marginTop: "1.4rem", textAlign: "center" }}>
   Favorited {savedImages.length} image{savedImages.length !== 1 ? "s" : ""}
 </p>
 
