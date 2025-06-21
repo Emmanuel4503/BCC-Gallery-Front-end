@@ -292,6 +292,10 @@ const fetchGalleryImages = async (silent = false) => {
     }
   }
 };
+
+
+
+
     const fetchUserReactions = async (userId) => {
         try {
           const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/images/reactions?userId=${userId}`);
