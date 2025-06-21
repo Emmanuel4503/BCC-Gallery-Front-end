@@ -175,7 +175,7 @@ const handleImageRetry = (imageId, imageUrl) => {
   img.onerror = () => {
     timeouts.current[imageId] = setTimeout(() => {
       handleImageError(imageId, imageUrl);
-    }, 10000); // 12-second timeout for retry
+    }, 20000); // 12-second timeout for retry
   };
 };
 
