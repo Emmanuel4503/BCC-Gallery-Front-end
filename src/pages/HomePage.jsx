@@ -31,18 +31,11 @@ const [latestAlbumTitle, setLatestAlbumTitle] = useState(null);
 const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
 
-const [loadingImages, setLoadingImages] = useState({});
-
-// HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-// HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
-// hhhhhhhhhhhhhhhhhhhhhhhhhhh
-
 const [isTransitioning, setIsTransitioning] = useState(false)
 // const [isPreLoading, setIsPreLoading] = useState(true);
 // const [preloadProgress, setPreloadProgress] = useState(0);
 const [notificationQueue, setNotificationQueue] = useState([]);
 const [currentNotification, setCurrentNotification] = useState(null);
-
 
 const addNotification = (message) => {
   setNotificationQueue((prev) => [...prev, { id: Date.now(), message }]);
@@ -72,141 +65,87 @@ const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
-const [errorImages, setErrorImages] = useState({});
-
-const handleImageLoad = (imageId) => {
-    console.log(`Image loaded successfully: ${imageId}`);
-    setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-    setErrorImages((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[imageId];
-        return newErrors;
-    });
-};
-
-const handleImageError = (imageId, imageUrl) => {
-    console.error(`Failed to load image: ${imageUrl}`);
-    setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-    setErrorImages((prev) => ({
-        ...prev,
-        [imageId]: 'Failed to load image. Please try again.'
-    }));
-};
-
-const handleImageRetry = (imageId, imageUrl) => {
-    console.log(`Retrying image load: ${imageId}`);
-    setErrorImages((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[imageId];
-        return newErrors;
-    });
-    setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
-    const img = new Image();
-    img.src = imageUrl;
-    img.crossOrigin = 'anonymous';
-    img.onload = () => handleImageLoad(imageId);
-    img.onerror = () => handleImageError(imageId, imageUrl);
-};
-
-useEffect(() => {
-    const timeouts = {};
-    Object.keys(loadingImages).forEach((imageId) => {
-        if (loadingImages[imageId]) {
-            timeouts[imageId] = setTimeout(() => {
-                console.warn(`Image loading timeout for: ${imageId}`);
-                setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-                setErrorImages((prev) => ({
-                    ...prev,
-                    [imageId]: 'Image took too long to load. Please retry.'
-                }));
-            }, 15000);
-        }
-    });
-    return () => {
-        Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
-    };
-}, [loadingImages]);
 
 const fetchCarouselImages = async () => {
-  try {
+    try {
       setIsLoadingCarousel(true);
       setCarouselError(null);
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
+  
+      const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/selected');
+  
       if (!response.ok) {
-          if (response.status >= 500) {
-              throw new Error('Database error: Unable to retrieve carousel images from the server.');
-          }
-          throw new Error(`Failed to fetch carousel images: ${response.status}`);
+        if (response.status >= 500) {
+          throw new Error('Database error: Unable to retrieve carousel images from the server.');
+        }
+        throw new Error(`Failed to fetch carousel images: ${response.status}`);
       }
+  
       const data = await response.json();
+    //   console.log('Carousel images fetched:', data);
+  
       setCarouselImages(data);
-      // Initialize loading state for carousel images
-      const initialLoadingState = data.reduce((acc, image) => {
-          acc[image._id] = true;
-          return acc;
-      }, {});
-      setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
-  } catch (error) {
+    } catch (error) {
       console.error('Error fetching carousel images:', error);
       let message;
       if (!navigator.onLine) {
-          message = 'No internet connection. Please check your network and try again.';
+        message = 'No internet connection. Please check your network and try again.';
       } else if (error.message.includes('Database error')) {
-          message = 'Unable to load carousel images due to a server issue. Please try again later.';
+        message = 'Unable to load carousel images due to a server issue. Please try again later.';
       } else {
-          message = 'Network error. Failed to connect to the server. Please try again.';
+        message = 'Network error. Failed to connect to the server. Please try again.';
       }
       addNotification(message);
       setCarouselError(error.message);
       setCarouselImages([]);
-  } finally {
+    } finally {
       setIsLoadingCarousel(false);
-  }
-};
+    }
+  };
 
+// Fetch gallery images 
 const fetchGalleryImages = async (silent = false) => {
-  try {
+    try {
       if (!silent) {
-          setIsLoadingGallery(true);
+        setIsLoadingGallery(true);
       }
       setGalleryError(null);
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
+  
+      const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest');
+  
       if (!response.ok) {
-          if (response.status >= 500) {
-              throw new Error('Database error: Unable to retrieve gallery images from the server.');
-          }
-          throw new Error(`Failed to fetch gallery images: ${response.status}`);
+        if (response.status >= 500) {
+          throw new Error('Database error: Unable to retrieve gallery images from the server.');
+        }
+        throw new Error(`Failed to fetch gallery images: ${response.status}`);
       }
+  
       const data = await response.json();
+    //   console.log('Gallery images fetched:', data);
+  
       setGalleryImages(data);
-      // Initialize loading state for gallery images
-      const initialLoadingState = data.reduce((acc, image) => {
-          acc[image._id] = true;
-          return acc;
-      }, {});
-      setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
-  } catch (error) {
+    } catch (error) {
       console.error('Error fetching gallery images:', error);
       let message;
       if (!navigator.onLine) {
-          message = 'No internet connection. Please check your network and try again.';
+        message = 'No internet connection. Please check your network and try again.';
       } else if (error.message.includes('Database error')) {
-          message = 'Unable to load gallery images due to a server issue. Please try again later.';
+        message = 'Unable to load gallery images due to a server issue. Please try again later.';
       } else {
-          message = 'Network error. Failed to connect to the server. Please try again.';
+        message = 'Network error. Failed to connect to the server. Please try again.';
       }
       addNotification(message);
       setGalleryError(error.message);
       setGalleryImages([]);
-  } finally {
+    } finally {
       if (!silent) {
-          setIsLoadingGallery(false);
+        setIsLoadingGallery(false);
       }
-  }
-};
+    }
+  };
+
     const fetchUserReactions = async (userId) => {
         try {
-          const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/images/reactions?userId=${userId}`);
+          const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`);
           if (!response.ok) {
             if (response.status >= 500) {
               throw new Error('Database error: Unable to retrieve user reactions from the server.');
@@ -239,7 +178,7 @@ const fetchLatestAlbum = async () => {
       setIsLoadingAlbum(true);
       setAlbumError(null);
   
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/album/latest');
+      const response = await fetch('https://bcc-gallery-back-end.onrender.com/album/latest');
   
       if (!response.ok) {
         if (response.status >= 500) {
@@ -268,7 +207,7 @@ const fetchLatestAlbum = async () => {
     }
   };
 
-  const handleReaction = useCallback(
+const handleReaction = useCallback(
     async (imageId, reactionType) => {
       if (!currentUser?.id) {
         alert('Please sign in to react to images');
@@ -292,7 +231,7 @@ const fetchLatestAlbum = async () => {
         });
   
         // Send reaction to backend
-        const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/react', {
+        const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/react', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -309,25 +248,10 @@ const fetchLatestAlbum = async () => {
           throw new Error(errorData.error || `Failed to process reaction: ${response.status}`);
         }
   
-        // Update only the specific image's reaction data without resetting loading state
-        setGalleryImages((prevImages) =>
-          prevImages.map((image) =>
-            image._id === imageId
-              ? {
-                  ...image,
-                  reactions: {
-                    ...image.reactions,
-                    [reactionType]: (image.reactions?.[reactionType] || 0) + (currentUserReaction === reactionType ? -1 : 1),
-                    ...(currentUserReaction && currentUserReaction !== reactionType && {
-                      [currentUserReaction]: (image.reactions?.[currentUserReaction] || 0) - 1,
-                    }),
-                  },
-                }
-              : image
-          )
-        );
+        // Re-fetch gallery images 
+        await fetchGalleryImages(true);
   
-        // Re-fetch user reactions to ensure consistency
+       
         await fetchUserReactions(Number(currentUser.id));
       } catch (error) {
         console.error('Error processing reaction:', error);
@@ -352,6 +276,7 @@ const fetchLatestAlbum = async () => {
           return newReactions;
         });
       } finally {
+      
         setTimeout(() => {
           setDisabledButtons((prev) => {
             const newSet = new Set(prev);
@@ -361,8 +286,9 @@ const fetchLatestAlbum = async () => {
         }, 200); 
       }
     },
-    [currentUser, userReactions, fetchUserReactions]
+    [currentUser, userReactions, fetchGalleryImages, fetchUserReactions]
 );
+
 
 const debounce = (func, wait) => {
     let timeoutId;
@@ -751,7 +677,7 @@ const handleUserSignup = async (e) => {
     try {
     console.log('Attempting to create user:', userName.trim())
     
-    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/users/signup', {
+    const response = await fetch('https://bcc-gallery-back-end.onrender.com/users/signup', {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
@@ -808,28 +734,20 @@ const handleUserSignup = async (e) => {
     }
 }
 
+// Auto-slide
 useEffect(() => {
-
-  if (carouselImages.length === 0 || isLoadingCarousel || carouselError) return;
-
- 
-  const loadedImagesCount = carouselImages.filter(
-    (image) => !loadingImages[image._id]
-  ).length;
-
- 
-  if (loadedImagesCount < Math.min(5, carouselImages.length)) return;
-
-  const timer = setInterval(() => {
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
-      setIsTransitioning(false);
-    }, 100);
-  }, 5000);
-
-  return () => clearInterval(timer);
-}, [carouselImages, isLoadingCarousel, carouselError, loadingImages]);
+    if (carouselImages.length === 0) return
+    
+    const timer = setInterval(() => {
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentSlide((prev) => (prev + 1) % carouselImages.length)
+        setIsTransitioning(false)
+      }, 100)
+    }, 4000)
+  
+    return () => clearInterval(timer)
+  }, [carouselImages.length])
 
 const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -873,7 +791,7 @@ const handleSaveAll = async () => {
             }
 
             try {
-                const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
+                const response = await fetch('https://bcc-gallery-back-end.onrender.com/saved/add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -940,7 +858,7 @@ const handleSaveSelected = async (index) => {
 
     setIsSubmitting(true)
     try {
-        const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
+        const response = await fetch('https://bcc-gallery-back-end.onrender.com/saved/add', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1044,21 +962,6 @@ useEffect(() => {
     document.body.style.overflow = "unset"
     }
 }, [fullscreenImage, showDownloadModal, isDownloading])
-
-useEffect(() => {
-  const timeouts = {};
-  Object.keys(loadingImages).forEach((imageId) => {
-      if (loadingImages[imageId]) {
-          timeouts[imageId] = setTimeout(() => {
-              console.warn(`Image loading timeout for: ${imageId}`);
-              setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-          }, 20000); // 10-second timeout
-      }
-  });
-  return () => {
-      Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
-  };
-}, [loadingImages]);
 
 
 return (
@@ -1338,42 +1241,33 @@ aria-label="Scroll to top"
             </div>
         ) : (
             <>
-<div className="carousel">
-    {carouselImages.map((image, index) => {
-        let slideClass = "carousel-slide";
-        if (index === currentSlide && !isTransitioning) {
-            slideClass += " slide-active";
-        } else if (index === currentSlide && isTransitioning) {
-            slideClass += " slide-exiting";
-        } else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
-            slideClass += " slide-entering";
-        }
 
-        const imageUrl = image.imageUrl || "/placeholder.svg";
-        return (
-            <div key={image._id || index} className={slideClass}>
-                {loadingImages[image._id] ? (
-                    <div className="image-loading-container">
-                        <Loader2 className="image-loading-spinner" />
-                    </div>
-                ) : (
-                    <img
-                        src={imageUrl}
-                        alt={`Church gallery image ${index + 1}`}
-                        className="carousel-image"
-                        crossOrigin="anonymous"
-                        onLoad={() => handleImageLoad(image._id)}
-                        onError={() => handleImageError(image._id, imageUrl)}
-                        // onClick={() => openFullscreen(image.imageUrl)}
-                    />
-                )}
-                <div className="carousel-overlay" />
-            </div>
-        );
-    })}
-    <div className="carousel-content">
-        <center></center>
-    </div>
+            <div className="carousel">
+{carouselImages.map((image, index) => {
+let slideClass = "carousel-slide";
+if (index === currentSlide && !isTransitioning) {
+slideClass += " slide-active";
+} else if (index === currentSlide && isTransitioning) {
+slideClass += " slide-exiting";
+} else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
+slideClass += " slide-entering";
+}
+
+return (
+<div key={image._id || index} className={slideClass}>
+<img
+  src={image.imageUrl || "/placeholder.svg"} 
+  alt={`Church gallery image ${index + 1}`}
+  className="carousel-image"
+//   onClick={() => openFullscreen(image.imageUrl)} 
+/>
+<div className="carousel-overlay" />
+</div>
+);
+})}
+<div className="carousel-content">
+<center></center>
+</div>
 </div>
 
             </>
@@ -1382,140 +1276,127 @@ aria-label="Scroll to top"
 
         {/* Sunday Service Section */}
         <div className="service-section">
-                    <h3 className="service-title">
-                        {isLoadingAlbum ? (
-                            <span>Loading album title...</span>
-                        ) : albumError || !latestAlbumTitle ? (
-                            <span>No album available</span>
-                        ) : (
-                            latestAlbumTitle
-                        )}
-                        <b className="welcome-underline"></b>
-                    </h3>
-                    <div className="action-buttons">
-                        <button onClick={handleDownloadAll} className="action-btn download-all">
-                            <Download className="btn-icon" />
-                            Download All ({selectedImages.length} selected)
-                        </button>
-                        <button onClick={handleSaveAll} className="action-btn save-all">
-                            <Save className="btn-icon" />
-                            Save All ({selectedImages.length} selected)
-                        </button>
-                    </div>
-                    <hr />
-                    {isLoadingGallery ? (
-                        <div className="loading-container">
-                            <Loader2 className="loading-spinner" />
-                            <p>Loading gallery images...</p>
-                        </div>
-                    ) : galleryError ? (
-                        <div className="error-container">
-                            <p>Error loading gallery: {galleryError}</p>
-                            <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
-                        </div>
-                    ) : galleryImages.length === 0 ? (
-                        <div className="no-images-container">
-                            <p>No gallery images available</p>
-                        </div>
-                    ) : (
-                        <div className="image-gallery">
-                            {galleryImages.map((image, index) => {
-                                const imageUrl = image.thumbnailUrl || image.imageUrl || "/placeholder.svg";
-                                return (
-                                  <div key={image._id || index} className="image-card">
-                                  <div className="image-container">
-                                      {errorImages[image._id] ? (
-                                          <div className="image-error-container">
-                                              <span className="image-error-message">{errorImages[image._id]}</span>
-                                              <button
-                                                  className="image-retry-btn"
-                                                  onClick={() => handleImageRetry(image._id, imageUrl)}
-                                              >
-                                                  Retry
-                                              </button>
-                                          </div>
-                                      ) : loadingImages[image._id] ? (
-                                          <div className="image-loading-container">
-                                              <Loader2 className="image-loading-spinner" />
-                                          </div>
-                                      ) : (
-                                          <img
-                                              src={imageUrl}
-                                              alt={`Service ${index + 1}`}
-                                              className="gallery-image"
-                                              crossOrigin="anonymous"
-                                              onLoad={() => handleImageLoad(image._id)}
-                                              onError={() => handleImageError(image._id, imageUrl)}
-                                              onClick={() => openFullscreen(image.imageUrl)}
-                                          />
-                                      )}
-                                            <div className="image-overlay">
-                                                <input
-                                                    type="checkbox"
-                                                    className="image-checkbox"
-                                                    checked={selectedImages.includes(index)}
-                                                    onChange={() => handleImageSelect(index)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="reaction-section">
-                                            <button
-                                                className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
-                                                onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
-                                                title="Party Popper"
-                                                disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
-                                            >
-                                                🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
-                                            </button>
-                                            <button
-                                                className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
-                                                onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
-                                                title="Thumbs Up"
-                                                disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
-                                            >
-                                                👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
-                                            </button>
-                                            <button
-                                                className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
-                                                onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
-                                                title="Red Heart"
-                                                disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
-                                            >
-                                                ❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
-                                            </button>
-                                            <button
-                                                className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
-                                                onClick={() => debouncedHandleReaction(image._id, 'fire')}
-                                                title="Fire"
-                                                disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
-                                            >
-                                                🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
-                                            </button>
-                                        </div>
-                                        <div className="image-actions">
-                                            <button
-                                                onClick={() => handleDownloadSelected(index)}
-                                                className="image-btn download-btn"
-                                                title="Download"
-                                            >
-                                                <Download className="image-btn-icon" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleSaveSelected(index)}
-                                                className="image-btn save-btn"
-                                                title="Save"
-                                                disabled={isSubmitting}
-                                            >
-                                                <Save className="image-btn-icon" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+        <h3 className="service-title">
+{isLoadingAlbum ? (
+<span>Loading album title...</span>
+) : albumError || !latestAlbumTitle ? (
+<span>No album available</span>
+) : (
+latestAlbumTitle
+)}
+<b className="welcome-underline"></b>
+</h3>
+        
+
+        {/* Action Buttons */}
+        <div className="action-buttons">
+            <button onClick={handleDownloadAll} className="action-btn download-all">
+            <Download className="btn-icon" />
+            Download All ({selectedImages.length} selected)
+            </button>
+            <button onClick={handleSaveAll} className="action-btn save-all">
+<Save className="btn-icon" />
+Save All ({selectedImages.length} selected)
+</button>
+        </div>
+
+        <hr />
+
+        {/* Image Gallery */}
+        {isLoadingGallery ? (
+            <div className="loading-container">
+            <Loader2 className="loading-spinner" />
+            <p>Loading gallery images...</p>
+            </div>
+        ) : galleryError ? (
+            <div className="error-container">
+            <p>Error loading gallery: {galleryError}</p>
+            <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
+            </div>
+        ) : galleryImages.length === 0 ? (
+            <div className="no-images-container">
+            <p>No gallery images available</p>
+            </div>
+        ) : (
+            <div className="image-gallery">
+{galleryImages.map((image, index) => (
+<div key={image._id || index} className="image-card">
+<div className="image-container">
+<img
+  src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
+  alt={`Service ${index + 1}`}
+  className="gallery-image"
+  onClick={() => openFullscreen(image.imageUrl)}
+/>
+<div className="image-overlay">
+  <input
+    type="checkbox"
+    className="image-checkbox"
+    checked={selectedImages.includes(index)}
+    onChange={() => handleImageSelect(index)}
+    onClick={(e) => e.stopPropagation()}
+  />
+</div>
+</div>
+                
+        {/* Reaction Section */}
+        <div className="reaction-section">
+<button
+className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
+onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
+title="Party Popper"
+disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
+>
+🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
+</button>
+<button
+className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
+onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
+title="Thumbs Up"
+disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
+>
+👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
+</button>
+<button
+className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
+onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
+title="Red Heart"
+disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
+>
+❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
+</button>
+<button
+className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
+onClick={() => debouncedHandleReaction(image._id, 'fire')}
+title="Fire"
+disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
+>
+🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
+</button>
+</div>
+                
+                <div className="image-actions">
+                <button
+  onClick={() => handleDownloadSelected(index)}
+  className="image-btn download-btn"
+  title="Download"
+>
+  <Download className="image-btn-icon" />
+</button>
+<button
+  onClick={() => handleSaveSelected(index)}
+  className="image-btn save-btn"
+  title="Save"
+  disabled={isSubmitting}
+>
+  <Save className="image-btn-icon" />
+</button>
                 </div>
+                </div>
+            ))}
+            </div>
+        )}
+        </div>
 
         {/* Footer */}
         <footer className="footer">
@@ -1525,7 +1406,7 @@ aria-label="Scroll to top"
             <p className="footer-subtitle">God's platfrom for building men</p>
             </div>
             <div className="footer-copyright">
-            <p className="copyright-text">© {new Date().getFullYear()} <a href="https://wa.me/+2349110241218" className="heic-modal-link" target="_blank" rel="noopener noreferrer">BCC Media.</a>  All rights reserved.</p>
+            <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
             </div>
         </div>
         </footer>
