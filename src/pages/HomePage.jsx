@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback,useRef } from "react"
 import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
 import { Link } from "react-router-dom"
 import "../styles/HomePage.css"
@@ -31,11 +31,78 @@ const [latestAlbumTitle, setLatestAlbumTitle] = useState(null);
 const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
 
+const [loadingImages, setLoadingImages] = useState({});
+const timeouts = useRef({}); 
+
+// HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+// HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+// hhhhhhhhhhhhhhhhhhhhhhhhhhh
+// ghhhhhhh
+// hhhhh
+// Add these functions after your existing state declarations and before the notification functions
+
+const CACHE_DURATION = 1 * 60 * 1000; // 5 minutes in milliseconds
+const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
+const GALLERY_CACHE_KEY = 'bcc_gallery_cache';
+const ALBUM_CACHE_KEY = 'bcc_album_cache';
+
+const setCacheData = (key, data) => {
+  try {
+    const cacheData = {
+      data: data,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + CACHE_DURATION
+    };
+    localStorage.setItem(key, JSON.stringify(cacheData));
+  } catch (error) {
+    console.error('Error setting cache data:', error);
+  }
+};
+
+const getCacheData = (key) => {
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+    
+    const cacheData = JSON.parse(cached);
+    if (Date.now() > cacheData.expiresAt) {
+      // Cache expired, remove it
+      localStorage.removeItem(key);
+      return null;
+    }
+    
+    return cacheData.data;
+  } catch (error) {
+    console.error('Error getting cache data:', error);
+    // Remove corrupted cache
+    localStorage.removeItem(key);
+    return null;
+  }
+};
+
+const clearExpiredCache = () => {
+  try {
+    [CAROUSEL_CACHE_KEY, GALLERY_CACHE_KEY, ALBUM_CACHE_KEY].forEach(key => {
+      const cached = localStorage.getItem(key);
+      if (cached) {
+        const cacheData = JSON.parse(cached);
+        if (Date.now() > cacheData.expiresAt) {
+          localStorage.removeItem(key);
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error clearing expired cache:', error);
+  }
+};
+
+
 const [isTransitioning, setIsTransitioning] = useState(false)
 // const [isPreLoading, setIsPreLoading] = useState(true);
 // const [preloadProgress, setPreloadProgress] = useState(0);
 const [notificationQueue, setNotificationQueue] = useState([]);
 const [currentNotification, setCurrentNotification] = useState(null);
+
 
 const addNotification = (message) => {
   setNotificationQueue((prev) => [...prev, { id: Date.now(), message }]);
@@ -65,87 +132,173 @@ const removeNotification = (id) => {
   setNotifications((prev) => prev.filter((notification) => notification.id !== id));
 };
 
+const [errorImages, setErrorImages] = useState({});
+const handleImageLoad = (imageId) => {
+  console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
+  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+  setErrorImages((prev) => {
+    const newErrors = { ...prev };
+    delete newErrors[imageId];
+    return newErrors;
+  });
+  if (timeouts.current[imageId]) {
+    clearTimeout(timeouts.current[imageId]);
+    delete timeouts.current[imageId];
+  }
+};
+
+const handleImageError = (imageId, imageUrl) => {
+  console.error(`Image error at: ${new Date().toISOString()}, imageId: ${imageId}, url: ${imageUrl}`);
+  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+  setErrorImages((prev) => ({
+    ...prev,
+    [imageId]: 'Failed to load image. Please try again.'
+  }));
+  if (timeouts.current[imageId]) {
+    clearTimeout(timeouts.current[imageId]);
+    delete timeouts.current[imageId];
+  }
+};
+
+const handleImageRetry = (imageId, imageUrl) => {
+  console.log(`Retrying image load: ${imageId}`);
+  setErrorImages((prev) => {
+    const newErrors = { ...prev };
+    delete newErrors[imageId];
+    return newErrors;
+  });
+  setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
+  const img = new Image();
+  img.src = imageUrl;
+  img.crossOrigin = 'anonymous';
+  img.onload = () => handleImageLoad(imageId);
+  img.onerror = () => {
+    timeouts.current[imageId] = setTimeout(() => {
+      handleImageError(imageId, imageUrl);
+    }, 25000); // 12-second timeout for retry
+  };
+};
 
 const fetchCarouselImages = async () => {
-    try {
-      setIsLoadingCarousel(true);
-      setCarouselError(null);
-  
-      const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/selected');
-  
-      if (!response.ok) {
+  try {
+    setIsLoadingCarousel(true);
+    setCarouselError(null);
+    
+    // Check cache first
+    const cachedData = getCacheData(CAROUSEL_CACHE_KEY);
+    if (cachedData) {
+      console.log('Loading carousel images from cache');
+      setCarouselImages(cachedData);
+      // Skip individual loading for cached images
+      setIsLoadingCarousel(false);
+      return;
+    }
+    
+    // Fetch from backend if no cache
+    console.log('Fetching carousel images from backend');
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
+    if (!response.ok) {
         if (response.status >= 500) {
-          throw new Error('Database error: Unable to retrieve carousel images from the server.');
+            throw new Error('Database error: Unable to retrieve carousel images from the server.');
         }
         throw new Error(`Failed to fetch carousel images: ${response.status}`);
-      }
-  
-      const data = await response.json();
-    //   console.log('Carousel images fetched:', data);
-  
-      setCarouselImages(data);
-    } catch (error) {
-      console.error('Error fetching carousel images:', error);
-      let message;
-      if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Database error')) {
-        message = 'Unable to load carousel images due to a server issue. Please try again later.';
-      } else {
-        message = 'Network error. Failed to connect to the server. Please try again.';
-      }
-      addNotification(message);
-      setCarouselError(error.message);
-      setCarouselImages([]);
-    } finally {
-      setIsLoadingCarousel(false);
     }
-  };
-
-// Fetch gallery images 
-const fetchGalleryImages = async (silent = false) => {
-    try {
-      if (!silent) {
-        setIsLoadingGallery(true);
-      }
-      setGalleryError(null);
-  
-      const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/latest');
-  
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Database error: Unable to retrieve gallery images from the server.');
-        }
-        throw new Error(`Failed to fetch gallery images: ${response.status}`);
-      }
-  
-      const data = await response.json();
-    //   console.log('Gallery images fetched:', data);
-  
-      setGalleryImages(data);
-    } catch (error) {
-      console.error('Error fetching gallery images:', error);
-      let message;
-      if (!navigator.onLine) {
+    const data = await response.json();
+    
+    // Cache the data
+    setCacheData(CAROUSEL_CACHE_KEY, data);
+    
+    setCarouselImages(data);
+    // Initialize loading state for carousel images
+    const initialLoadingState = data.reduce((acc, image) => {
+        acc[image._id] = true;
+        return acc;
+    }, {});
+    setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
+  } catch (error) {
+    console.error('Error fetching carousel images:', error);
+    let message;
+    if (!navigator.onLine) {
         message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Database error')) {
-        message = 'Unable to load gallery images due to a server issue. Please try again later.';
-      } else {
+    } else if (error.message.includes('Database error')) {
+        message = 'Unable to load carousel images due to a server issue. Please try again later.';
+    } else {
         message = 'Network error. Failed to connect to the server. Please try again.';
-      }
-      addNotification(message);
-      setGalleryError(error.message);
-      setGalleryImages([]);
-    } finally {
+    }
+    addNotification(message);
+    setCarouselError(error.message);
+    setCarouselImages([]);
+  } finally {
+    setIsLoadingCarousel(false);
+  }
+};
+
+const fetchGalleryImages = async (silent = false) => {
+  try {
+    if (!silent) {
+        setIsLoadingGallery(true);
+    }
+    setGalleryError(null);
+    
+    // Check cache first
+    const cachedData = getCacheData(GALLERY_CACHE_KEY);
+    if (cachedData) {
+      console.log('Loading gallery images from cache');
+      setGalleryImages(cachedData);
+      // Skip individual loading for cached images
       if (!silent) {
         setIsLoadingGallery(false);
       }
+      return;
     }
-  };
+    
+    // Fetch from backend if no cache
+    console.log('Fetching gallery images from backend');
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
+    if (!response.ok) {
+        if (response.status >= 500) {
+            throw new Error('Database error: Unable to retrieve gallery images from the server.');
+        }
+        throw new Error(`Failed to fetch gallery images: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Cache the data
+    setCacheData(GALLERY_CACHE_KEY, data);
+    
+    setGalleryImages(data);
+    // Initialize loading state for gallery images
+    const initialLoadingState = data.reduce((acc, image) => {
+        acc[image._id] = true;
+        return acc;
+    }, {});
+    setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
+  } catch (error) {
+    console.error('Error fetching gallery images:', error);
+    let message;
+    if (!navigator.onLine) {
+        message = 'No internet connection. Please check your network and try again.';
+    } else if (error.message.includes('Database error')) {
+        message = 'Unable to load gallery images due to a server issue. Please try again later.';
+    } else {
+        message = 'Network error. Failed to connect to the server. Please try again.';
+    }
+    addNotification(message);
+    setGalleryError(error.message);
+    setGalleryImages([]);
+  } finally {
+    if (!silent) {
+        setIsLoadingGallery(false);
+    }
+  }
+};
+
+
+
 
     const fetchUserReactions = async (userId) => {
         try {
-          const response = await fetch(`https://bcc-gallery-back-end.onrender.com/images/reactions?userId=${userId}`);
+          const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/images/reactions?userId=${userId}`);
           if (!response.ok) {
             if (response.status >= 500) {
               throw new Error('Database error: Unable to retrieve user reactions from the server.');
@@ -173,41 +326,56 @@ const fetchGalleryImages = async (silent = false) => {
         }
       };
 
-const fetchLatestAlbum = async () => {
-    try {
-      setIsLoadingAlbum(true);
-      setAlbumError(null);
-  
-      const response = await fetch('https://bcc-gallery-back-end.onrender.com/album/latest');
-  
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Database error: Unable to retrieve the latest album from the server.');
+      const fetchLatestAlbum = async () => {
+        try {
+          setIsLoadingAlbum(true);
+          setAlbumError(null);
+      
+          // Check cache first
+          const cachedData = getCacheData(ALBUM_CACHE_KEY);
+          if (cachedData) {
+            console.log('Loading album data from cache');
+            setLatestAlbumTitle(cachedData?.title || null);
+            setIsLoadingAlbum(false);
+            return;
+          }
+      
+          // Fetch from backend if no cache
+          console.log('Fetching album data from backend');
+          const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/album/latest');
+      
+          if (!response.ok) {
+            if (response.status >= 500) {
+              throw new Error('Database error: Unable to retrieve the latest album from the server.');
+            }
+            throw new Error(`Failed to fetch latest album: ${response.status}`);
+          }
+      
+          const data = await response.json();
+          
+          // Cache the data
+          setCacheData(ALBUM_CACHE_KEY, data);
+          
+          setLatestAlbumTitle(data?.title || null);
+        } catch (error) {
+          console.error('Error fetching latest album:', error);
+          let message;
+          if (!navigator.onLine) {
+            message = 'No internet connection. Please check your network and try again.';
+          } else if (error.message.includes('Database error')) {
+            message = 'Unable to load the latest album due to a server issue. Please try again later.';
+          } else {
+            message = 'Network error: Failed to connect to the server. Please try again.';
+          }
+          addNotification(message);
+          setAlbumError(error.message);
+          setLatestAlbumTitle(null);
+        } finally {
+          setIsLoadingAlbum(false);
         }
-        throw new Error(`Failed to fetch latest album: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      setLatestAlbumTitle(data?.title || null);
-    } catch (error) {
-      console.error('Error fetching latest album:', error);
-      let message;
-      if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Database error')) {
-        message = 'Unable to load the latest album due to a server issue. Please try again later.';
-      } else {
-        message = 'Network error: Failed to connect to the server. Please try again.';
-      }
-      addNotification(message);
-      setAlbumError(error.message);
-      setLatestAlbumTitle(null);
-    } finally {
-      setIsLoadingAlbum(false);
-    }
-  };
+      };
 
-const handleReaction = useCallback(
+  const handleReaction = useCallback(
     async (imageId, reactionType) => {
       if (!currentUser?.id) {
         alert('Please sign in to react to images');
@@ -231,7 +399,7 @@ const handleReaction = useCallback(
         });
   
         // Send reaction to backend
-        const response = await fetch('https://bcc-gallery-back-end.onrender.com/images/react', {
+        const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/react', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -248,10 +416,25 @@ const handleReaction = useCallback(
           throw new Error(errorData.error || `Failed to process reaction: ${response.status}`);
         }
   
-        // Re-fetch gallery images 
-        await fetchGalleryImages(true);
+        // Update only the specific image's reaction data without resetting loading state
+        setGalleryImages((prevImages) =>
+          prevImages.map((image) =>
+            image._id === imageId
+              ? {
+                  ...image,
+                  reactions: {
+                    ...image.reactions,
+                    [reactionType]: (image.reactions?.[reactionType] || 0) + (currentUserReaction === reactionType ? -1 : 1),
+                    ...(currentUserReaction && currentUserReaction !== reactionType && {
+                      [currentUserReaction]: (image.reactions?.[currentUserReaction] || 0) - 1,
+                    }),
+                  },
+                }
+              : image
+          )
+        );
   
-       
+        // Re-fetch user reactions to ensure consistency
         await fetchUserReactions(Number(currentUser.id));
       } catch (error) {
         console.error('Error processing reaction:', error);
@@ -276,7 +459,6 @@ const handleReaction = useCallback(
           return newReactions;
         });
       } finally {
-      
         setTimeout(() => {
           setDisabledButtons((prev) => {
             const newSet = new Set(prev);
@@ -286,9 +468,8 @@ const handleReaction = useCallback(
         }, 200); 
       }
     },
-    [currentUser, userReactions, fetchGalleryImages, fetchUserReactions]
+    [currentUser, userReactions, fetchUserReactions]
 );
-
 
 const debounce = (func, wait) => {
     let timeoutId;
@@ -520,7 +701,7 @@ const downloadImage = async (imageUrl, filename, format) => {
             const randomNumber = Math.floor(1000 + Math.random() * 9000);
             await downloadImage(
               image.imageUrl,
-              `BCC-image-${imageIndex + 1}-${randomNumber}-${Date.now()}`,
+              `BCC-image-${imageIndex + 1}-${Date.now()}-${randomNumber}}`,
               selectedFormat
             );
             successCount++;
@@ -586,6 +767,13 @@ useEffect(() => {
     fetchUserReactions(currentUser.id);
     }
 }, [currentUser?.id]);
+
+
+
+useEffect(() => {
+  // Clear expired cache on component mount
+  clearExpiredCache();
+}, []);
 
 // useEffect(() => {
 //   if (!carouselImages.length && !galleryImages.length) {
@@ -677,7 +865,7 @@ const handleUserSignup = async (e) => {
     try {
     console.log('Attempting to create user:', userName.trim())
     
-    const response = await fetch('https://bcc-gallery-back-end.onrender.com/users/signup', {
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/users/signup', {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
@@ -733,21 +921,50 @@ const handleUserSignup = async (e) => {
     setIsSubmitting(false)
     }
 }
+const isImageSaved = async (userId, imageId) => {
+  try {
+    const response = await fetch(
+      `https://bcc-gallery-back-end-production.up.railway.app/saved/check?userId=${userId}&imageId=${imageId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to check save status');
+    }
+    const data = await response.json();
+    return data.isSaved; // Assume backend returns { isSaved: boolean }
+  } catch (error) {
+    console.error('Error checking save status:', error);
+    return false; // Default to false if check fails
+  }
+};
 
-// Auto-slide
 useEffect(() => {
-    if (carouselImages.length === 0) return
-    
-    const timer = setInterval(() => {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setCurrentSlide((prev) => (prev + 1) % carouselImages.length)
-        setIsTransitioning(false)
-      }, 100)
-    }, 4000)
-  
-    return () => clearInterval(timer)
-  }, [carouselImages.length])
+
+  if (carouselImages.length === 0 || isLoadingCarousel || carouselError) return;
+
+ 
+  const loadedImagesCount = carouselImages.filter(
+    (image) => !loadingImages[image._id]
+  ).length;
+
+ 
+  if (loadedImagesCount < Math.min(5, carouselImages.length)) return;
+
+  const timer = setInterval(() => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+      setIsTransitioning(false);
+    }, 100);
+  }, 5000);
+
+  return () => clearInterval(timer);
+}, [carouselImages, isLoadingCarousel, carouselError, loadingImages]);
 
 const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -768,72 +985,86 @@ const handleDownloadAll = () => {
 }
 
 const handleSaveAll = async () => {
-    if (!currentUser?.id) {
-        alert('Please sign in to save images')
-        return
-    }
-
-    if (selectedImages.length === 0) {
-        alert('Please select at least one image using the checkboxes before saving.')
-        return
-    }
-
-    setIsSubmitting(true)
-    let successCount = 0
-    let failCount = 0
-
-    try {
-        for (const index of selectedImages) {
-            const image = galleryImages[index]
-            if (!image?._id) {
-                failCount++
-                continue
-            }
-
-            try {
-                const response = await fetch('https://bcc-gallery-back-end.onrender.com/saved/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        userId: Number(currentUser.id),
-                        imageId: image._id
-                    })
-                })
-
-                const data = await response.json()
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to save image')
-                }
-                successCount++
-            } catch (error) {
-                console.error('Bulk save failed:', error);
-  let message;
-  if (!navigator.onLine) {
-    message = 'No internet connection. Please check your network and try again.';
-  } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
-    message = 'Unable to save images due to a server issue. Please try again later.';
-  } else {
-    message = `Failed to save images: ${error.message}`;
+  if (!currentUser?.id) {
+    alert('Please sign in to save images');
+    return;
   }
-  addNotification(message);
-                console.error(`Failed to save image ${index}:`, error)
-                failCount++
-            }
 
-            await new Promise(resolve => setTimeout(resolve, 300))
+  if (selectedImages.length === 0) {
+    alert('Please select at least one image using the checkboxes before saving.');
+    return;
+  }
+
+  setIsSubmitting(true);
+  let successCount = 0;
+  let failCount = 0;
+  let alreadySavedCount = 0;
+
+  try {
+    for (const index of selectedImages) {
+      const image = galleryImages[index];
+      if (!image?._id) {
+        failCount++;
+        continue;
+      }
+
+      try {
+        // Check if image is already saved
+        const alreadySaved = await isImageSaved(Number(currentUser.id), image._id);
+        if (alreadySaved) {
+          alreadySavedCount++;
+          continue;
         }
 
-        alert(`Save completed: ${successCount} images saved successfully, ${failCount} failed.`)
-        setSelectedImages([])
-    } catch (error) {
-        console.error('Bulk save failed:', error)
-        alert(`Failed to save images: ${error.message}`)
-    } finally {
-        setIsSubmitting(false)
+        const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: Number(currentUser.id),
+            imageId: image._id,
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to save image');
+        }
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to save image ${index}:`, error);
+        failCount++;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
-}
+
+    let message = `${successCount} image${successCount !== 1 ? 's' : ''} saved successfully`;
+    if (failCount > 0) {
+      message += `, ${failCount} failed`;
+    }
+    if (alreadySavedCount > 0) {
+      message += `, ${alreadySavedCount} were already saved`;
+    }
+    message += '.';
+    alert(message);
+    setSelectedImages([]);
+  } catch (error) {
+    console.error('Bulk save failed:', error);
+    let message;
+    if (!navigator.onLine) {
+      message = 'No internet connection. Please check your network and try again.';
+    } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
+      message = 'Unable to save images due to a server issue. Please try again later.';
+    } else {
+      message = `Failed to save images: ${error.message}`;
+    }
+    alert(message);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 const handleDownloadSelected = (index) => {
     const image = galleryImages[index];
@@ -844,52 +1075,61 @@ const handleDownloadSelected = (index) => {
     }
   };
 
-const handleSaveSelected = async (index) => {
+
+  // Modified handleSaveSelected function
+  const handleSaveSelected = async (index) => {
     if (!currentUser?.id) {
-        alert('Please sign in to save images')
-        return
+      alert('Please sign in to save images');
+      return;
     }
-
-    const image = galleryImages[index]
+  
+    const image = galleryImages[index];
     if (!image?._id) {
-        alert('Invalid image selected')
-        return
+      alert('Invalid image selected');
+      return;
     }
-
-    setIsSubmitting(true)
+  
+    setIsSubmitting(true);
     try {
-        const response = await fetch('https://bcc-gallery-back-end.onrender.com/saved/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userId: Number(currentUser.id),
-                imageId: image._id
-            })
-        })
-
-        const data = await response.json()
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to save image')
-        }
-
-        alert('Image saved successfully!')
+      // Check if image is already saved
+      const alreadySaved = await isImageSaved(Number(currentUser.id), image._id);
+      if (alreadySaved) {
+        alert('This image is already saved.');
+        return;
+      }
+  
+      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: Number(currentUser.id),
+          imageId: image._id,
+        }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to save image');
+      }
+  
+      alert('Image saved successfully!');
     } catch (error) {
-        console.error('Error saving image:', error);
-        let message;
-        if (!navigator.onLine) {
-          message = 'No internet connection. Please check your network and try again.';
-        } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
-          message = 'Unable to save image due to a server issue. Please try again later.';
-        } else {
-          message = `Failed to save image: ${error.message}`;
-        }
-        addNotification(message);
-      }finally {
-        setIsSubmitting(false)
+      console.error('Error saving image:', error);
+      let message;
+      if (!navigator.onLine) {
+        message = 'No internet connection. Please check your network and try again.';
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
+        message = 'Unable to save image due to a server issue. Please try again later.';
+      } else {
+        message = `Failed to save image: ${error.message}`;
+      }
+      alert(message);
+    } finally {
+      setIsSubmitting(false);
     }
-}
+  };
 const openFullscreen = (imageSrc) => {
     setFullscreenImage(imageSrc)
 }
@@ -962,6 +1202,21 @@ useEffect(() => {
     document.body.style.overflow = "unset"
     }
 }, [fullscreenImage, showDownloadModal, isDownloading])
+
+useEffect(() => {
+  const timeouts = {};
+  Object.keys(loadingImages).forEach((imageId) => {
+      if (loadingImages[imageId]) {
+          timeouts[imageId] = setTimeout(() => {
+              console.warn(`Image loading timeout for: ${imageId}`);
+              setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+          }, 20000); // 10-second timeout
+      }
+  });
+  return () => {
+      Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
+  };
+}, [loadingImages]);
 
 
 return (
@@ -1241,33 +1496,42 @@ aria-label="Scroll to top"
             </div>
         ) : (
             <>
+<div className="carousel">
+    {carouselImages.map((image, index) => {
+        let slideClass = "carousel-slide";
+        if (index === currentSlide && !isTransitioning) {
+            slideClass += " slide-active";
+        } else if (index === currentSlide && isTransitioning) {
+            slideClass += " slide-exiting";
+        } else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
+            slideClass += " slide-entering";
+        }
 
-            <div className="carousel">
-{carouselImages.map((image, index) => {
-let slideClass = "carousel-slide";
-if (index === currentSlide && !isTransitioning) {
-slideClass += " slide-active";
-} else if (index === currentSlide && isTransitioning) {
-slideClass += " slide-exiting";
-} else if (index === (currentSlide + 1) % carouselImages.length && isTransitioning) {
-slideClass += " slide-entering";
-}
-
-return (
-<div key={image._id || index} className={slideClass}>
-<img
-  src={image.imageUrl || "/placeholder.svg"} 
-  alt={`Church gallery image ${index + 1}`}
-  className="carousel-image"
-//   onClick={() => openFullscreen(image.imageUrl)} 
-/>
-<div className="carousel-overlay" />
-</div>
-);
-})}
-<div className="carousel-content">
-<center></center>
-</div>
+        const imageUrl = image.imageUrl || "/placeholder.svg";
+        return (
+            <div key={image._id || index} className={slideClass}>
+                {loadingImages[image._id] ? (
+                    <div className="image-loading-container">
+                        <Loader2 className="image-loading-spinner" />
+                    </div>
+                ) : (
+                    <img
+                        src={imageUrl}
+                        alt={`Church gallery image ${index + 1}`}
+                        className="carousel-image"
+                        crossOrigin="anonymous"
+                        onLoad={() => handleImageLoad(image._id)}
+                        onError={() => handleImageError(image._id, imageUrl)}
+                        // onClick={() => openFullscreen(image.imageUrl)}
+                    />
+                )}
+                <div className="carousel-overlay" />
+            </div>
+        );
+    })}
+    <div className="carousel-content">
+        <center></center>
+    </div>
 </div>
 
             </>
@@ -1276,137 +1540,157 @@ return (
 
         {/* Sunday Service Section */}
         <div className="service-section">
-        <h3 className="service-title">
-{isLoadingAlbum ? (
-<span>Loading album title...</span>
-) : albumError || !latestAlbumTitle ? (
-<span>No album available</span>
-) : (
-latestAlbumTitle
-)}
-<b className="welcome-underline"></b>
-</h3>
-        
-
-        {/* Action Buttons */}
-        <div className="action-buttons">
-            <button onClick={handleDownloadAll} className="action-btn download-all">
-            <Download className="btn-icon" />
-            Download All ({selectedImages.length} selected)
-            </button>
-            <button onClick={handleSaveAll} className="action-btn save-all">
-<Save className="btn-icon" />
-Save All ({selectedImages.length} selected)
-</button>
-        </div>
-
-        <hr />
-
-        {/* Image Gallery */}
-        {isLoadingGallery ? (
-            <div className="loading-container">
-            <Loader2 className="loading-spinner" />
-            <p>Loading gallery images...</p>
-            </div>
-        ) : galleryError ? (
-            <div className="error-container">
-            <p>Error loading gallery: {galleryError}</p>
-            <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
-            </div>
-        ) : galleryImages.length === 0 ? (
-            <div className="no-images-container">
-            <p>No gallery images available</p>
-            </div>
-        ) : (
-            <div className="image-gallery">
-{galleryImages.map((image, index) => (
-<div key={image._id || index} className="image-card">
-<div className="image-container">
-<img
-  src={image.thumbnailUrl || image.imageUrl || "/placeholder.svg"} 
-  alt={`Service ${index + 1}`}
-  className="gallery-image"
-  onClick={() => openFullscreen(image.imageUrl)}
-/>
-<div className="image-overlay">
-  <input
-    type="checkbox"
-    className="image-checkbox"
-    checked={selectedImages.includes(index)}
-    onChange={() => handleImageSelect(index)}
-    onClick={(e) => e.stopPropagation()}
-  />
-</div>
-</div>
-                
-        {/* Reaction Section */}
-        <div className="reaction-section">
-<button
-className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
-onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
-title="Party Popper"
-disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
+                    <h3 className="service-title">
+                        {isLoadingAlbum ? (
+                            <span>Loading album title...</span>
+                        ) : albumError || !latestAlbumTitle ? (
+                            <span>No album available</span>
+                        ) : (
+                            latestAlbumTitle
+                        )}
+                        <b className="welcome-underline"></b>
+                    </h3>
+                    <div className="action-buttons">
+                        <button onClick={handleDownloadAll} className="action-btn download-all">
+                            <Download className="btn-icon" />
+                            Download All ({selectedImages.length} selected)
+                        </button>
+                        <button onClick={handleSaveAll} className="action-btn save-all">
+                            <Save className="btn-icon" />
+                            Save All ({selectedImages.length} selected)
+                        </button>
+                    </div>
+                    <hr />
+                    <p style={{ color: "#6b7280", marginBottom: "0.50rem", marginTop: "1.4rem", textAlign: "center" }}>
+  Found {galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}
+</p>
+                    {isLoadingGallery ? (
+                        <div className="loading-container">
+                            <Loader2 className="loading-spinner" />
+                            <p>Loading gallery images...</p>
+                        </div>
+                    ) : galleryError ? (
+                        <div className="error-container">
+                            <p>Error loading gallery: {galleryError}</p>
+                            <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
+                        </div>
+                    ) : galleryImages.length === 0 ? (
+                        <div className="no-images-container">
+                            <p>No gallery images available</p>
+                        </div>
+                    ) : (
+                        <div className="image-gallery">
+                            {galleryImages.map((image, index) => {
+                                const imageUrl = image.thumbnailUrl || image.imageUrl || "/placeholder.svg";
+                                return (
+                                  <div key={image._id || index} className="image-card">
+                               <div
+  className={`image-container ${
+    errorImages[image._id] ? 'error' : loadingImages[image._id] ? 'loading' : 'loaded'
+  }`} 
 >
-🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
-</button>
-<button
-className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
-onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
-title="Thumbs Up"
-disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
->
-👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
-</button>
-<button
-className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
-onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
-title="Red Heart"
-disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
->
-❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
-</button>
-<button
-className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
-onClick={() => debouncedHandleReaction(image._id, 'fire')}
-title="Fire"
-disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
->
-🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
-</button>
-</div>
-                
-                <div className="image-actions">
-                <button
-  onClick={() => handleDownloadSelected(index)}
-  className="image-btn download-btn"
-  title="Download"
->
-  <Download className="image-btn-icon" />
-</button>
-<button
-  onClick={() => handleSaveSelected(index)}
-  className="image-btn save-btn"
-  title="Save"
-  disabled={isSubmitting}
->
-  <Save className="image-btn-icon" />
-</button>
+                                      {errorImages[image._id] ? (
+                                          <div className="image-error-container">
+                                              <span className="image-error-message">{errorImages[image._id]}</span>
+                                              <button
+                                                  className="image-retry-btn"
+                                                  onClick={() => handleImageRetry(image._id, imageUrl)}
+                                              >
+                                                  Retry
+                                              </button>
+                                          </div>
+                                      ) : loadingImages[image._id] ? (
+                                          <div className="image-loading-container">
+                                              <Loader2 className="image-loading-spinner" />
+                                          </div>
+                                      ) : (
+                                          <img
+                                              src={imageUrl}
+                                              alt={`Service ${index + 1}`}
+                                              className="gallery-image"
+                                              crossOrigin="anonymous"
+                                              onLoad={() => handleImageLoad(image._id)}
+                                              onError={() => handleImageError(image._id, imageUrl)}
+                                              onClick={() => openFullscreen(image.imageUrl)}
+                                          />
+                                      )}
+                                            <div className="image-overlay">
+                                                <input
+                                                    type="checkbox"
+                                                    className="image-checkbox"
+                                                    checked={selectedImages.includes(index)}
+                                                    onChange={() => handleImageSelect(index)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="reaction-section">
+                                            <button
+                                                className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
+                                                onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
+                                                title="Party Popper"
+                                                disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
+                                            >
+                                                🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
+                                            </button>
+                                            <button
+                                                className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
+                                                onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
+                                                title="Thumbs Up"
+                                                disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
+                                            >
+                                                👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
+                                            </button>
+                                            <button
+                                                className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
+                                                onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
+                                                title="Red Heart"
+                                                disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
+                                            >
+                                                ❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
+                                            </button>
+                                            <button
+                                                className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
+                                                onClick={() => debouncedHandleReaction(image._id, 'fire')}
+                                                title="Fire"
+                                                disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
+                                            >
+                                                🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
+                                            </button>
+                                        </div>
+                                        <div className="image-actions">
+                                            <button
+                                                onClick={() => handleDownloadSelected(index)}
+                                                className="image-btn download-btn"
+                                                title="Download"
+                                            >
+                                                <Download className="image-btn-icon" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleSaveSelected(index)}
+                                                className="image-btn save-btn"
+                                                title="Save"
+                                                disabled={isSubmitting}
+                                            >
+                                                <Save className="image-btn-icon" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
-                </div>
-            ))}
-            </div>
-        )}
-        </div>
 
         {/* Footer */}
         <footer className="footer">
         <div className="footer-content">
             <div className="footer-info">
-            <h3 className="footer-title">Believers Community Church</h3>
+            <h3 className="footer-title">Believers' Community Church</h3>
             <p className="footer-subtitle">God's platfrom for building men</p>
             </div>
             <div className="footer-copyright">
-            <p className="copyright-text">© {new Date().getFullYear()} BCC Media. All rights reserved.</p>
+            <p className="copyright-text">© {new Date().getFullYear()} <a href="https://wa.me/+2349110241218" className="heic-modal-link" target="_blank" rel="noopener noreferrer">BCC Media.</a>  All rights reserved.</p>
             </div>
         </div>
         </footer>
