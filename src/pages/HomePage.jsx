@@ -41,7 +41,7 @@ const timeouts = useRef({});
 // hhhhh
 // Add these functions after your existing state declarations and before the notification functions
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_DURATION = 2 * 60 * 1000; // 5 minutes in milliseconds
 const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
 const GALLERY_CACHE_KEY = 'bcc_gallery_cache';
 const ALBUM_CACHE_KEY = 'bcc_album_cache';
@@ -175,7 +175,7 @@ const handleImageRetry = (imageId, imageUrl) => {
   img.onerror = () => {
     timeouts.current[imageId] = setTimeout(() => {
       handleImageError(imageId, imageUrl);
-    }, 40000); // 12-second timeout for retry
+    }, 25000); // 12-second timeout for retry
   };
 };
 
