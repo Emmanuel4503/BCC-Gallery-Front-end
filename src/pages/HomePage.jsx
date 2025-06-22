@@ -133,17 +133,9 @@ const removeNotification = (id) => {
 };
 
 const [errorImages, setErrorImages] = useState({});
-const MAX_RETRIES = 3;
-const BASE_DELAY = 1000; // 1 second
-const LOAD_TIMEOUT = 15000; // 15 seconds for initial load
-
 const handleImageLoad = (imageId) => {
   console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
-  setLoadingImages((prev) => {
-    const newState = { ...prev, [imageId]: false };
-    console.log('Updated loadingImages:', newState);
-    return newState;
-  });
+  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
   setErrorImages((prev) => {
     const newErrors = { ...prev };
     delete newErrors[imageId];
@@ -155,52 +147,38 @@ const handleImageLoad = (imageId) => {
   }
 };
 
-const handleImageError = (imageId, imageUrl, retryCount = 0) => {
-  console.error(`Image error at: ${new Date().toISOString()}, imageId: ${imageId}, url: ${imageUrl}, retryCount: ${retryCount}`);
-  handleImageRetry(imageId, imageUrl, retryCount);
+const handleImageError = (imageId, imageUrl) => {
+  console.error(`Image error at: ${new Date().toISOString()}, imageId: ${imageId}, url: ${imageUrl}`);
+  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+  setErrorImages((prev) => ({
+    ...prev,
+    [imageId]: 'Failed to load image. Please try again.'
+  }));
+  if (timeouts.current[imageId]) {
+    clearTimeout(timeouts.current[imageId]);
+    delete timeouts.current[imageId];
+  }
 };
 
-const handleImageRetry = (imageId, imageUrl, retryCount = 0) => {
-  if (retryCount >= MAX_RETRIES) {
-    console.error(`Max retries (${MAX_RETRIES}) reached for imageId: ${imageId}, url: ${imageUrl}`);
-    setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-    setErrorImages((prev) => ({
-      ...prev,
-      [imageId]: 'Failed to load image after multiple attempts.',
-    }));
-    addNotification(`Image ${imageId} failed to load after ${MAX_RETRIES} attempts.`);
-    if (timeouts.current[imageId]) {
-      clearTimeout(timeouts.current[imageId]);
-      delete timeouts.current[imageId];
-    }
-    return;
-  }
-
-  console.log(`Retrying image load: ${imageId}, attempt ${retryCount + 1}, delay: ${BASE_DELAY * Math.pow(2, retryCount)}ms`);
-  setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
+const handleImageRetry = (imageId, imageUrl) => {
+  console.log(`Retrying image load: ${imageId}`);
   setErrorImages((prev) => {
     const newErrors = { ...prev };
     delete newErrors[imageId];
     return newErrors;
   });
-
+  setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
   const img = new Image();
   img.src = imageUrl;
   img.crossOrigin = 'anonymous';
   img.onload = () => handleImageLoad(imageId);
   img.onerror = () => {
-    const delay = BASE_DELAY * Math.pow(2, retryCount);
     timeouts.current[imageId] = setTimeout(() => {
-      handleImageError(imageId, imageUrl, retryCount + 1);
-    }, delay);
+      handleImageError(imageId, imageUrl);
+    }, 25000); // 12-second timeout for retry
   };
-
-  // Set a timeout to catch silent failures
-  timeouts.current[imageId] = setTimeout(() => {
-    console.warn(`Image load timeout for: ${imageId}, url: ${imageUrl}`);
-    handleImageError(imageId, imageUrl, retryCount + 1);
-  }, LOAD_TIMEOUT);
 };
+
 const fetchCarouselImages = async () => {
   try {
     setIsLoadingCarousel(true);
@@ -1226,13 +1204,19 @@ useEffect(() => {
 }, [fullscreenImage, showDownloadModal, isDownloading])
 
 useEffect(() => {
-  // Timeout management is now handled within handleImageRetry
-  // This useEffect ensures cleanup of any stray timeouts
+  const timeouts = {};
+  Object.keys(loadingImages).forEach((imageId) => {
+      if (loadingImages[imageId]) {
+          timeouts[imageId] = setTimeout(() => {
+              console.warn(`Image loading timeout for: ${imageId}`);
+              setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+          }, 20000); // 10-second timeout
+      }
+  });
   return () => {
-    Object.values(timeouts.current).forEach((timeout) => clearTimeout(timeout));
-    timeouts.current = {};
+      Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
   };
-}, []);
+}, [loadingImages]);
 
 
 return (
@@ -1556,158 +1540,147 @@ aria-label="Scroll to top"
 
         {/* Sunday Service Section */}
         <div className="service-section">
-        <h3 className="service-title">
-          {isLoadingAlbum ? (
-            <span>Loading album title...</span>
-          ) : albumError || !latestAlbumTitle ? (
-            <span>No album available</span>
-          ) : (
-            latestAlbumTitle
-          )}
-          <b className="welcome-underline"></b>
-        </h3>
-        <div className="action-buttons">
-          <button onClick={handleDownloadAll} className="action-btn download-all">
-            <Download className="btn-icon" />
-            Download All ({selectedImages.length} selected)
-          </button>
-          <button onClick={handleSaveAll} className="action-btn save-all">
-            <Save className="btn-icon" />
-            Save All ({selectedImages.length} selected)
-          </button>
-        </div>
-        <hr />
-        <p style={{ color: "#6b7280", marginBottom: "0.50rem", marginTop: "1.4rem", textAlign: "center" }}>
-          Found {galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}
-        </p>
-        {isLoadingGallery ? (
-          <div className="loading-container">
-            <Loader2 className="loading-spinner" />
-            <p>Loading gallery images...</p>
-          </div>
-        ) : galleryError ? (
-          <div className="error-container">
-            <p>Error loading gallery: {galleryError}</p>
-            <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
-          </div>
-        ) : galleryImages.length === 0 ? (
-          <div className="no-images-container">
-            <p>No gallery images available</p>
-          </div>
-        ) : (
-          <div className="image-gallery">
-            {galleryImages.map((image, index) => {
-              const isValidUrl = (url) => {
-                if (!url || typeof url !== 'string') return false;
-                try {
-                  new URL(url);
-                  return true;
-                } catch {
-                  return false;
-                }
-              };
-              const imageUrl = isValidUrl(image.thumbnailUrl) ? image.thumbnailUrl : isValidUrl(image.imageUrl) ? image.imageUrl : "/placeholder.svg";
-              return (
-                <div key={image._id || index} className="image-card">
-                  <div
-                    className={`image-container ${
-                      errorImages[image._id] ? 'error' : loadingImages[image._id] ? 'loading' : 'loaded'
-                    }`}
-                  >
-                    {errorImages[image._id] ? (
-                      <div className="image-error-container">
-                        <span className="image-error-message">{errorImages[image._id]}</span>
-                        <button
-                          className="image-retry-btn"
-                          onClick={() => handleImageRetry(image._id, imageUrl, 0)}
-                        >
-                          Retry
+                    <h3 className="service-title">
+                        {isLoadingAlbum ? (
+                            <span>Loading album title...</span>
+                        ) : albumError || !latestAlbumTitle ? (
+                            <span>No album available</span>
+                        ) : (
+                            latestAlbumTitle
+                        )}
+                        <b className="welcome-underline"></b>
+                    </h3>
+                    <div className="action-buttons">
+                        <button onClick={handleDownloadAll} className="action-btn download-all">
+                            <Download className="btn-icon" />
+                            Download All ({selectedImages.length} selected)
                         </button>
-                      </div>
-                    ) : loadingImages[image._id] ? (
-                      <div className="image-loading-container">
-                        <Loader2 className="image-loading-spinner" />
-                        <span>Loading image...</span>
-                      </div>
-                    ) : (
-                      <img
-                        src={imageUrl}
-                        alt={`Service ${index + 1}`}
-                        className="gallery-image"
-                        crossOrigin="anonymous"
-                        loading="lazy"
-                        onLoad={() => handleImageLoad(image._id)}
-                        onError={() => handleImageError(image._id, imageUrl, 0)}
-                        onClick={() => openFullscreen(image.imageUrl)}
-                      />
-                    )}
-                    <div className="image-overlay">
-                      <input
-                        type="checkbox"
-                        className="image-checkbox"
-                        checked={selectedImages.includes(index)}
-                        onChange={() => handleImageSelect(index)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                        <button onClick={handleSaveAll} className="action-btn save-all">
+                            <Save className="btn-icon" />
+                            Save All ({selectedImages.length} selected)
+                        </button>
                     </div>
-                  </div>
-                  <div className="reaction-section">
-                    <button
-                      className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
-                      onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
-                      title="Party Popper"
-                      disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
-                    >
-                      🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
-                    </button>
-                    <button
-                      className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
-                      onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
-                      title="Thumbs Up"
-                      disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
-                    >
-                      👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
-                    </button>
-                    <button
-                      className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
-                      onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
-                      title="Red Heart"
-                      disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
-                    >
-                      ❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
-                    </button>
-                    <button
-                      className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
-                      onClick={() => debouncedHandleReaction(image._id, 'fire')}
-                      title="Fire"
-                      disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
-                    >
-                      🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
-                    </button>
-                  </div>
-                  <div className="image-actions">
-                    <button
-                      onClick={() => handleDownloadSelected(index)}
-                      className="image-btn download-btn"
-                      title="Download"
-                    >
-                      <Download className="image-btn-icon" />
-                    </button>
-                    <button
-                      onClick={() => handleSaveSelected(index)}
-                      className="image-btn save-btn"
-                      title="Save"
-                      disabled={isSubmitting}
-                    >
-                      <Save className="image-btn-icon" />
-                    </button>
-                  </div>
+                    <hr />
+                    <p style={{ color: "#6b7280", marginBottom: "0.50rem", marginTop: "1.4rem", textAlign: "center" }}>
+  Found {galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}
+</p>
+                    {isLoadingGallery ? (
+                        <div className="loading-container">
+                            <Loader2 className="loading-spinner" />
+                            <p>Loading gallery images...</p>
+                        </div>
+                    ) : galleryError ? (
+                        <div className="error-container">
+                            <p>Error loading gallery: {galleryError}</p>
+                            <button onClick={fetchGalleryImages} className="retry-btn">Retry</button>
+                        </div>
+                    ) : galleryImages.length === 0 ? (
+                        <div className="no-images-container">
+                            <p>No gallery images available</p>
+                        </div>
+                    ) : (
+                        <div className="image-gallery">
+                            {galleryImages.map((image, index) => {
+                                const imageUrl = image.thumbnailUrl || image.imageUrl || "/placeholder.svg";
+                                return (
+                                  <div key={image._id || index} className="image-card">
+                               <div
+  className={`image-container ${
+    errorImages[image._id] ? 'error' : loadingImages[image._id] ? 'loading' : 'loaded'
+  }`} 
+>
+                                      {errorImages[image._id] ? (
+                                          <div className="image-error-container">
+                                              <span className="image-error-message">{errorImages[image._id]}</span>
+                                              <button
+                                                  className="image-retry-btn"
+                                                  onClick={() => handleImageRetry(image._id, imageUrl)}
+                                              >
+                                                  Retry
+                                              </button>
+                                          </div>
+                                      ) : loadingImages[image._id] ? (
+                                          <div className="image-loading-container">
+                                              <Loader2 className="image-loading-spinner" />
+                                          </div>
+                                      ) : (
+                                          <img
+                                              src={imageUrl}
+                                              alt={`Service ${index + 1}`}
+                                              className="gallery-image"
+                                              crossOrigin="anonymous"
+                                              onLoad={() => handleImageLoad(image._id)}
+                                              onError={() => handleImageError(image._id, imageUrl)}
+                                              onClick={() => openFullscreen(image.imageUrl)}
+                                          />
+                                      )}
+                                            <div className="image-overlay">
+                                                <input
+                                                    type="checkbox"
+                                                    className="image-checkbox"
+                                                    checked={selectedImages.includes(index)}
+                                                    onChange={() => handleImageSelect(index)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="reaction-section">
+                                            <button
+                                                className={`reaction-btn ${isUserReacted(image._id, 'partyPopper') ? 'reaction-active' : ''}`}
+                                                onClick={() => debouncedHandleReaction(image._id, 'partyPopper')}
+                                                title="Party Popper"
+                                                disabled={!currentUser || disabledButtons.has(`${image._id}_partyPopper`)}
+                                            >
+                                                🎉 <span className="reaction-count">{getReactionCount(image, 'partyPopper')}</span>
+                                            </button>
+                                            <button
+                                                className={`reaction-btn ${isUserReacted(image._id, 'thumbsUp') ? 'reaction-active' : ''}`}
+                                                onClick={() => debouncedHandleReaction(image._id, 'thumbsUp')}
+                                                title="Thumbs Up"
+                                                disabled={!currentUser || disabledButtons.has(`${image._id}_thumbsUp`)}
+                                            >
+                                                👍 <span className="reaction-count">{getReactionCount(image, 'thumbsUp')}</span>
+                                            </button>
+                                            <button
+                                                className={`reaction-btn ${isUserReacted(image._id, 'redHeart') ? 'reaction-active' : ''}`}
+                                                onClick={() => debouncedHandleReaction(image._id, 'redHeart')}
+                                                title="Red Heart"
+                                                disabled={!currentUser || disabledButtons.has(`${image._id}_redHeart`)}
+                                            >
+                                                ❤️ <span className="reaction-count">{getReactionCount(image, 'redHeart')}</span>
+                                            </button>
+                                            <button
+                                                className={`reaction-btn ${isUserReacted(image._id, 'fire') ? 'reaction-active' : ''}`}
+                                                onClick={() => debouncedHandleReaction(image._id, 'fire')}
+                                                title="Fire"
+                                                disabled={!currentUser || disabledButtons.has(`${image._id}_fire`)}
+                                            >
+                                                🔥 <span className="reaction-count">{getReactionCount(image, 'fire')}</span>
+                                            </button>
+                                        </div>
+                                        <div className="image-actions">
+                                            <button
+                                                onClick={() => handleDownloadSelected(index)}
+                                                className="image-btn download-btn"
+                                                title="Download"
+                                            >
+                                                <Download className="image-btn-icon" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleSaveSelected(index)}
+                                                className="image-btn save-btn"
+                                                title="Save"
+                                                disabled={isSubmitting}
+                                            >
+                                                <Save className="image-btn-icon" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
         {/* Footer */}
         <footer className="footer">
