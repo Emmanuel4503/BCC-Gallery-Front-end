@@ -1662,22 +1662,22 @@ aria-label="Scroll to top"
                                             </button>
                                         </div>
                                         <div className="image-actions">
-                                            <button
-                                                onClick={() => handleDownloadSelected(index)}
-                                                className="image-btn download-btn"
-                                                title="Download"
-                                            >
-                                                <Download className="image-btn-icon" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleSaveSelected(index)}
-                                                className="image-btn save-btn"
-                                                title="Save"
-                                                disabled={isSubmitting}
-                                            >
-                                                <Save className="image-btn-icon" />
-                                            </button>
-                                        </div>
+  <button
+    onClick={() => handleDownloadSelected(image._id)}
+    className="image-btn download-btn"
+    title="Download"
+  >
+    <Download className="image-btn-icon" />
+  </button>
+  <button
+    onClick={() => handleSaveSelected(image._id)}
+    className="image-btn save-btn"
+    title="Save"
+    disabled={isSubmitting}
+  >
+    <Save className="image-btn-icon" />
+  </button>
+</div>
                                     </div>
                                 );
                             })}
