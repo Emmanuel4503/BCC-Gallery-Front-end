@@ -839,6 +839,26 @@ html, body {
     height: 1.5rem;
     color: white;
   }
+  .fullscreen-content .image-loading-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Optional: subtle overlay for better visibility */
+    z-index: 10; /* Ensure it appears above other content */
+  }
+  
+  .fullscreen-content .image-loading-spinner {
+    width: 48px;
+    height: 48px;
+    color: #ffffff; /* White spinner for contrast */
+    animation: spin 1s linear infinite;
+  }
   
 
   @keyframes fadeIn {
@@ -850,6 +870,8 @@ html, body {
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
   }
+
+  
   
   
   /* Footer styling */
