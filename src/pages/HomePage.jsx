@@ -33,6 +33,7 @@ const [albumError, setAlbumError] = useState(null);
 
 const [loadingImages, setLoadingImages] = useState({});
 const timeouts = useRef({}); 
+const [isLoadingFullscreen, setIsLoadingFullscreen] = useState(false);
 
 // HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
 // HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
@@ -41,7 +42,7 @@ const timeouts = useRef({});
 // hhhhh
 // Add these functions after your existing state declarations and before the notification functions
 
-const CACHE_DURATION = 2 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_DURATION = 30 * 60 * 1000; // 5 minutes in milliseconds
 const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
 const GALLERY_CACHE_KEY = 'bcc_gallery_cache';
 const ALBUM_CACHE_KEY = 'bcc_album_cache';
@@ -211,10 +212,12 @@ const fetchCarouselImages = async () => {
         throw new Error(`Failed to fetch carousel images: ${response.status}`);
     }
     const data = await response.json();
-    
+    // hffffffffffffffffffffffffffffffffffffffffffff
+    // hffffffffffffffffffffffffffffffffffff
+    // gffffffffffffffffffffffffffffffffffffffffffffff
     // Cache the data
     setCacheData(CAROUSEL_CACHE_KEY, data);
-    setGalleryImages(data);
+    setCarouselImages(data);
     // Preload images
     data.forEach((image) => {
       const img = new Image();
@@ -277,10 +280,15 @@ const fetchGalleryImages = async (silent = false) => {
     }
     const data = await response.json();
     
-    // Cache the data
-    setCacheData(GALLERY_CACHE_KEY, data);
-    
     setGalleryImages(data);
+    // Preload images
+    data.forEach((image) => {
+      const img = new Image();
+      img.src = image.thumbnailUrl || image.imageUrl;
+      img.crossOrigin = '';
+      img.onload = () => handleImageLoad(image._id);
+      img.onerror = () => handleImageError(image._id, img.src);
+    });
     // Initialize loading state for gallery images
     const initialLoadingState = data.reduce((acc, image) => {
         acc[image._id] = true;
@@ -513,6 +521,10 @@ const isUserReacted = (imageId, reactionType) => {
 
 // Download functionality
 const downloadImage = async (imageUrl, filename, format) => {
+  if (!imageUrl.match(/\.(jpg|jpeg|png|webp|heic)$/i)) {
+    throw new Error('Invalid image format in URL');
+  }
+
   try {
     console.log('Downloading image:', { imageUrl, filename, format });
 
@@ -1144,9 +1156,10 @@ const handleDownloadSelected = (index) => {
       setIsSubmitting(false);
     }
   };
-const openFullscreen = (imageSrc) => {
-    setFullscreenImage(imageSrc)
-}
+  const openFullscreen = (imageSrc) => {
+    setIsLoadingFullscreen(true);
+    setFullscreenImage(imageSrc);
+};
 
 const closeFullscreen = () => {
     setFullscreenImage(null)
@@ -1514,15 +1527,16 @@ aria-label="Scroll to top"
                         <Loader2 className="image-loading-spinner" />
                     </div>
                 ) : (
-                    <img
-                        src={imageUrl}
-                        alt={`Church gallery image ${index + 1}`}
-                        className="carousel-image"
-                        crossOrigin="anonymous"
-                        onLoad={() => handleImageLoad(image._id)}
-                        onError={() => handleImageError(image._id, imageUrl)}
-                        // onClick={() => openFullscreen(image.imageUrl)}
-                    />
+                  <img
+                  key={`${image._id}-${loadingImages[image._id] ? 'loading' : 'loaded'}`}
+                  src={imageUrl}
+                  alt={`Church gallery image ${index + 1}`}
+                  className="carousel-image"
+                  crossOrigin=""
+                  onLoad={() => handleImageLoad(image._id)}
+                  onError={() => handleImageError(image._id, imageUrl)}
+                  loading="lazy"
+              />  
                 )}
                 <div className="carousel-overlay" />
             </div>
@@ -1705,12 +1719,19 @@ aria-label="Scroll to top"
         </button>
 
         <div className="fullscreen-content" onClick={(e) => e.stopPropagation()}>
-            <img
-            src={fullscreenImage || "/placeholder.svg"}
-            alt="Fullscreen view"
-            className="fullscreen-image"
-            />
+    {isLoadingFullscreen && (
+        <div className="image-loading-container">
+            <Loader2 className="image-loading-spinner" />
         </div>
+    )}
+    <img
+        src={fullscreenImage || "/placeholder.svg"}
+        alt="Fullscreen view"
+        className="fullscreen-image"
+        loading="lazy"
+        onLoad={() => setIsLoadingFullscreen(false)}
+    />
+</div>
         </div>
     )}
     </div>
