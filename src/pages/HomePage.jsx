@@ -276,7 +276,7 @@ const fetchGalleryImages = async (silent = false) => {
     setGalleryError(null);
     
     // Check cache first
-    const cacheData = getCacheData(GALLERY_CACHE_KEY);
+    const cachedData = getCacheData(GALLERY_CACHE_KEY);
     if (cachedData) {
       console.log('Loading gallery images from cache');
       setGalleryImages(cachedData);
@@ -294,6 +294,8 @@ const fetchGalleryImages = async (silent = false) => {
     }
     const data = await response.json();
     
+    // Cache the data
+    setCacheData(GALLERY_CACHE_KEY, data);
     setGalleryImages(data);
     // Preload images
     data.forEach((image) => { 
@@ -1081,70 +1083,68 @@ const handleSaveAll = async () => {
   }
 };
 
-const handleDownloadSelected = (index) => {
-    const image = galleryImages[index];
-    if (image) {
-      setCurrentDownloadImage({ ...image, imageUrl: image.imageUrl }); // Use original imageUrl
-      setDownloadType('single');
-      setShowDownloadModal(true);
-    }
-  };
+const handleDownloadSelected = (imageId) => {
+  const image = galleryImages.find((img) => img._id === imageId);
+  if (image) {
+    setCurrentDownloadImage({ ...image, imageUrl: image.imageUrl });
+    setDownloadType('single');
+    setShowDownloadModal(true);
+  }
+};
 
-
-  // Modified handleSaveSelected function
-  const handleSaveSelected = async (index) => {
-    if (!currentUser?.id) {
-      alert('Please sign in to save images');
+const handleSaveSelected = async (imageId) => {
+  if (!currentUser?.id) {
+    alert('Please sign in to save images');
+    return;
+  }
+  
+  const image = galleryImages.find((img) => img._id === imageId);
+  if (!image?._id) {
+    alert('Invalid image selected');
+    return;
+  }
+  
+  setIsSubmitting(true);
+  try {
+    const alreadySaved = await isImageSaved(Number(currentUser.id), image._id);
+    if (alreadySaved) {
+      alert('This image is already saved.');
       return;
     }
-  
-    const image = galleryImages[index];
-    if (!image?._id) {
-      alert('Invalid image selected');
-      return;
+    
+    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: Number(currentUser.id),
+        imageId: image._id,
+      }),
+    });
+    
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save image');
     }
-  
-    setIsSubmitting(true);
-    try {
-      // Check if image is already saved
-      const alreadySaved = await isImageSaved(Number(currentUser.id), image._id);
-      if (alreadySaved) {
-        alert('This image is already saved.');
-        return;
-      }
-  
-      const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: Number(currentUser.id),
-          imageId: image._id,
-        }),
-      });
-  
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to save image');
-      }
-  
-      alert('Image saved successfully!');
-    } catch (error) {
-      console.error('Error saving image:', error);
-      let message;
-      if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
-      } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
-        message = 'Unable to save image due to a server issue. Please try again later.';
-      } else {
-        message = `Failed to save image: ${error.message}`;
-      }
-      alert(message);
-    } finally {
-      setIsSubmitting(false);
+    
+    alert('Image saved successfully!');
+  } catch (error) {
+    console.error('Error saving image:', error);
+    let message;
+    if (!navigator.onLine) {
+      message = 'No internet connection. Please check your network and try again.';
+    } else if (error.message.includes('Failed to fetch') || error.message.includes('Server error')) {
+      message = 'Unable to save image due to a server issue. Please try again later.';
+    } else {
+      message = `Failed to save image: ${error.message}`;
     }
-  };
+    alert(message);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   const openFullscreen = (imageSrc) => {
     setIsLoadingFullscreen(true);
     setFullscreenImage(imageSrc);
