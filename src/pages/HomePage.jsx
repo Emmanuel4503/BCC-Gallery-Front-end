@@ -203,13 +203,15 @@ const fetchCarouselImages = async () => {
     }
     
     // Fetch from backend if no cache
-    console.log('Fetching carousel images from backend');
     const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
+    if (!response) {
+      throw new Error('No response received from server');
+    }
     if (!response.ok) {
-        if (response.status >= 500) {
-            throw new Error('Database error: Unable to retrieve carousel images from the server.');
-        }
-        throw new Error(`Failed to fetch carousel images: ${response.status}`);
+      if (response.status >= 500) {
+        throw new Error('Database error: Unable to retrieve carousel images from the server.');
+      }
+      throw new Error(`Failed to fetch carousel images: ${response.status}`);
     }
     const data = await response.json();
     // hffffffffffffffffffffffffffffffffffffffffffff
@@ -285,7 +287,7 @@ const fetchGalleryImages = async (silent = false) => {
     data.forEach((image) => {
       const img = new Image();
       img.src = image.thumbnailUrl || image.imageUrl;
-      img.crossOrigin = '';
+      img.crossOrigin = 'anonymous'; // or '' in fetchGalleryImages
       img.onload = () => handleImageLoad(image._id);
       img.onerror = () => handleImageError(image._id, img.src);
     });
