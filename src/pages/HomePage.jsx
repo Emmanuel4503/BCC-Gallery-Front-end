@@ -42,7 +42,7 @@ const [isLoadingFullscreen, setIsLoadingFullscreen] = useState(false);
 // hhhhh
 // Add these functions after your existing state declarations and before the notification functions
 
-const CACHE_DURATION = 30 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_DURATION = 1 * 60 * 1000; // 5 minutes in milliseconds
 const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
 const GALLERY_CACHE_KEY = 'bcc_gallery_cache';
 const ALBUM_CACHE_KEY = 'bcc_album_cache';
