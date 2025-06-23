@@ -176,7 +176,7 @@ const handleImageRetry = (imageId, imageUrl) => {
     return newErrors;
   });
   setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
-  const img = new Image();
+  const img = new window.Image();
   img.src = imageUrl;
   img.crossOrigin = 'anonymous';
   img.onload = () => handleImageLoad(imageId);
@@ -222,7 +222,7 @@ const fetchCarouselImages = async () => {
     setCarouselImages(data);
     // Preload images
     data.forEach((image) => {
-      const img = new Image();
+      const img = new window.Image();
       img.src = image.thumbnailUrl || image.imageUrl;
       img.crossOrigin = 'anonymous';
       img.onload = () => handleImageLoad(image._id);
