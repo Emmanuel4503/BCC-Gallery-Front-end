@@ -255,7 +255,7 @@ const fetchCarouselImages = async () => {
 const fetchGalleryImages = async (silent = false) => {
   try {
     if (!silent) {
-        setIsLoadingGallery(true);
+      setIsLoadingGallery(true);
     }
     setGalleryError(null);
     
@@ -264,7 +264,6 @@ const fetchGalleryImages = async (silent = false) => {
     if (cachedData) {
       console.log('Loading gallery images from cache');
       setGalleryImages(cachedData);
-      // Skip individual loading for cached images
       if (!silent) {
         setIsLoadingGallery(false);
       }
@@ -275,48 +274,47 @@ const fetchGalleryImages = async (silent = false) => {
     console.log('Fetching gallery images from backend');
     const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
     if (!response.ok) {
-        if (response.status >= 500) {
-            throw new Error('Database error: Unable to retrieve gallery images from the server.');
-        }
-        throw new Error(`Failed to fetch gallery images: ${response.status}`);
+      if (response.status >= 500) {
+        throw new Error('Database error: Unable to retrieve gallery images from the server.');
+      }
+      throw new Error(`Failed to fetch gallery images: ${response.status}`);
     }
     const data = await response.json();
     
     setGalleryImages(data);
     // Preload images
-    data.forEach((image) => {
-      const img = new Image();
+    data.forEach((image) => { 
+      const img = new window.Image(); // Use window.Image explicitly
       img.src = image.thumbnailUrl || image.imageUrl;
-      img.crossOrigin = 'anonymous'; // or '' in fetchGalleryImages
+      img.crossOrigin = 'anonymous';
       img.onload = () => handleImageLoad(image._id);
       img.onerror = () => handleImageError(image._id, img.src);
     });
     // Initialize loading state for gallery images
     const initialLoadingState = data.reduce((acc, image) => {
-        acc[image._id] = true;
-        return acc;
+      acc[image._id] = true;
+      return acc;
     }, {});
     setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
   } catch (error) {
     console.error('Error fetching gallery images:', error);
     let message;
     if (!navigator.onLine) {
-        message = 'No internet connection. Please check your network and try again.';
+      message = 'No internet connection. Please check your network and try again.';
     } else if (error.message.includes('Database error')) {
-        message = 'Unable to load gallery images due to a server issue. Please try again later.';
+      message = 'Unable to load gallery images due to a server issue. Please try again later.';
     } else {
-        message = 'Network error. Failed to connect to the server. Please try again.';
+      message = 'Network error: Failed to connect to the server. Please try again.';
     }
     addNotification(message);
     setGalleryError(error.message);
     setGalleryImages([]);
   } finally {
     if (!silent) {
-        setIsLoadingGallery(false);
+      setIsLoadingGallery(false);
     }
   }
 };
-
 
 
 
