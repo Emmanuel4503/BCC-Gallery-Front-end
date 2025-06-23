@@ -135,7 +135,10 @@ const removeNotification = (id) => {
 const [errorImages, setErrorImages] = useState({});
 const handleImageLoad = (imageId) => {
   console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
-  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+  setLoadingImages((prev) => {
+    const newState = { ...prev, [imageId]: false };
+    return newState;
+  });
   setErrorImages((prev) => {
     const newErrors = { ...prev };
     delete newErrors[imageId];
@@ -145,6 +148,10 @@ const handleImageLoad = (imageId) => {
     clearTimeout(timeouts.current[imageId]);
     delete timeouts.current[imageId];
   }
+  // Force re-render if needed
+  setTimeout(() => {
+    setLoadingImages((prev) => ({ ...prev }));
+  }, 0);
 };
 
 const handleImageError = (imageId, imageUrl) => {
@@ -207,9 +214,16 @@ const fetchCarouselImages = async () => {
     
     // Cache the data
     setCacheData(CAROUSEL_CACHE_KEY, data);
-    
-    setCarouselImages(data);
-    // Initialize loading state for carousel images
+    setGalleryImages(data);
+    // Preload images
+    data.forEach((image) => {
+      const img = new Image();
+      img.src = image.thumbnailUrl || image.imageUrl;
+      img.crossOrigin = 'anonymous';
+      img.onload = () => handleImageLoad(image._id);
+      img.onerror = () => handleImageError(image._id, img.src);
+    });
+    // Initialize loading state for gallery images
     const initialLoadingState = data.reduce((acc, image) => {
         acc[image._id] = true;
         return acc;
@@ -1203,21 +1217,6 @@ useEffect(() => {
     }
 }, [fullscreenImage, showDownloadModal, isDownloading])
 
-useEffect(() => {
-  const timeouts = {};
-  Object.keys(loadingImages).forEach((imageId) => {
-      if (loadingImages[imageId]) {
-          timeouts[imageId] = setTimeout(() => {
-              console.warn(`Image loading timeout for: ${imageId}`);
-              setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-          }, 20000); // 10-second timeout
-      }
-  });
-  return () => {
-      Object.values(timeouts).forEach((timeout) => clearTimeout(timeout));
-  };
-}, [loadingImages]);
-
 
 return (
     <div className="page-container">
@@ -1604,15 +1603,17 @@ aria-label="Scroll to top"
                                               <Loader2 className="image-loading-spinner" />
                                           </div>
                                       ) : (
-                                          <img
-                                              src={imageUrl}
-                                              alt={`Service ${index + 1}`}
-                                              className="gallery-image"
-                                              crossOrigin="anonymous"
-                                              onLoad={() => handleImageLoad(image._id)}
-                                              onError={() => handleImageError(image._id, imageUrl)}
-                                              onClick={() => openFullscreen(image.imageUrl)}
-                                          />
+                                        <img
+                                        key={`${image._id}-${loadingImages[image._id] ? 'loading' : 'loaded'}`}
+                                        src={imageUrl}
+                                        alt={`Service ${index + 1}`}
+                                        className="gallery-image"
+                                        crossOrigin="anonymous"
+                                        onLoad={() => handleImageLoad(image._id)}
+                                        onError={() => handleImageError(image._id, imageUrl)}
+                                        onClick={() => openFullscreen(image.imageUrl)}
+                                        loading="lazy"
+                                    />
                                       )}
                                             <div className="image-overlay">
                                                 <input
