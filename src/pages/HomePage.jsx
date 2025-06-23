@@ -138,7 +138,10 @@ useEffect(() => {
 }, [currentNotification, notificationQueue]);
 
 const removeNotification = (id) => {
-  setNotifications((prev) => prev.filter((notification) => notification.id !== id));
+  setNotificationQueue((prev) => prev.filter((notification) => notification.id !== id));
+  if (currentNotification?.id === id) {
+    setCurrentNotification(null);
+  }
 };
 
 const [errorImages, setErrorImages] = useState({});
@@ -273,13 +276,10 @@ const fetchGalleryImages = async (silent = false) => {
     setGalleryError(null);
     
     // Check cache first
-    const cachedData = getCacheData(GALLERY_CACHE_KEY);
+    const cacheData = getCacheData(GALLERY_CACHE_KEY);
     if (cachedData) {
       console.log('Loading gallery images from cache');
       setGalleryImages(cachedData);
-      if (!silent) {
-        setIsLoadingGallery(false);
-      }
       return;
     }
     
@@ -297,7 +297,7 @@ const fetchGalleryImages = async (silent = false) => {
     setGalleryImages(data);
     // Preload images
     data.forEach((image) => { 
-      const img = new window.Image(); // Use window.Image explicitly
+      const img = new window.Image();
       img.src = image.thumbnailUrl || image.imageUrl || '/placeholder.svg';
       img.crossOrigin = 'anonymous';
       img.onload = () => handleImageLoad(image._id);
@@ -323,9 +323,7 @@ const fetchGalleryImages = async (silent = false) => {
     setGalleryError(error.message);
     setGalleryImages([]);
   } finally {
-    if (!silent) {
-      setIsLoadingGallery(false);
-    }
+    setIsLoadingGallery(false); // Always reset loading state
   }
 };
 
@@ -712,39 +710,32 @@ const downloadImage = async (imageUrl, filename, format) => {
         setDownloadProgress(0);
       }
   };
-
   const handleMultipleDownload = async () => {
     if (selectedImages.length === 0) {
       alert('Please select at least one image to download');
       return;
     }
-  
     console.log('Starting multiple download:', { selectedImages, galleryImages });
-  
     setIsDownloading(true);
     setDownloadProgress(0);
-  
     try {
       const totalImages = selectedImages.length;
       let successCount = 0;
       let failCount = 0;
-  
       for (let i = 0; i < totalImages; i++) {
-        const imageIndex = selectedImages[i];
-        const image = galleryImages[imageIndex];
-  
-        console.log(`Processing image at index ${imageIndex}:`, image);
-  
+        const imageId = selectedImages[i];
+        const image = galleryImages.find((img) => img._id === imageId);
+        console.log(`Processing image with id ${imageId}:`, image);
         if (image && image.imageUrl) {
           try {
             const randomNumber = Math.floor(1000 + Math.random() * 9000);
             await downloadImage(
               image.imageUrl,
-              `BCC-image-${imageIndex + 1}-${Date.now()}-${randomNumber}}`,
+              `BCC-image-${imageId}-${Date.now()}-${randomNumber}`,
               selectedFormat
             );
             successCount++;
-            console.log(`Successfully downloaded image at index ${imageIndex}`);
+            console.log(`Successfully downloaded image with id ${imageId}`);
           } catch (error) {
             console.error('Bulk download failed:', error);
             let message;
@@ -756,27 +747,21 @@ const downloadImage = async (imageUrl, filename, format) => {
               message = `Failed to download images: ${error.message}`;
             }
             addNotification(message);
-            setIsDownloading(false);
-            setDownloadProgress(0);
+            failCount++;
           }
         } else {
-          console.error(`No valid image found at index ${imageIndex}`);
+          console.error(`No valid image found with id ${imageId}`);
           failCount++;
         }
-  
         setDownloadProgress(((i + 1) / totalImages) * 100);
-  
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-  
       console.log(`Download completed: ${successCount} succeeded, ${failCount} failed`);
-  
       setTimeout(() => {
         setShowDownloadModal(false);
         setIsDownloading(false);
         setDownloadProgress(0);
         setSelectedImages([]);
-  
         if (failCount > 0) {
           alert(`Download completed with issues. ${successCount} images downloaded successfully, ${failCount} failed.`);
         } else {
@@ -784,18 +769,19 @@ const downloadImage = async (imageUrl, filename, format) => {
         }
       }, 1000);
     } catch (error) {
-        console.error(`Failed to download image at index ${imageIndex}:`, error);
-        let message;
-        if (!navigator.onLine) {
-          message = 'No internet connection. Please check your network and try again.';
-        } else if (error.message.includes('Failed to fetch')) {
-          message = 'Unable to download image due to a server issue.';
-        } else {
-          message = `Failed to download image: ${error.message}`;
-        }
-        addNotification(message);
-        failCount++;
+      console.error('Bulk download error:', error);
+      let message;
+      if (!navigator.onLine) {
+        message = 'No internet connection. Please check your network and try again.';
+      } else if (error.message.includes('Failed to fetch')) {
+        message = 'Unable to download image due to a server issue.';
+      } else {
+        message = `Failed to download image: ${error.message}`;
       }
+      addNotification(message);
+      setIsDownloading(false);
+      setDownloadProgress(0);
+    }
   };
 
 useEffect(() => {
@@ -1005,11 +991,13 @@ useEffect(() => {
 const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
 }
-
-const handleImageSelect = (index) => {
-    setSelectedImages((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]))
-}
-
+// jhhhhhh
+// hhhh
+const handleImageSelect = (imageId) => {
+  setSelectedImages((prev) =>
+    prev.includes(imageId) ? prev.filter((id) => id !== imageId) : [...prev, imageId]
+  );
+};
 const handleDownloadAll = () => {
     if (selectedImages.length === 0) {
     alert('Please select at least one image using the checkboxes before Downloading.');
@@ -1025,33 +1013,27 @@ const handleSaveAll = async () => {
     alert('Please sign in to save images');
     return;
   }
-
   if (selectedImages.length === 0) {
     alert('Please select at least one image using the checkboxes before saving.');
     return;
   }
-
   setIsSubmitting(true);
   let successCount = 0;
   let failCount = 0;
   let alreadySavedCount = 0;
-
   try {
-    for (const index of selectedImages) {
-      const image = galleryImages[index];
+    for (const imageId of selectedImages) {
+      const image = galleryImages.find((img) => img._id === imageId);
       if (!image?._id) {
         failCount++;
         continue;
       }
-
       try {
-        // Check if image is already saved
         const alreadySaved = await isImageSaved(Number(currentUser.id), image._id);
         if (alreadySaved) {
           alreadySavedCount++;
           continue;
         }
-
         const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
           method: 'POST',
           headers: {
@@ -1062,20 +1044,17 @@ const handleSaveAll = async () => {
             imageId: image._id,
           }),
         });
-
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data.message || 'Failed to save image');
         }
         successCount++;
       } catch (error) {
-        console.error(`Failed to save image ${index}:`, error);
+        console.error(`Failed to save image ${imageId}:`, error);
         failCount++;
       }
-
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
-
     let message = `${successCount} image${successCount !== 1 ? 's' : ''} saved successfully`;
     if (failCount > 0) {
       message += `, ${failCount} failed`;
@@ -1639,13 +1618,13 @@ aria-label="Scroll to top"
                                       />
                                       )}
                                             <div className="image-overlay">
-                                                <input
-                                                    type="checkbox"
-                                                    className="image-checkbox"
-                                                    checked={selectedImages.includes(index)}
-                                                    onChange={() => handleImageSelect(index)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
+                                            <input
+  type="checkbox"
+  className="image-checkbox"
+  checked={selectedImages.includes(image._id)}
+  onChange={() => handleImageSelect(image._id)}
+  onClick={(e) => e.stopPropagation()}
+/>
                                             </div>
                                         </div>
                                         <div className="reaction-section">
