@@ -115,18 +115,26 @@ const removeCurrentNotification = () => {
 
 // Process the notification queue
 useEffect(() => {
+  let isMounted = true;
   if (!currentNotification && notificationQueue.length > 0) {
     const nextNotification = notificationQueue[0];
-    setCurrentNotification(nextNotification);
-    setNotificationQueue((prev) => prev.slice(1));
+    if (isMounted) {
+      setCurrentNotification(nextNotification);
+      setNotificationQueue((prev) => prev.slice(1));
+    }
 
-    // Auto-remove after 6 seconds
     const timeoutId = setTimeout(() => {
-      removeCurrentNotification();
+      if (isMounted) removeCurrentNotification();
     }, 10000);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }
+  return () => {
+    isMounted = false;
+  };
 }, [currentNotification, notificationQueue]);
 
 const removeNotification = (id) => {
@@ -168,6 +176,7 @@ const handleImageError = (imageId, imageUrl) => {
   }
 };
 
+const RETRY_TIMEOUT = navigator.connection?.effectiveType === '2g' ? 40000 : 25000;
 const handleImageRetry = (imageId, imageUrl) => {
   console.log(`Retrying image load: ${imageId}`);
   setErrorImages((prev) => {
@@ -176,6 +185,10 @@ const handleImageRetry = (imageId, imageUrl) => {
     return newErrors;
   });
   setLoadingImages((prev) => ({ ...prev, [imageId]: true }));
+  if (timeouts.current[imageId]) {
+    clearTimeout(timeouts.current[imageId]);
+    delete timeouts.current[imageId];
+  }
   const img = new window.Image();
   img.src = imageUrl;
   img.crossOrigin = 'anonymous';
@@ -183,7 +196,7 @@ const handleImageRetry = (imageId, imageUrl) => {
   img.onerror = () => {
     timeouts.current[imageId] = setTimeout(() => {
       handleImageError(imageId, imageUrl);
-    }, 25000); // 12-second timeout for retry
+    }, RETRY_TIMEOUT);
   };
 };
 
@@ -223,7 +236,7 @@ const fetchCarouselImages = async () => {
     // Preload images
     data.forEach((image) => {
       const img = new window.Image();
-      img.src = image.thumbnailUrl || image.imageUrl;
+      img.src = image.thumbnailUrl || image.imageUrl || '/placeholder.svg';
       img.crossOrigin = 'anonymous';
       img.onload = () => handleImageLoad(image._id);
       img.onerror = () => handleImageError(image._id, img.src);
@@ -285,7 +298,7 @@ const fetchGalleryImages = async (silent = false) => {
     // Preload images
     data.forEach((image) => { 
       const img = new window.Image(); // Use window.Image explicitly
-      img.src = image.thumbnailUrl || image.imageUrl;
+      img.src = image.thumbnailUrl || image.imageUrl || '/placeholder.svg';
       img.crossOrigin = 'anonymous';
       img.onload = () => handleImageLoad(image._id);
       img.onerror = () => handleImageError(image._id, img.src);
@@ -970,15 +983,12 @@ const isImageSaved = async (userId, imageId) => {
 };
 
 useEffect(() => {
-
   if (carouselImages.length === 0 || isLoadingCarousel || carouselError) return;
 
- 
   const loadedImagesCount = carouselImages.filter(
     (image) => !loadingImages[image._id]
   ).length;
 
- 
   if (loadedImagesCount < Math.min(5, carouselImages.length)) return;
 
   const timer = setInterval(() => {
@@ -990,7 +1000,7 @@ useEffect(() => {
   }, 5000);
 
   return () => clearInterval(timer);
-}, [carouselImages, isLoadingCarousel, carouselError, loadingImages]);
+}, [carouselImages, isLoadingCarousel, carouselError, loadingImages, currentSlide]);
 
 const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -1527,16 +1537,16 @@ aria-label="Scroll to top"
                         <Loader2 className="image-loading-spinner" />
                     </div>
                 ) : (
+                  // jfffffffffffffffffffffffffffffffffffffffffff
                   <img
-                  key={`${image._id}-${loadingImages[image._id] ? 'loading' : 'loaded'}`}
                   src={imageUrl}
                   alt={`Church gallery image ${index + 1}`}
                   className="carousel-image"
-                  crossOrigin=""
+                  crossOrigin="anonymous"
                   onLoad={() => handleImageLoad(image._id)}
                   onError={() => handleImageError(image._id, imageUrl)}
                   loading="lazy"
-              />  
+                /> 
                 )}
                 <div className="carousel-overlay" />
             </div>
@@ -1618,7 +1628,6 @@ aria-label="Scroll to top"
                                           </div>
                                       ) : (
                                         <img
-                                        key={`${image._id}-${loadingImages[image._id] ? 'loading' : 'loaded'}`}
                                         src={imageUrl}
                                         alt={`Service ${index + 1}`}
                                         className="gallery-image"
@@ -1627,7 +1636,7 @@ aria-label="Scroll to top"
                                         onError={() => handleImageError(image._id, imageUrl)}
                                         onClick={() => openFullscreen(image.imageUrl)}
                                         loading="lazy"
-                                    />
+                                      />
                                       )}
                                             <div className="image-overlay">
                                                 <input
@@ -1724,13 +1733,18 @@ aria-label="Scroll to top"
             <Loader2 className="image-loading-spinner" />
         </div>
     )}
-    <img
-        src={fullscreenImage || "/placeholder.svg"}
-        alt="Fullscreen view"
-        className="fullscreen-image"
-        loading="lazy"
-        onLoad={() => setIsLoadingFullscreen(false)}
-    />
+<img
+  src={fullscreenImage || "/placeholder.svg"}
+  alt="Fullscreen view"
+  className="fullscreen-image"
+  loading="lazy"
+  onLoad={() => setIsLoadingFullscreen(false)}
+  onError={() => {
+    setIsLoadingFullscreen(false);
+    addNotification('Failed to load fullscreen image.');
+    setFullscreenImage(null);
+  }}
+/>
 </div>
         </div>
     )}
