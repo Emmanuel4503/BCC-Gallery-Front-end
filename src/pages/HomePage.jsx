@@ -146,7 +146,7 @@ const removeNotification = (id) => {
 
 const [errorImages, setErrorImages] = useState({});
 const handleImageLoad = (imageId) => {
-  console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
+  // console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
   setLoadingImages((prev) => {
     const newState = { ...prev, [imageId]: false };
     return newState;
