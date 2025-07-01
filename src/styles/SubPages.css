@@ -191,17 +191,23 @@
   }
   
 
+  .page-container:has(.cloudinary-limit-modal-overlay) {
+    filter: blur(8px);
+    pointer-events: none; /* Prevent interaction with blurred content */
+  }
+  
   .cloudinary-limit-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgb(0, 0, 0); /* Fully opaque black background */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(4px); /* Additional blur for the overlay */
   }
   
   .cloudinary-limit-modal {
@@ -254,20 +260,6 @@
     justify-content: center;
     gap: 16px;
     margin-top: 16px;
-  }
-  
-  .cloudinary-limit-modal-close-btn {
-    background: #f0f0f0;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  
-  .cloudinary-limit-modal-close-btn:hover {
-    background: #e0e0e0;
   }
   
   .cloudinary-limit-modal-contact-btn {
