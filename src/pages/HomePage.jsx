@@ -1249,7 +1249,7 @@ return (
             </div>
             <h2 className="cloudinary-limit-modal-title">Under Maintenance</h2>
             <p className="cloudinary-limit-modal-subtitle">
-              The BCC Gallery is currently under maintenance. For assistance, please contact support.
+            The BCC Gallery is currently under maintenance. For more information, please contact support.
             </p>
           </div>
           <div className="cloudinary-limit-modal-actions">
