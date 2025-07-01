@@ -1223,6 +1223,48 @@ useEffect(() => {
 
 return (
     <div className="page-container">
+      {/* message */}
+      {/* Cloudinary Limit Modal */}
+    {showCloudinaryLimitModal && (
+      <div className="cloudinary-limit-modal-overlay">
+        <div className="cloudinary-limit-modal">
+          <div className="cloudinary-limit-modal-header">
+            <div className="cloudinary-limit-modal-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="modal-warning-icon"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+                <path d="M12 8v4" />
+                <circle cx="12" cy="16" r="1" />
+              </svg>
+            </div>
+            <h2 className="cloudinary-limit-modal-title">Under Maintenance</h2>
+            <p className="cloudinary-limit-modal-subtitle">
+              The BCC Gallery is currently under maintenance. For assistance, please contact support.
+            </p>
+          </div>
+          <div className="cloudinary-limit-modal-actions">
+            <a
+              href="https://wa.me/+2349110241218"
+              className="cloudinary-limit-modal-contact-btn"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Contact Support
+            </a>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="notification-container">
   {currentNotification && (
     <div className="notification">
@@ -1237,47 +1279,6 @@ return (
   )}
 </div>
 
-{/* message */}
-{showCloudinaryLimitModal && (
-  <div className="cloudinary-limit-modal-overlay">
-    <div className="cloudinary-limit-modal">
-      <div className="cloudinary-limit-modal-header">
-        <div className="cloudinary-limit-modal-icon">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="modal-warning-icon"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-            <path d="M12 8v4" />
-            <circle cx="12" cy="16" r="1" />
-          </svg>
-        </div>
-        <h2 className="cloudinary-limit-modal-title">Under Maintenance</h2>
-        <p className="cloudinary-limit-modal-subtitle">
-          The BCC Gallery is currently under maintenance. For assistance, please contact support.
-        </p>
-      </div>
-      <div className="cloudinary-limit-modal-actions">
-        <a
-          href="https://wa.me/+2349110241218"
-          className="cloudinary-limit-modal-contact-btn"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Contact Support
-        </a>
-      </div>
-    </div>
-  </div>
-)}
     {/* User Signup Modal */}
     {showUserModal && (
         <div className="user-modal-overlay">

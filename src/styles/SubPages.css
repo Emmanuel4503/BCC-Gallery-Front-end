@@ -191,11 +191,6 @@
   }
   
 
-  .page-container:has(.cloudinary-limit-modal-overlay) {
-    filter: blur(8px);
-    pointer-events: none; /* Prevent interaction with blurred content */
-  }
-  
   .cloudinary-limit-modal-overlay {
     position: fixed;
     top: 0;
