@@ -3444,9 +3444,7 @@ html, body {
   opacity: 1;
   z-index: 3;
 }
-body:has(.cloudinary-limit-modal-overlay) .page-container {
-  pointer-events: none; /* Prevent interaction with blurred content */
-}
+
 
 .cloudinary-limit-modal-overlay {
   position: fixed;
