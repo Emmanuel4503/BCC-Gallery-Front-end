@@ -218,7 +218,7 @@ const fetchCarouselImages = async () => {
     }
     
     // Fetch from backend if no cache
-    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/selected');
+    const response = await fetch('https://bcc-gallery-back-end-6avw.onrender.com//images/selected');
     if (!response) {
       throw new Error('No response received from server');
     }
@@ -284,7 +284,7 @@ const fetchGalleryImages = async (silent = false) => {
     
     // Fetch from backend if no cache
     console.log('Fetching gallery images from backend');
-    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
+    const response = await fetch('https://bcc-gallery-back-end-6avw.onrender.com//images/latest');
     if (!response.ok) {
       if (response.status >= 500) {
         throw new Error('Database error: Unable to retrieve gallery images from the server.');
@@ -375,7 +375,7 @@ const fetchUserReactions = async (userId) => {
       
           // Fetch from backend if no cache
           console.log('Fetching album data from backend');
-          const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/album/latest');
+          const response = await fetch('https://bcc-gallery-back-end-6avw.onrender.com//album/latest');
       
           if (!response.ok) {
             if (response.status >= 500) {
@@ -432,7 +432,7 @@ const fetchUserReactions = async (userId) => {
         });
   
         // Send reaction to backend
-        const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/react', {
+        const response = await fetch('https://bcc-gallery-back-end-6avw.onrender.com//images/react', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -890,7 +890,7 @@ const handleUserSignup = async (e) => {
     try {
     console.log('Attempting to create user:', userName.trim())
     
-    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/users/signup', {
+    const response = await fetch('https://bcc-gallery-back-end-6avw.onrender.com//users/signup', {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
@@ -949,7 +949,7 @@ const handleUserSignup = async (e) => {
 const isImageSaved = async (userId, imageId) => {
   try {
     const response = await fetch(
-      `https://bcc-gallery-back-end-production.up.railway.app/saved/check?userId=${userId}&imageId=${imageId}`,
+      `https://bcc-gallery-back-end-6avw.onrender.com//saved/check?userId=${userId}&imageId=${imageId}`,
       {
         method: 'GET',
         headers: {
@@ -1034,7 +1034,7 @@ const handleSaveAll = async () => {
           alreadySavedCount++;
           continue;
         }
-        const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
+        const response = await fetch('https://bcc-gallery-back-end-6avw.onrender.com//saved/add', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1110,7 +1110,7 @@ const handleSaveSelected = async (imageId) => {
       return;
     }
     
-    const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/saved/add', {
+    const response = await fetch('https://bcc-gallery-back-end-6avw.onrender.com//saved/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
