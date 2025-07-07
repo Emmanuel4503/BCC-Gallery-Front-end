@@ -355,7 +355,7 @@ const fetchUserReactions = async (userId) => {
     setUserReactions(reactions);
   } catch (error) {
     console.error('Error fetching reactions:', error);
-    addNotification('Failed to load reactions. Please try again.');
+    // addNotification('Failed to load reactions. Please try again.');
   }
 };
 
