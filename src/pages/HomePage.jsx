@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback,useRef } from "react"
-import { Menu, X, Image, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
+import { Menu, X, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
 import { Link } from "react-router-dom"
 import "../styles/HomePage.css"
 import bcclogo from './bcclogo.png';
@@ -1420,10 +1420,10 @@ return (
         </div>
 
         <nav className="menu-nav">
-            <Link to="/albums" className="menu-item" onClick={toggleMenu}>
+            {/* <Link to="/albums" className="menu-item" onClick={toggleMenu}>
             <Image className="menu-item-icon" />
             <span className="menu-item-text">Albums</span>
-            </Link>
+            </Link> */}
 
             <Link to="/saved" className="menu-item" onClick={toggleMenu}>
             <Heart className="menu-item-icon" />
