@@ -3546,16 +3546,17 @@ html, body {
   background: #7c3aed;
   border: none;
   border-radius: 10%;
-  /* width: 2.5rem;
-  height: 2.5rem; */
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0.10rem 0.20rem;
+  text-align: center;
   /* display: flex; */
-  align-items: center;
   /* justify-content: center; */
   cursor: pointer;
   z-index: 50000;
   transition: background-color 0.2s;
   font-size: 1rem;
+  margin: 0 auto;
 }
 
 .slideshow-close:hover {
@@ -3563,8 +3564,7 @@ html, body {
 }
 
 .close-icon-large {
-  width: 1.5rem;
-  height: 1.5rem;
+  text-align: center;
   color: white;
 }
 
