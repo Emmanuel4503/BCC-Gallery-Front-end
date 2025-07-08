@@ -82,8 +82,8 @@ html, body {
   }
   
   .menu-icon {
-    height: 4rem;
-    width: 4rem;
+    height: 2rem;
+    width: 2rem;
     color: #374151;
   }
   
@@ -179,8 +179,8 @@ html, body {
   }
   
   .menu-item-icon {
-    height: 1.2rem;
-    width: 1.2rem;
+    height: 2rem;
+    width: 2rem;
     color: #fe9a65;
     transition: color 0.2s;
   }
