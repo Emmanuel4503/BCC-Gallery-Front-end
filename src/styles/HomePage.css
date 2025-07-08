@@ -3487,7 +3487,7 @@ html, body {
   width: 100%;
 }
 
-.image-btns {
+.image-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -3601,7 +3601,7 @@ html, body {
 
 .slideshow-indicator {
   position: absolute;
-top: 10rem;
+top: 80%;
   background: rgba(0, 0, 0, 50);
   color: white;
   padding: 0.5rem 1rem;
