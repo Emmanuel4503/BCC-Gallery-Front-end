@@ -534,6 +534,7 @@ html, body {
     margin-bottom: 2rem;
     flex-wrap: wrap;
     margin-top: 3rem;
+    padding: 0.5rem 1rem;
   }
   
   .action-btn {
