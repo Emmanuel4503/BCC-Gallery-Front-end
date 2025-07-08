@@ -175,7 +175,7 @@ const handleImageLoad = useCallback(
       delete timeouts.current[imageId];
     }
     // Removed setTimeout for forced re-render, as debouncing handles batching
-  }, 100),
+  }, 50),
   [setLoadingImages, setErrorImages, timeouts]
 );
 
@@ -191,7 +191,7 @@ const handleImageError = useCallback(
       clearTimeout(timeouts.current[imageId]);
       delete timeouts.current[imageId];
     }
-  }, 100),
+  }, 50),
   [setLoadingImages, setErrorImages, timeouts]
 );
 
