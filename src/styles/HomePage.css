@@ -589,6 +589,10 @@ html, body {
     background-color: #6d28d9;
     transform: translateY(-2px);
   }
+  .action-btn.view-gallery {
+    white-space: nowrap;
+    padding: 0.5rem 1rem;
+  }
   
   .btn-icon {
     width: 1.1rem;
