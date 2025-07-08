@@ -330,7 +330,7 @@ html, body {
 
   .scrollable-content {
     position: relative;
-    z-index: 10000;
+    z-index: 2;
     margin-top: 70vh;
     flex: 1;
     background-color: white;
