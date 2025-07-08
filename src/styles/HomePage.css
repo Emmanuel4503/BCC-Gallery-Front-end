@@ -3540,7 +3540,7 @@ html, body {
 
 .slideshow-close {
   position: absolute;
-  top: 5rem;
+  top: 4.5rem;
   right: 0;
   left: 0;
   background: #7c3aed;
@@ -3549,9 +3549,9 @@ html, body {
   /* width: 2.5rem;
   height: 2.5rem; */
   padding: 0.10rem 0.20rem;
-  display: flex;
+  /* display: flex; */
   align-items: center;
-  justify-content: center;
+  /* justify-content: center; */
   cursor: pointer;
   z-index: 50000;
   transition: background-color 0.2s;
@@ -3576,8 +3576,8 @@ html, body {
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 500;
-  bottom: 20%;
-  top: 0;
+  bottom: 5rem;
+ 
 }
 
 .view-gallery {
