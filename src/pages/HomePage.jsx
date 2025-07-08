@@ -1281,6 +1281,15 @@ const handleScroll = useCallback(() => {
     }
   }, [showGallerySlideshow, fullscreenImage, showDownloadModal, showUserModal]);
 
+  useEffect(() => {
+    const preloadImages = galleryImages.slice(0, 10).map((image) => {
+      const img = new window.Image();
+      img.src = image.thumbnailUrl || image.imageUrl || '/placeholder.svg';
+      img.crossOrigin = 'anonymous';
+      return img;
+    });
+  }, [galleryImages]);
+
 return (
     <div className="page-container">
     <div className="notification-container">
