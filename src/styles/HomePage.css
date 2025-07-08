@@ -82,8 +82,8 @@ html, body {
   }
   
   .menu-icon {
-    height: 1.25rem;
-    width: 1.25rem;
+    height: 2rem;
+    width: 2rem;
     color: #374151;
   }
   
@@ -451,7 +451,7 @@ html, body {
   }
   
   .service-title {
-    font-size: 2rem;
+    font-size: 1.50rem;
     font-weight: 600;
     color: #ff9a56;
     text-align: center;
@@ -1180,7 +1180,7 @@ html, body {
     }
   
     .service-title {
-        font-size: 1.3rem;
+        font-size: 1rem;
         margin-bottom: 1rem;
         padding: 0.75rem 0.10rem;
         border-radius: 12px;
@@ -1370,7 +1370,7 @@ html, body {
    
   
     .service-title {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         padding: 1.25rem 0.50rem;
       }
   
@@ -1475,8 +1475,8 @@ html, body {
     }
   
     .menu-icon {
-      height: 1.4rem;
-      width: 1.4rem;
+      height: 1.5rem;
+      width: 1.5rem;
     }
   
     .sliding-menu {
@@ -1786,7 +1786,7 @@ html, body {
     }
   
     .service-title {
-        font-size: 1.9rem;
+        font-size: 1.8rem;
         padding: 1.75rem 1rem;
         border-radius: 24px;
       }
@@ -3541,7 +3541,7 @@ html, body {
 
 .slideshow-close {
   position: absolute;
-  top: 4.5rem;
+  top: 4rem;
   left: 50%;
   transform: translateX(-50%);
   background: #7c3aed;
@@ -3553,7 +3553,6 @@ html, body {
   transition: background-color 0.2s;
   font-size: 1rem;
   text-align: center;
-  margin-bottom: 1rem;
 }
 
 .slideshow-close:hover {
