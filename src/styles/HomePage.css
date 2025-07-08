@@ -14,7 +14,7 @@ html, body {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 50;
+    z-index: 200;
   }
   
   .header-content {
@@ -3454,12 +3454,15 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 1);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 5000;
+  z-index: 10000;
   overflow: hidden;
+}
+.header.modal-hidden {
+  display: none;
 }
 
 .slideshow-content {
@@ -3492,7 +3495,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.90rem 1rem;
   border-radius: 4px;
   font-size: 1rem;
   font-weight: 500;
@@ -3540,8 +3543,8 @@ html, body {
 }
 
 .slideshow-close {
-  position: absolute;
-  top: 4.5rem;
+  position: fixed;
+  top: 1.5rem;
   right: 1.5rem;
   background: rgba(255, 255, 255, 0.9); 
   border: 2px solid #e5e7eb; 
@@ -3552,7 +3555,7 @@ html, body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 2200; 
+  z-index: 2000; 
   transition: background-color 0.2s, transform 0.2s;
 }
 
