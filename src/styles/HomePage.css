@@ -179,8 +179,8 @@ html, body {
   }
   
   .menu-item-icon {
-    height: 2rem;
-    width: 2rem;
+    height: 1.8rem;
+    width: 1.8rem;
     color: #fe9a65;
     transition: color 0.2s;
   }
@@ -1492,8 +1492,8 @@ html, body {
     }
   
     .menu-icon {
-      height: 1.5rem;
-      width: 1.5rem;
+      height: 1.3rem;
+      3width: 1.5rem;
     }
   
     .sliding-menu {
@@ -1517,8 +1517,8 @@ html, body {
     }
   
     .menu-item-icon {
-      height: 1.40rem;
-      width: 1.40rem;
+      height: 1.35rem;
+      width: 1.350rem;
     }
   
     .user-name {
@@ -3564,8 +3564,8 @@ html, body {
 
 .slideshow-close {
   position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
+  top: 1.4rem;
+  right: 1.4rem;
   background: rgba(255, 255, 255, 0.9); 
   border: 2px solid #e5e7eb; 
   border-radius: 50%;
