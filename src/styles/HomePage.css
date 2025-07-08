@@ -3481,6 +3481,7 @@ html, body {
   align-items: center;
   z-index: 10000;
   overflow: hidden;
+  padding: 5px;
 }
 .header.modal-hidden {
   display: none;
@@ -3527,16 +3528,98 @@ html, body {
 }
 
 
+/* Gallery Slideshow Modal */
+.gallery-slideshow-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  overflow: hidden;
+}
+
+.slideshow-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 90%;
+  max-height: 90%;
+  width: 100%;
+  position: relative;
+}
+
+.slideshow-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slideshow-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.image-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.download-btn {
+  background-color: #2563eb;
+  color: white;
+}
+
+.download-btn:hover {
+  background-color: #1e40af;
+  transform: translateY(-2px);
+}
+
+.save-btn {
+  background-color: #16a34a;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #15803d;
+  transform: translateY(-2px);
+}
+
+.save-btn:disabled {
+  background-color: #6b7280;
+  cursor: not-allowed;
+}
+
+.image-btn-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 .slideshow-nav-btn {
   position: absolute;
-  top: 40%;
+  top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.831);
+  background: rgba(0, 0, 0, 0.5);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 3rem;
+  height: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3545,16 +3628,16 @@ html, body {
 }
 
 .slideshow-nav-btn:disabled {
-  background: rgba(128, 128, 128, 0.76);
+  background: rgba(0, 0, 0, 0.3);
   cursor: not-allowed;
 }
 
 .slideshow-nav-left {
-  left: 1px;
+  left: 1rem;
 }
 
 .slideshow-nav-right {
-  right: 1px;
+  right: 1rem;
 }
 
 .nav-icon {
@@ -3567,42 +3650,57 @@ html, body {
 }
 
 .slideshow-close {
-  position: fixed;
-  top: 1.4rem;
-  right: 1.4rem;
-  background: rgba(255, 255, 255, 0.9); 
-  border: 2px solid #e5e7eb; 
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
   border-radius: 50%;
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 2000; 
-  transition: background-color 0.2s, transform 0.2s;
+  z-index: 2100;
+  transition: background-color 0.2s;
 }
 
 .slideshow-close:hover {
-  background: #f3f4f6; 
-  transform: scale(1.1); 
+  background: rgba(0, 0, 0, 0.7);
 }
 
-.close-icon-larges {
-  width: 1.75rem;
-  height: 1.75rem;
-  color: #1f2937; /
+.close-icon-large {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: white;
 }
-
 
 .slideshow-indicator {
   position: absolute;
-  background: rgba(0, 0, 0, 50);
+  bottom: 1rem;
+  background: rgba(0, 0, 0, 0.5);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 500;
-  bottom: 12px;
 }
 
+.view-gallery {
+  background-color: #7c3aed;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.view-gallery:hover {
+  background-color: #6d28d9;
+  transform: translateY(-2px);
+}

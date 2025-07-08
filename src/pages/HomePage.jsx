@@ -40,6 +40,8 @@ const [currentGallerySlide, setCurrentGallerySlide] = useState(0);
 const [galleryScrollPosition, setGalleryScrollPosition] = useState(0);
 const [isLoadingSlideshow, setIsLoadingSlideshow] = useState(false);
 
+const [touchStartX, setTouchStartX] = useState(null);
+
 const CACHE_DURATION = 1 * 60 * 1000; // 1 minutes in milliseconds
 const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
 const GALLERY_CACHE_KEY = 'bcc_gallery_cache';
@@ -1182,18 +1184,24 @@ const goToNextSlide = () => {
   setIsLoadingSlideshow(true);
 };
 
+const handleTouchStart = (e) => {
+  setTouchStartX(e.touches[0].clientX);
+};
+
 const handleSwipe = (e) => {
-  const touch = e.changedTouches[0];
-  const startX = e.touches[0].clientX;
-  const endX = touch.clientX;
-  const diffX = startX - endX;
-  if (Math.abs(diffX) > 50) {
+  if (touchStartX === null) return;
+  const endX = e.changedTouches[0].clientX;
+  const diffX = touchStartX - endX;
+  const minSwipeDistance = 50; // Minimum swipe distance in pixels
+
+  if (Math.abs(diffX) > minSwipeDistance) {
     if (diffX > 0 && currentGallerySlide < galleryImages.length - 1) {
-      goToNextSlide();
+      goToNextSlide(); // Swipe left -> next image
     } else if (diffX < 0 && currentGallerySlide > 0) {
-      goToPreviousSlide();
+      goToPreviousSlide(); // Swipe right -> previous image
     }
   }
+  setTouchStartX(null); // Reset touch start position
 };
 
 const closeDownloadModal = () => {
@@ -1615,7 +1623,7 @@ aria-label="Scroll to top"
                         </button>
                         <button onClick={openGallerySlideshow} className="action-btn view-gallery">
   <ArrowUp className="btn-icon" />
-  View Gallery (Total: {galleryImages.length} images)
+  View Gallery ({galleryImages.length} images)
 </button>
                     </div>
                     <hr />
@@ -1741,11 +1749,16 @@ aria-label="Scroll to top"
                     )}
 
 {showGallerySlideshow && (
-  <div className="gallery-slideshow-modal" onTouchEnd={handleSwipe}>
-<button className="slideshow-close" onClick={closeGallerySlideshow}>
-  <X className="close-icon-larges" />
-</button>
-    <div className="slideshow-content" onClick={(e) => e.stopPropagation()}>
+  <div className="gallery-slideshow-modal">
+    <button className="slideshow-close" onClick={closeGallerySlideshow}>
+      <X className="close-icon-large" />
+    </button>
+    <div
+      className="slideshow-content"
+      onClick={(e) => e.stopPropagation()}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleSwipe}
+    >
       {isLoadingSlideshow && (
         <div className="image-loading-container">
           <Loader2 className="image-loading-spinner" />
@@ -1767,7 +1780,10 @@ aria-label="Scroll to top"
           />
           <div className="slideshow-actions">
             <button
-              onClick={() => handleDownloadSelected(galleryImages[currentGallerySlide]._id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownloadSelected(galleryImages[currentGallerySlide]._id);
+              }}
               className="image-btn download-btn image-view-btn"
               title="Download"
             >
@@ -1775,7 +1791,10 @@ aria-label="Scroll to top"
               Download
             </button>
             <button
-              onClick={() => handleSaveSelected(galleryImages[currentGallerySlide]._id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSaveSelected(galleryImages[currentGallerySlide]._id);
+              }}
               className="image-btn save-btn image-view-btn"
               title="Save"
               disabled={isSubmitting}
@@ -1788,27 +1807,32 @@ aria-label="Scroll to top"
             <>
               <button
                 className="slideshow-nav-btn slideshow-nav-left"
-                onClick={goToPreviousSlide}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPreviousSlide();
+                }}
                 disabled={currentGallerySlide === 0}
               >
                 <ChevronLeft className="nav-icon" />
               </button>
               <button
                 className="slideshow-nav-btn slideshow-nav-right"
-                onClick={goToNextSlide}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNextSlide();
+                }}
                 disabled={currentGallerySlide === galleryImages.length - 1}
               >
                 <ChevronRight className="nav-icon" />
               </button>
             </>
           )}
-         
+          <div className="slideshow-indicator">
+            {currentGallerySlide + 1} / {galleryImages.length}
+          </div>
         </>
       )}
     </div>
-    <div className="slideshow-indicator">
-            {currentGallerySlide + 1} / {galleryImages.length}
-          </div>
   </div>
 )}
                 </div>
