@@ -3546,8 +3546,6 @@ html, body {
   background: #7c3aed;
   border: none;
   border-radius: 10%;
-  width: 4rem;
-  height: 1rem;
   padding: 0.10rem 0.20rem;
   text-align: center;
   /* display: flex; */
@@ -3566,6 +3564,7 @@ html, body {
 .close-icon-large {
   text-align: center;
   color: white;
+  padding: 0.20rem 0.50rem;
 }
 
 .slideshow-indicator {
@@ -3576,9 +3575,7 @@ html, body {
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 500;
-  bottom: 25%;
-  transform: translateY(-25%);
- 
+  bottom: 4px;
 }
 
 .view-gallery {
