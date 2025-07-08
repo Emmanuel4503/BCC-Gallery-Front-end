@@ -34,6 +34,8 @@ const [scrollPosition, setScrollPosition] = useState(0);
 const [loadingImages, setLoadingImages] = useState({});
 const timeouts = useRef({}); 
 const [isLoadingFullscreen, setIsLoadingFullscreen] = useState(false);
+const [errorImages, setErrorImages] = useState({});
+
 
 const [showGallerySlideshow, setShowGallerySlideshow] = useState(false);
 const [currentGallerySlide, setCurrentGallerySlide] = useState(0);
@@ -144,49 +146,55 @@ const removeNotification = (id) => {
   }
 };
 
+
+
+
+// Debounce utility
 const debounce = (func, wait) => {
-  let timeoutId;
+  let timeout;
   return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), wait);
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
   };
 };
 
-const [errorImages, setErrorImages] = useState({});
+const handleImageLoad = useCallback(
+  debounce((imageId) => {
+    // console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
+    setLoadingImages((prev) => {
+      const newState = { ...prev, [imageId]: false };
+      return newState;
+    });
+    setErrorImages((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[imageId];
+      return newErrors;
+    });
+    if (timeouts.current[imageId]) {
+      clearTimeout(timeouts.current[imageId]);
+      delete timeouts.current[imageId];
+    }
+    // Removed setTimeout for forced re-render, as debouncing handles batching
+  }, 100),
+  [setLoadingImages, setErrorImages, timeouts]
+);
 
-const handleImageLoad = (imageId) => {
-  // console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
-  setLoadingImages((prev) => {
-    const newState = { ...prev, [imageId]: false };
-    return newState;
-  });
-  setErrorImages((prev) => {
-    const newErrors = { ...prev };
-    delete newErrors[imageId];
-    return newErrors;
-  });
-  if (timeouts.current[imageId]) {
-    clearTimeout(timeouts.current[imageId]);
-    delete timeouts.current[imageId];
-  }
-  // Force re-render if needed
-  setTimeout(() => {
-    setLoadingImages((prev) => ({ ...prev }));
-  }, 0);
-};
+const handleImageError = useCallback(
+  debounce((imageId, imageUrl) => {
+    console.error(`Image error at: ${new Date().toISOString()}, imageId: ${imageId}, url: ${imageUrl}`);
+    setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+    setErrorImages((prev) => ({
+      ...prev,
+      [imageId]: 'Failed to load image. Please try again.'
+    }));
+    if (timeouts.current[imageId]) {
+      clearTimeout(timeouts.current[imageId]);
+      delete timeouts.current[imageId];
+    }
+  }, 100),
+  [setLoadingImages, setErrorImages, timeouts]
+);
 
-const handleImageError = (imageId, imageUrl) => {
-  console.error(`Image error at: ${new Date().toISOString()}, imageId: ${imageId}, url: ${imageUrl}`);
-  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
-  setErrorImages((prev) => ({
-    ...prev,
-    [imageId]: 'Failed to load image. Please try again.'
-  }));
-  if (timeouts.current[imageId]) {
-    clearTimeout(timeouts.current[imageId]);
-    delete timeouts.current[imageId];
-  }
-};
 
 const RETRY_TIMEOUT = navigator.connection?.effectiveType === '2g' ? 40000 : 25000;
 const handleImageRetry = (imageId, imageUrl) => {
