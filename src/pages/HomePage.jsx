@@ -144,13 +144,6 @@ const removeNotification = (id) => {
   }
 };
 
-const debounce = (func, wait) => {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), wait);
-  };
-};
 
 const [errorImages, setErrorImages] = useState({});
 
@@ -514,7 +507,13 @@ const fetchUserReactions = async (userId) => {
 );
 
 
-
+const debounce = (func, wait) => {
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), wait);
+  };
+};
 
 const debouncedHandleReaction = useCallback(
     debounce((imageId, reactionType) => handleReaction(imageId, reactionType), 200),
