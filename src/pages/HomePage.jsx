@@ -333,7 +333,7 @@ const fetchGalleryImages = async (silent = false) => {
 
 const fetchUserReactions = async (userId) => {
   try {
-    const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/reactions/user/${userId}`, {
+    const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/reactions/${userId}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
