@@ -3542,20 +3542,17 @@ html, body {
 .slideshow-close {
   position: absolute;
   top: 4.5rem;
-  right: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   background: #7c3aed;
   border: none;
   border-radius: 10%;
   padding: 0.10rem 0.50rem;
-  text-align: center;
-  /* display: flex; */
-  /* justify-content: center; */
   cursor: pointer;
   z-index: 50000;
   transition: background-color 0.2s;
   font-size: 1rem;
-  /* margin: 0 auto; */
+  text-align: center;
 }
 
 .slideshow-close:hover {
@@ -3563,10 +3560,10 @@ html, body {
 }
 
 .close-icon-large {
-  text-align: center;
   color: white;
   padding: 0.10rem 0.50rem;
 }
+
 
 .slideshow-indicator {
   position: absolute;
@@ -3576,7 +3573,7 @@ html, body {
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 500;
-  bottom: 10px;
+  bottom: 12px;
 }
 
 .view-gallery {
