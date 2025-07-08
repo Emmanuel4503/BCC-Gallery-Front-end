@@ -1623,7 +1623,7 @@ aria-label="Scroll to top"
                         </button>
                         <button onClick={openGallerySlideshow} className="action-btn view-gallery">
   <ArrowUp className="btn-icon" />
-  View Gallery ({galleryImages.length} images)
+  View Gallery ({galleryImages.length} images available)
 </button>
                     </div>
                     <hr />

@@ -3539,8 +3539,8 @@ html, body {
   color: white;
   border: none;
   border-radius: 50%;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.4rem;
+  height: 2.4rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3549,6 +3549,7 @@ html, body {
 }
 
 .slideshow-nav-btn:disabled {
+  display: none;
   background: rgba(128, 128, 128, 0.76);
   cursor: not-allowed;
 }
