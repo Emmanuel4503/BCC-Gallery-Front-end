@@ -333,7 +333,7 @@ const fetchGalleryImages = async (silent = false) => {
 
 const fetchUserReactions = async (userId) => {
   try {
-    const response = await fetch(`https://4a9d-135-129-124-46.ngrok-free.app/reactions/user/${userId}`, {
+    const response = await fetch(`https://bcc-gallery-back-end-production.up.railway.app/reactions/user/${userId}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -356,7 +356,7 @@ const fetchUserReactions = async (userId) => {
     setUserReactions(reactions);
   } catch (error) {
     console.error('Error fetching reactions:', error);
-    // addNotification('Failed to load reactions. Please try again.');
+    addNotification('Failed to load reactions. Please try again.');
   }
 };
 
