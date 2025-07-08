@@ -1282,13 +1282,49 @@ const handleScroll = useCallback(() => {
   }, [showGallerySlideshow, fullscreenImage, showDownloadModal, showUserModal]);
 
   useEffect(() => {
-    const preloadImages = galleryImages.slice(0, 10).map((image) => {
+    if (!galleryImages.length) {
+      setIsLoadingGallery(false);
+      return;
+    }
+  
+    const imagesToPreload = galleryImages.slice(0, 20); // Preload first 20 images
+    let loadedImages = 0;
+    const totalImages = imagesToPreload.length;
+  
+    const updateProgress = (imageId) => {
+      loadedImages += 1;
+      if (loadedImages >= totalImages) {
+        setIsLoadingGallery(false); // Mark gallery as loaded when all preloaded images are done
+      }
+    };
+  
+    imagesToPreload.forEach((image) => {
       const img = new window.Image();
-      img.src = image.thumbnailUrl || image.imageUrl || '/placeholder.svg';
+      const imageUrl = image.thumbnailUrl || image.imageUrl || '/placeholder.svg';
+      img.src = imageUrl;
       img.crossOrigin = 'anonymous';
-      return img;
+      img.onload = () => {
+        handleImageLoad(image._id);
+        updateProgress(image._id);
+      };
+      img.onerror = () => {
+        handleImageError(image._id, imageUrl);
+        updateProgress(image._id);
+      };
     });
-  }, [galleryImages]);
+  
+    // Fallback timeout to prevent hanging
+    const timeoutId = setTimeout(() => {
+      if (loadedImages < totalImages) {
+        setIsLoadingGallery(false);
+        console.warn('Preload timeout: Not all images loaded within 10 seconds');
+      }
+    }, 10000);
+  
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [galleryImages, handleImageLoad, handleImageError]);
 
 return (
     <div className="page-container">
