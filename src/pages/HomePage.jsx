@@ -1,5 +1,6 @@
+// hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 import { useState, useEffect, useCallback,useRef } from "react"
-import { Menu, X, Heart, Bell, Download, Save, User, Loader2, ArrowUp } from "lucide-react"
+import { Menu, X, Heart, Bell, Download, Save, User, Loader2, ArrowUp, ChevronLeft, ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom"
 import "../styles/HomePage.css"
 import bcclogo from './bcclogo.png';
@@ -34,7 +35,10 @@ const [loadingImages, setLoadingImages] = useState({});
 const timeouts = useRef({}); 
 const [isLoadingFullscreen, setIsLoadingFullscreen] = useState(false);
 
-
+const [showGallerySlideshow, setShowGallerySlideshow] = useState(false);
+const [currentGallerySlide, setCurrentGallerySlide] = useState(0);
+const [galleryScrollPosition, setGalleryScrollPosition] = useState(0);
+const [isLoadingSlideshow, setIsLoadingSlideshow] = useState(false);
 
 const CACHE_DURATION = 1 * 60 * 1000; // 1 minutes in milliseconds
 const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
@@ -1150,6 +1154,48 @@ const closeFullscreen = () => {
   window.scrollTo(0, scrollPosition); 
 };
 
+const openGallerySlideshow = () => {
+  if (galleryImages.length === 0) {
+    addNotification('No images available to view in slideshow.');
+    return;
+  }
+  setGalleryScrollPosition(window.scrollY);
+  setCurrentGallerySlide(0);
+  setIsLoadingSlideshow(true);
+  setShowGallerySlideshow(true);
+};
+
+const closeGallerySlideshow = () => {
+  setShowGallerySlideshow(false);
+  setIsLoadingSlideshow(false);
+  setCurrentGallerySlide(0);
+  window.scrollTo(0, galleryScrollPosition);
+};
+
+const goToPreviousSlide = () => {
+  setCurrentGallerySlide((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+  setIsLoadingSlideshow(true);
+};
+
+const goToNextSlide = () => {
+  setCurrentGallerySlide((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+  setIsLoadingSlideshow(true);
+};
+
+const handleSwipe = (e) => {
+  const touch = e.changedTouches[0];
+  const startX = e.touches[0].clientX;
+  const endX = touch.clientX;
+  const diffX = startX - endX;
+  if (Math.abs(diffX) > 50) {
+    if (diffX > 0 && currentGallerySlide < galleryImages.length - 1) {
+      goToNextSlide();
+    } else if (diffX < 0 && currentGallerySlide > 0) {
+      goToPreviousSlide();
+    }
+  }
+};
+
 const closeDownloadModal = () => {
     if (!isDownloading) {
     setShowDownloadModal(false);
@@ -1192,29 +1238,29 @@ const handleScroll = useCallback(() => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-useEffect(() => {
+  useEffect(() => {
     const handleEscape = (e) => {
-    if (e.key === "Escape") {
-        closeFullscreen()
+      if (e.key === "Escape") {
+        closeFullscreen();
+        closeGallerySlideshow();
         if (!isDownloading) {
-        closeDownloadModal()
+          closeDownloadModal();
         }
-    }
-    }
-
-    if (fullscreenImage || showDownloadModal) {
-    document.addEventListener("keydown", handleEscape)
-    document.body.style.overflow = "hidden"
+      }
+    };
+  
+    if (fullscreenImage || showDownloadModal || showGallerySlideshow) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
     } else {
-    document.body.style.overflow = "unset"
+      document.body.style.overflow = "unset";
     }
-
+  
     return () => {
-    document.removeEventListener("keydown", handleEscape)
-    document.body.style.overflow = "unset"
-    }
-}, [fullscreenImage, showDownloadModal, isDownloading])
-
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
+    };
+  }, [fullscreenImage, showDownloadModal, isDownloading, showGallerySlideshow]);
 
 return (
     <div className="page-container">
@@ -1558,6 +1604,10 @@ aria-label="Scroll to top"
                             <Save className="btn-icon" />
                             Save All ({selectedImages.length} selected)
                         </button>
+                        <button onClick={openGallerySlideshow} className="action-btn view-gallery">
+  <ArrowUp className="btn-icon" />
+  View Gallery
+</button>
                     </div>
                     <hr />
                     <p style={{ color: "#6b7280", marginBottom: "0.50rem", marginTop: "1.4rem", textAlign: "center" }}>
@@ -1680,6 +1730,77 @@ aria-label="Scroll to top"
                             })}
                         </div>
                     )}
+
+{showGallerySlideshow && (
+  <div className="gallery-slideshow-modal" onTouchEnd={handleSwipe}>
+    <button className="slideshow-close" onClick={closeGallerySlideshow}>
+      <X className="close-icon-large" />
+    </button>
+    <div className="slideshow-content" onClick={(e) => e.stopPropagation()}>
+      {isLoadingSlideshow && (
+        <div className="image-loading-container">
+          <Loader2 className="image-loading-spinner" />
+        </div>
+      )}
+      {galleryImages.length > 0 && (
+        <>
+          <img
+            src={galleryImages[currentGallerySlide].imageUrl || "/placeholder.svg"}
+            alt={`Gallery image ${currentGallerySlide + 1}`}
+            className="slideshow-image"
+            loading="lazy"
+            onLoad={() => setIsLoadingSlideshow(false)}
+            onError={() => {
+              setIsLoadingSlideshow(false);
+              addNotification('Failed to load slideshow image.');
+              setShowGallerySlideshow(false);
+            }}
+          />
+          <div className="slideshow-actions">
+            <button
+              onClick={() => handleDownloadSelected(galleryImages[currentGallerySlide]._id)}
+              className="image-btn download-btn"
+              title="Download"
+            >
+              <Download className="image-btn-icon" />
+              Download
+            </button>
+            <button
+              onClick={() => handleSaveSelected(galleryImages[currentGallerySlide]._id)}
+              className="image-btn save-btn"
+              title="Save"
+              disabled={isSubmitting}
+            >
+              <Save className="image-btn-icon" />
+              Save
+            </button>
+          </div>
+          {galleryImages.length > 1 && (
+            <>
+              <button
+                className="slideshow-nav-btn slideshow-nav-left"
+                onClick={goToPreviousSlide}
+                disabled={currentGallerySlide === 0}
+              >
+                <ChevronLeft className="nav-icon" />
+              </button>
+              <button
+                className="slideshow-nav-btn slideshow-nav-right"
+                onClick={goToNextSlide}
+                disabled={currentGallerySlide === galleryImages.length - 1}
+              >
+                <ChevronRight className="nav-icon" />
+              </button>
+            </>
+          )}
+          <div className="slideshow-indicator">
+            {currentGallerySlide + 1} / {galleryImages.length}
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
                 </div>
 
         {/* Footer */}
