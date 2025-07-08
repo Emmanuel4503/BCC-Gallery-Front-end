@@ -46,7 +46,7 @@ function SavedPage() {
       setIsLoading(true);
       setError(null);
       const response = await fetch(
-        `bcc-gallery-back-end-production.up.railway.app/saved/get/${currentUser.id}`
+        `https://bcc-gallery-back-end-production.up.railway.app/saved/get/${currentUser.id}`
       );
       if (!response.ok) {
         throw new Error(`Failed to fetch saved images: ${response.status}`);
@@ -66,7 +66,7 @@ function SavedPage() {
   const fetchUserReactions = async (userId) => {
     try {
       const response = await fetch(
-        `bcc-gallery-back-end-production.up.railway.app/images/reactions?userId=${userId}`
+        `https://bcc-gallery-back-end-production.up.railway.app/images/reactions?userId=${userId}`
       );
       if (!response.ok) {
         throw new Error(`Failed to fetch user reactions: ${response.status}`);
@@ -111,7 +111,7 @@ function SavedPage() {
           return newReactions;
         });
   
-        const response = await fetch("\bcc-gallery-back-end-production.up.railway.app/images/react", {
+        const response = await fetch("\https://bcc-gallery-back-end-production.up.railway.app/images/react", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -182,9 +182,9 @@ function SavedPage() {
     try {
       let processedUrl = imageUrl;
       if (imageUrl.startsWith("/")) {
-        processedUrl = `bcc-gallery-back-end-production.up.railway.app${imageUrl}`;
+        processedUrl = `https://bcc-gallery-back-end-production.up.railway.app${imageUrl}`;
       } else if (!imageUrl.startsWith("http")) {
-        processedUrl = `bcc-gallery-back-end-production.up.railway.app/${imageUrl}`;
+        processedUrl = `https://bcc-gallery-back-end-production.up.railway.app/${imageUrl}`;
       }
 
       const response = await fetch(processedUrl, {
@@ -316,7 +316,7 @@ function SavedPage() {
     }
   
     try {
-      const response = await fetch("bcc-gallery-back-end-production.up.railway.app/saved/delete", {
+      const response = await fetch("https://bcc-gallery-back-end-production.up.railway.app/saved/delete", {
         method: "DELETE", // Changed from POST to DELETE
         headers: {
           "Content-Type": "application/json",
