@@ -1089,8 +1089,8 @@ html, body {
     }
   
     .menu-item-icon {
-      height: 1.5rem;
-      width: 1.5rem;
+      height: 1.3rem;
+      width: 1.3rem;
     }
   
     .user-name {
@@ -1500,8 +1500,8 @@ html, body {
     }
   
     .menu-item-icon {
-      height: 1.60rem;
-      width: 1.60rem;
+      height: 1.50rem;
+      width: 1.50rem;
     }
   
     .user-name {
@@ -3547,12 +3547,13 @@ html, body {
   background: #7c3aed;
   border: none;
   border-radius: 10%;
-  padding: 0.10rem 0.50rem;
+  padding: 0.20rem 0.60rem;
   cursor: pointer;
   z-index: 50000;
   transition: background-color 0.2s;
   font-size: 1rem;
   text-align: center;
+  margin-bottom: 1rem;
 }
 
 .slideshow-close:hover {
@@ -3561,7 +3562,7 @@ html, body {
 
 .close-icon-large {
   color: white;
-  padding: 0.10rem 0.50rem;
+  padding: 0.20rem 0.60rem;
 }
 
 
