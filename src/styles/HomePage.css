@@ -3554,7 +3554,8 @@ html, body {
   z-index: 50000;
   transition: background-color 0.2s;
   font-size: 1rem;
-  margin: 0 auto;
+  /* margin: 0 auto; */
+  width: 5rem;
 }
 
 .slideshow-close:hover {
@@ -3575,7 +3576,7 @@ html, body {
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 500;
-  bottom: 4px;
+  bottom: 10px;
 }
 
 .view-gallery {
