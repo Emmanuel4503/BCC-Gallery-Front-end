@@ -29,19 +29,14 @@ const [currentDownloadImage, setCurrentDownloadImage] = useState(null)
 const [latestAlbumTitle, setLatestAlbumTitle] = useState(null);
 const [isLoadingAlbum, setIsLoadingAlbum] = useState(true);
 const [albumError, setAlbumError] = useState(null);
-
+const [scrollPosition, setScrollPosition] = useState(0);
 const [loadingImages, setLoadingImages] = useState({});
 const timeouts = useRef({}); 
 const [isLoadingFullscreen, setIsLoadingFullscreen] = useState(false);
 
-// HDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
-// HHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
-// hhhhhhhhhhhhhhhhhhhhhhhhhhh
-// ghhhhhhh
-// hhhhh
-// Add these functions after your existing state declarations and before the notification functions
 
-const CACHE_DURATION = 1 * 60 * 1000; // 5 minutes in milliseconds
+
+const CACHE_DURATION = 1 * 60 * 1000; // 1 minutes in milliseconds
 const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
 const GALLERY_CACHE_KEY = 'bcc_gallery_cache';
 const ALBUM_CACHE_KEY = 'bcc_album_cache';
@@ -1143,14 +1138,17 @@ const handleSaveSelected = async (imageId) => {
   }
 };
 
-  const openFullscreen = (imageSrc) => {
-    setIsLoadingFullscreen(true);
-    setFullscreenImage(imageSrc);
+const openFullscreen = (imageSrc) => {
+  setScrollPosition(window.scrollY);
+  setIsLoadingFullscreen(true);
+  setFullscreenImage(imageSrc);
 };
 
 const closeFullscreen = () => {
-    setFullscreenImage(null)
-}
+  setFullscreenImage(null);
+  setIsLoadingFullscreen(false);
+  window.scrollTo(0, scrollPosition); 
+};
 
 const closeDownloadModal = () => {
     if (!isDownloading) {
