@@ -534,7 +534,6 @@ html, body {
     margin-bottom: 2rem;
     flex-wrap: wrap;
     margin-top: 3rem;
-    padding: 0.5rem 1rem;
   }
   
   .action-btn {
@@ -3492,47 +3491,13 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.10rem 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 4px;
   font-size: 1rem;
   font-weight: 500;
   transition: background-color 0.2s, transform 0.2s;
 }
 
-.image-btn-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-/* .download-btn {
-  background-color: #2563eb;
-  color: white;
-}
-
-.download-btn:hover {
-  background-color: #1e40af;
-  transform: translateY(-2px);
-}
-
-.save-btn {
-  background-color: #16a34a;
-  color: white;
-}
-
-.save-btn:hover {
-  background-color: #15803d;
-  transform: translateY(-2px);
-}
-
-.save-btn:disabled {
-  background-color: #6b7280;
-  cursor: not-allowed;
-}
-
-.image-btn-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-} */
 
 .slideshow-nav-btn {
   position: absolute;
@@ -3542,8 +3507,8 @@ html, body {
   color: white;
   border: none;
   border-radius: 50%;
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3602,13 +3567,13 @@ html, body {
 
 .slideshow-indicator {
   position: absolute;
-top: 80%;
   background: rgba(0, 0, 0, 50);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 500;
+  bottom: 1px;
 }
 
 .view-gallery {

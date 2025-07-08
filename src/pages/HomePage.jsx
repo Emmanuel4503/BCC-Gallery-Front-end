@@ -1793,12 +1793,13 @@ aria-label="Scroll to top"
               </button>
             </>
           )}
-          <div className="slideshow-indicator">
-            {currentGallerySlide + 1} / {galleryImages.length}
-          </div>
+         
         </>
       )}
     </div>
+    <div className="slideshow-indicator">
+            {currentGallerySlide + 1} / {galleryImages.length}
+          </div>
   </div>
 )}
                 </div>
