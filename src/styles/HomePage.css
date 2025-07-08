@@ -575,7 +575,7 @@ html, body {
   .view-gallery {
     background-color: #7c3aed;
     color: white;
-    display: flex;
+    /* display: flex; */
     align-items: center;
     gap: 0.5rem;
     /* padding: 0.5rem 1rem;
@@ -3503,6 +3503,9 @@ html, body {
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
 }
 
 .slideshow-actions {
@@ -3581,6 +3584,6 @@ html, body {
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 500;
-  bottom: 1px;
+bottom: 12px;
 }
 
