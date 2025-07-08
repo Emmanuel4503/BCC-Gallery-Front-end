@@ -3487,17 +3487,21 @@ html, body {
   width: 100%;
 }
 
-/* .image-btn {
+.image-btns {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.10rem 1rem;
   border-radius: 4px;
   font-size: 1rem;
   font-weight: 500;
   transition: background-color 0.2s, transform 0.2s;
-} */
+}
 
+.image-btn-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
 
 /* .download-btn {
   background-color: #2563eb;
@@ -3523,7 +3527,11 @@ html, body {
   background-color: #6b7280;
   cursor: not-allowed;
 }
- */
+
+.image-btn-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+} */
 
 .slideshow-nav-btn {
   position: absolute;
@@ -3567,7 +3575,7 @@ html, body {
 .slideshow-close {
   position: absolute;
   top: 5rem;
-  left: 1rem;
+  right: 1rem;
   background: rgba(0, 0, 0, 0.5);
   border: none;
   border-radius: 50%;
@@ -3593,8 +3601,8 @@ html, body {
 
 .slideshow-indicator {
   position: absolute;
- bottom: 1px;
-  background: rgba(0, 0, 0, 0.5);
+top: 10rem;
+  background: rgba(0, 0, 0, 50);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 12px;

@@ -1759,7 +1759,7 @@ aria-label="Scroll to top"
           <div className="slideshow-actions">
             <button
               onClick={() => handleDownloadSelected(galleryImages[currentGallerySlide]._id)}
-              className="image-btn download-btn"
+              className="image-btns download-btn"
               title="Download"
             >
               <Download className="image-btn-icon" />
@@ -1767,7 +1767,7 @@ aria-label="Scroll to top"
             </button>
             <button
               onClick={() => handleSaveSelected(galleryImages[currentGallerySlide]._id)}
-              className="image-btn save-btn"
+              className="image-btns save-btn"
               title="Save"
               disabled={isSubmitting}
             >
