@@ -109,6 +109,7 @@
     padding: 2rem;
     background-color: #f9fafb;
     border-radius: 0.75rem;
+    min-height: 20rem;
   }
   
   .placeholder-text {
@@ -136,7 +137,7 @@
     color: black;
     text-align: center;
     font-style: italic;
- 
+     min-height: 20rems;
     font-size: 1.1rem;
   }
  

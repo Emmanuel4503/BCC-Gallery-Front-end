@@ -1631,10 +1631,9 @@ aria-label="Scroll to top"
   Found {galleryImages.length} image{galleryImages.length !== 1 ? "s" : ""}
 </p>
                     {isLoadingGallery ? (
-                        <div className="loading-container">
-                            <Loader2 className="loading-spinner" />
-                            <p>Loading gallery images...</p>
-                        </div>
+                       <div className="image-loading-container">
+                       <Loader2 className="image-loading-spinner" />
+                     </div>
                     ) : galleryError ? (
                         <div className="error-container">
                             <p>Error loading gallery: {galleryError}</p>
