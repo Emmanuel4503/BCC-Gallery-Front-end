@@ -1262,6 +1262,15 @@ const handleScroll = useCallback(() => {
     };
   }, [fullscreenImage, showDownloadModal, isDownloading, showGallerySlideshow]);
 
+  useEffect(() => {
+    const header = document.querySelector('.header');
+    if (showGallerySlideshow || fullscreenImage || showDownloadModal || showUserModal) {
+      header.classList.add('modal-hidden');
+    } else {
+      header.classList.remove('modal-hidden');
+    }
+  }, [showGallerySlideshow, fullscreenImage, showDownloadModal, showUserModal]);
+
 return (
     <div className="page-container">
     <div className="notification-container">
@@ -1759,7 +1768,7 @@ aria-label="Scroll to top"
           <div className="slideshow-actions">
             <button
               onClick={() => handleDownloadSelected(galleryImages[currentGallerySlide]._id)}
-              className="image-btn download-btn"
+              className="image-btn download-btn image-view-btn"
               title="Download"
             >
               <Download className="image-btn-icon" />
@@ -1767,7 +1776,7 @@ aria-label="Scroll to top"
             </button>
             <button
               onClick={() => handleSaveSelected(galleryImages[currentGallerySlide]._id)}
-              className="image-btn save-btn"
+              className="image-btn save-btn image-view-btn"
               title="Save"
               disabled={isSubmitting}
             >
