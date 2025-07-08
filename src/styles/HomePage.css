@@ -3495,7 +3495,6 @@ html, body {
   max-height: 90%;
   width: 100%;
   position: relative;
-  touch-action: pan-y;
 }
 
 .slideshow-image {
@@ -3504,9 +3503,6 @@ html, body {
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  user-select: none;
-  -webkit-user-drag: none;
-  touch-action: none;
 }
 
 .slideshow-actions {
@@ -3571,33 +3567,10 @@ html, body {
   background: rgba(0, 0, 0, 0.7);
 }
 
-.slideshow-close {
-  position: fixed;
-  top: 1.4rem;
-  right: 1.4rem;
-  background: rgba(255, 255, 255, 0.9); 
-  border: 2px solid #e5e7eb; 
-  border-radius: 50%;
-  width: 2.6rem;
-  height: 2.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 12000; 
-  transition: background-color 0.2s, transform 0.2s;
-}
+.slideshow-close { position: absolute; top: 1rem; right: 1rem; background: rgba(0, 0, 0, 0.5); border: none; border-radius: 50%; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2100; transition: background-color 0.2s; } 
+.slideshow-close:hover { background: rgba(0, 0, 0, 0.7); } 
+.close-icon-large { width: 1.5rem; height: 1.5rem; color: white; }
 
-.slideshow-close:hover {
-  background: #f3f4f6; 
-  transform: scale(1.1); 
-}
-
-.close-icon-larges {
-  width: 1.75rem;
-  height: 1.75rem;
-  color: #1f2937; 
-}
 
 
 .slideshow-indicator {
