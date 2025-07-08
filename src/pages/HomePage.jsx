@@ -1733,10 +1733,9 @@ aria-label="Scroll to top"
 
 {showGallerySlideshow && (
   <div className="gallery-slideshow-modal" onTouchEnd={handleSwipe}>
-  <button className="slideshow-close" onClick={closeGallerySlideshow}>
-  <span className="close-icon-large">Close</span>
+<button className="slideshow-close" onClick={closeGallerySlideshow}>
+  <X className="close-icon-larges" />
 </button>
-
     <div className="slideshow-content" onClick={(e) => e.stopPropagation()}>
       {isLoadingSlideshow && (
         <div className="image-loading-container">

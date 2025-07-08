@@ -3541,27 +3541,30 @@ html, body {
 
 .slideshow-close {
   position: absolute;
-  top: 4rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #7c3aed;
-  border: none;
-  border-radius: 10%;
-  padding: 0.20rem 0.60rem;
+  top: 4.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.9); 
+  border: 2px solid #e5e7eb; 
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  z-index: 50000;
-  transition: background-color 0.2s;
-  font-size: 1rem;
-  text-align: center;
+  z-index: 2200; 
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .slideshow-close:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: #f3f4f6; 
+  transform: scale(1.1); 
 }
 
-.close-icon-large {
-  color: white;
-  padding: 0.20rem 0.60rem;
+.close-icon-larges {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: #1f2937; /
 }
 
 
