@@ -3687,7 +3687,7 @@ html, body {
   font-weight: 500;
 }
 
-.view-gallery {
+/* .view-gallery {
   background-color: #7c3aed;
   color: white;
   display: flex;
@@ -3703,4 +3703,4 @@ html, body {
 .view-gallery:hover {
   background-color: #6d28d9;
   transform: translateY(-2px);
-}
+} */
