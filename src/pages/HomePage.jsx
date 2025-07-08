@@ -1629,7 +1629,7 @@ aria-label="Scroll to top"
                   crossOrigin="anonymous"
                   onLoad={() => handleImageLoad(image._id)}
                   onError={() => handleImageError(image._id, imageUrl)}
-                  // loading="lazy"
+                  loading="lazy"
                 /> 
                 )}
                 <div className="carousel-overlay" />
@@ -1722,7 +1722,7 @@ aria-label="Scroll to top"
                                         onLoad={() => handleImageLoad(image._id)}
                                         onError={() => handleImageError(image._id, imageUrl)}
                                         onClick={() => openFullscreen(image.imageUrl)}
-                                        // loading="lazy"
+                                        loading="lazy"
                                       />
                                       )}
                                             <div className="image-overlay">
@@ -1814,7 +1814,7 @@ aria-label="Scroll to top"
             src={galleryImages[currentGallerySlide].imageUrl || "/placeholder.svg"}
             alt={`Gallery image ${currentGallerySlide + 1}`}
             className="slideshow-image"
-            // loading="lazy"
+            loading="lazy"
             onLoad={() => setIsLoadingSlideshow(false)}
             onError={() => {
               setIsLoadingSlideshow(false);
@@ -1913,7 +1913,7 @@ aria-label="Scroll to top"
   src={fullscreenImage || "/placeholder.svg"}
   alt="Fullscreen view"
   className="fullscreen-image"
-  // loading="lazy"
+  loading="lazy"
   onLoad={() => setIsLoadingFullscreen(false)}
   onError={() => {
     setIsLoadingFullscreen(false);
