@@ -339,7 +339,6 @@ const fetchUserReactions = async (userId) => {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
-        'ngrok-skip-browser-warning': 'true'
       },
       mode: 'cors'
     });
