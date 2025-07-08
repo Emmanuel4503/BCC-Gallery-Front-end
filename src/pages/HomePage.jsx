@@ -144,33 +144,50 @@ const removeNotification = (id) => {
   }
 };
 
-const [errorImages, setErrorImages] = useState({});
-
 const debounce = (func, wait) => {
-  let timeout;
+  let timeoutId;
   return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), wait);
   };
 };
 
-const handleImageLoad = debounce((imageId) => {
-  setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
+const [errorImages, setErrorImages] = useState({});
+
+const handleImageLoad = (imageId) => {
+  // console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
+  setLoadingImages((prev) => {
+    const newState = { ...prev, [imageId]: false };
+    return newState;
+  });
   setErrorImages((prev) => {
     const newErrors = { ...prev };
     delete newErrors[imageId];
     return newErrors;
   });
-}, 100);
+  if (timeouts.current[imageId]) {
+    clearTimeout(timeouts.current[imageId]);
+    delete timeouts.current[imageId];
+  }
+  // Force re-render if needed
+  setTimeout(() => {
+    setLoadingImages((prev) => ({ ...prev }));
+  }, 0);
+};
 
-const handleImageError = debounce((imageId, imageUrl) => {
+const handleImageError = (imageId, imageUrl) => {
   console.error(`Image error at: ${new Date().toISOString()}, imageId: ${imageId}, url: ${imageUrl}`);
   setLoadingImages((prev) => ({ ...prev, [imageId]: false }));
   setErrorImages((prev) => ({
     ...prev,
     [imageId]: 'Failed to load image. Please try again.'
   }));
-}, 100);
+  if (timeouts.current[imageId]) {
+    clearTimeout(timeouts.current[imageId]);
+    delete timeouts.current[imageId];
+  }
+};
+
 const RETRY_TIMEOUT = navigator.connection?.effectiveType === '2g' ? 40000 : 25000;
 const handleImageRetry = (imageId, imageUrl) => {
   console.log(`Retrying image load: ${imageId}`);
@@ -496,13 +513,7 @@ const fetchUserReactions = async (userId) => {
     [currentUser, userReactions, fetchUserReactions]
 );
 
-// const debounce = (func, wait) => {
-//     let timeoutId;
-//     return (...args) => {
-//       clearTimeout(timeoutId);
-//       timeoutId = setTimeout(() => func(...args), wait);
-//     };
-// };
+
 
 
 const debouncedHandleReaction = useCallback(
