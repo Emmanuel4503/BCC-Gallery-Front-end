@@ -1089,8 +1089,8 @@ html, body {
     }
   
     .menu-item-icon {
-      height: 0.995rem;
-      width: 0.995rem;
+      height: 1.2rem;
+      width: 1.2rem;
     }
   
     .user-name {
@@ -1500,8 +1500,8 @@ html, body {
     }
   
     .menu-item-icon {
-      height: 1.25rem;
-      width: 1.25rem;
+      height: 1.50rem;
+      width: 1.50rem;
     }
   
     .user-name {
@@ -3547,7 +3547,7 @@ html, body {
   background: #7c3aed;
   border: none;
   border-radius: 10%;
-  padding: 0.10rem 0.20rem;
+  padding: 0.10rem 0.50rem;
   text-align: center;
   /* display: flex; */
   /* justify-content: center; */
@@ -3556,7 +3556,6 @@ html, body {
   transition: background-color 0.2s;
   font-size: 1rem;
   /* margin: 0 auto; */
-  width: 5rem;
 }
 
 .slideshow-close:hover {
@@ -3566,7 +3565,7 @@ html, body {
 .close-icon-large {
   text-align: center;
   color: white;
-  padding: 0.20rem 0.50rem;
+  padding: 0.10rem 0.50rem;
 }
 
 .slideshow-indicator {
