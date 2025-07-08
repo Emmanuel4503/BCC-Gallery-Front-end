@@ -42,7 +42,7 @@ const [isLoadingSlideshow, setIsLoadingSlideshow] = useState(false);
 
 const [touchStartX, setTouchStartX] = useState(null);
 
-const CACHE_DURATION = 1 * 60 * 1000; // 1 minutes in milliseconds
+const CACHE_DURATION = 2 * 60 * 1000; // 1 minutes in milliseconds
 const CAROUSEL_CACHE_KEY = 'bcc_carousel_cache';
 const GALLERY_CACHE_KEY = 'bcc_gallery_cache';
 const ALBUM_CACHE_KEY = 'bcc_album_cache';
