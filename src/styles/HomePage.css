@@ -3498,7 +3498,8 @@ html, body {
   transition: background-color 0.2s, transform 0.2s;
 }
 
-.download-btn {
+
+/* .download-btn {
   background-color: #2563eb;
   color: white;
 }
@@ -3522,22 +3523,18 @@ html, body {
   background-color: #6b7280;
   cursor: not-allowed;
 }
-
-.image-btn-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
+ */
 
 .slideshow-nav-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.831);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 3rem;
-  height: 3rem;
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3546,16 +3543,16 @@ html, body {
 }
 
 .slideshow-nav-btn:disabled {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(128, 128, 128, 0.76);
   cursor: not-allowed;
 }
 
 .slideshow-nav-left {
-  left: 1rem;
+  left: 2px;
 }
 
 .slideshow-nav-right {
-  right: 1rem;
+  right: 2spx;
 }
 
 .nav-icon {
@@ -3596,7 +3593,7 @@ html, body {
 
 .slideshow-indicator {
   position: absolute;
-  bottom: 1rem;
+ top: 1rem;
   background: rgba(0, 0, 0, 0.5);
   color: white;
   padding: 0.5rem 1rem;
