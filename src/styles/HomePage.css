@@ -451,7 +451,7 @@ html, body {
   }
   
   .service-title {
-    font-size: 1.35rem;
+    font-size: 2rem;
     font-weight: 600;
     color: #ff9a56;
     text-align: center;
@@ -1180,7 +1180,7 @@ html, body {
     }
   
     .service-title {
-        font-size: 0.90rem;
+        font-size: 1.3rem;
         margin-bottom: 1rem;
         padding: 0.75rem 0.10rem;
         border-radius: 12px;
@@ -1370,7 +1370,7 @@ html, body {
    
   
     .service-title {
-        font-size: 1.4rem;
+        font-size: 1.6rem;
         padding: 1.25rem 0.50rem;
       }
   
@@ -1594,7 +1594,7 @@ html, body {
     }
   
     .service-title {
-        font-size: 1.65rem;
+        font-size: 1.85rem;
         margin-bottom: 2rem;
         padding: 1.5rem 0.50rem;
         border-radius: 20px;
@@ -1786,7 +1786,7 @@ html, body {
     }
   
     .service-title {
-        font-size: 1.7rem;
+        font-size: 1.9rem;
         padding: 1.75rem 1rem;
         border-radius: 24px;
       }
