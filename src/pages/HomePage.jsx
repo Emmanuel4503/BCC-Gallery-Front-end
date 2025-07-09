@@ -344,6 +344,11 @@ const fetchUserReactions = async (userId) => {
     });
 
     if (!response.ok) {
+      if (response.status === 404) {
+        console.log('No reactions found for user:', userId);
+        setUserReactions({}); // Set empty reactions for 404
+        return;
+      }
       throw new Error(`Failed to fetch reactions: ${response.status}`);
     }
 
@@ -357,7 +362,7 @@ const fetchUserReactions = async (userId) => {
     setUserReactions(reactions);
   } catch (error) {
     console.error('Error fetching reactions:', error);
-    addNotification('Failed to load reactions. Please try again.');
+    addNotification('Failed to load reactions. Please try again later.');
   }
 };
       const fetchLatestAlbum = async () => {
