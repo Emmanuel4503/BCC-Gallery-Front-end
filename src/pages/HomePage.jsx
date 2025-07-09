@@ -348,17 +348,18 @@ const fetchUserReactions = async (userId) => {
     }
 
     const data = await response.json();
-    const reactions = data.reduce((acc, reaction) => {
-      acc[`${reaction.imageId}_${userId}`] = reaction.reactionType;
-      return acc;
-    }, {});
+    const reactions = Object.keys(data).length > 0
+      ? Object.entries(data).reduce((acc, [imageId, reactionType]) => {
+          acc[`${imageId}_${userId}`] = reactionType;
+          return acc;
+        }, {})
+      : {};
     setUserReactions(reactions);
   } catch (error) {
     console.error('Error fetching reactions:', error);
-    // addNotification('Failed to load reactions. Please try again.');
+    addNotification('Failed to load reactions. Please try again.');
   }
 };
-
       const fetchLatestAlbum = async () => {
         try {
           setIsLoadingAlbum(true);
