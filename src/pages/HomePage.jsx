@@ -145,8 +145,9 @@ const removeNotification = (id) => {
 };
 
 const [errorImages, setErrorImages] = useState({});
+
 const handleImageLoad = (imageId) => {
-  // console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
+  console.log(`Image loaded: ${imageId}`);
   setLoadingImages((prev) => {
     const newState = { ...prev, [imageId]: false };
     return newState;
@@ -160,10 +161,6 @@ const handleImageLoad = (imageId) => {
     clearTimeout(timeouts.current[imageId]);
     delete timeouts.current[imageId];
   }
-  // Force re-render if needed
-  setTimeout(() => {
-    setLoadingImages((prev) => ({ ...prev }));
-  }, 0);
 };
 
 const handleImageError = (imageId, imageUrl) => {
