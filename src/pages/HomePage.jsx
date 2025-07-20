@@ -145,9 +145,8 @@ const removeNotification = (id) => {
 };
 
 const [errorImages, setErrorImages] = useState({});
-
 const handleImageLoad = (imageId) => {
-  console.log(`Image loaded: ${imageId}`);
+  // console.log(`Image loaded at: ${new Date().toISOString()}, imageId: ${imageId}`);
   setLoadingImages((prev) => {
     const newState = { ...prev, [imageId]: false };
     return newState;
@@ -161,6 +160,10 @@ const handleImageLoad = (imageId) => {
     clearTimeout(timeouts.current[imageId]);
     delete timeouts.current[imageId];
   }
+  // Force re-render if needed
+  setTimeout(() => {
+    setLoadingImages((prev) => ({ ...prev }));
+  }, 0);
 };
 
 const handleImageError = (imageId, imageUrl) => {
@@ -267,61 +270,62 @@ const fetchCarouselImages = async () => {
 
 const fetchGalleryImages = async (silent = false) => {
   try {
-    if (!silent) setIsLoadingGallery(true);
+    if (!silent) {
+      setIsLoadingGallery(true);
+    }
     setGalleryError(null);
-
+    
+    // Check cache first
     const cachedData = getCacheData(GALLERY_CACHE_KEY);
-    if (cachedData && Array.isArray(cachedData)) {
+    if (cachedData) {
       console.log('Loading gallery images from cache');
       setGalleryImages(cachedData);
-      setIsLoadingGallery(false);
       return;
     }
-
+    
+    // Fetch from backend if no cache
     console.log('Fetching gallery images from backend');
     const response = await fetch('https://bcc-gallery-back-end-production.up.railway.app/images/latest');
     if (!response.ok) {
-      throw new Error(`Failed to fetch gallery images: ${response.status} - ${response.statusText}`);
+      if (response.status >= 500) {
+        throw new Error('Database error: Unable to retrieve gallery images from the server.');
+      }
+      throw new Error(`Failed to fetch gallery images: ${response.status}`);
     }
     const data = await response.json();
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid gallery data format');
-    }
-
+    
+    // Cache the data
     setCacheData(GALLERY_CACHE_KEY, data);
     setGalleryImages(data);
-
     // Preload images
-    const preloadPromises = data.map((image) => {
-      if (!image._id) return Promise.resolve();
-      return new Promise((resolve) => {
-        const img = new window.Image();
-        img.src = image.thumbnailUrl || image.imageUrl || '/placeholder.svg';
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          handleImageLoad(image._id);
-          resolve();
-        };
-        img.onerror = () => {
-          handleImageError(image._id, img.src);
-          resolve();
-        };
-      });
+    data.forEach((image) => { 
+      const img = new window.Image();
+      img.src = image.thumbnailUrl || image.imageUrl || '/placeholder.svg';
+      img.crossOrigin = 'anonymous';
+      img.onload = () => handleImageLoad(image._id);
+      img.onerror = () => handleImageError(image._id, img.src);
     });
-    await Promise.all(preloadPromises);
-
+    // Initialize loading state for gallery images
+    const initialLoadingState = data.reduce((acc, image) => {
+      acc[image._id] = true;
+      return acc;
+    }, {});
+    setLoadingImages((prev) => ({ ...prev, ...initialLoadingState }));
   } catch (error) {
     console.error('Error fetching gallery images:', error);
-    let message = !navigator.onLine
-      ? 'No internet connection. Please check your network and try again.'
-      : error.message.includes('Database error')
-      ? 'Unable to load gallery images due to a server issue. Please try again later.'
-      : `Network error: ${error.message}`;
+    let message;
+    if (!navigator.onLine) {
+      message = 'No internet connection. Please check your network and try again.';
+    } else if (error.message.includes('Database error')) {
+      message = 'Unable to load gallery images due to a server issue. Please try again later.';
+    } else {
+      message = 'Network error: Failed to connect to the server. Please try again.';
+    }
     addNotification(message);
     setGalleryError(error.message);
     setGalleryImages([]);
   } finally {
-    setIsLoadingGallery(false);
+    setIsLoadingGallery(false); // Always reset loading state
   }
 };
 
